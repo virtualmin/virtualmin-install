@@ -11,20 +11,21 @@
 # will not work.  Don't even bother trying it.  Trust me.
 
 # Currently supported systems:
-# Fedora Core 3 and 4 for i386 and x86_64
-# CentOS and RHEL 3 and 4	i386 and x86_64
+# Fedora Core 3 and 4
+# CentOS and RHEL 3 and 4
+# SuSE 9.3
 
 LANG=
 export LANG
 
 SERIAL=ZZZZZZZZ
 KEY=sdfru8eu38jjdf
-VER=EA2b
+VER=EA2a
 arch=i386 # XXX need to detect x86_64
 deps=
 # RPM-based systems (maybe needs to be broken down by OS)
 rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
+yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl perl-DBI perl-DBD-Pg perl-DBD-mysql quota iptables openssl python mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server logrotate webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl y2pmsh proftpd"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
@@ -69,40 +70,12 @@ echo " major problems, but be prepared for some occasional discomfort on"
 echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
 echo " by creating issues in the bugtracker at Virtualmin.com."
 threelines
-echo " Continue? (y/n)"
-read line
-case $line in
-	y|Y)  continue;;
-	*)		exit 0;;
-esac
-threelines
-echo " INSTALL or UPGRADE "
-echo " It is possible to upgrade an existing Virtualmin GPL installation,"
-echo " or perform a minimal installation which only includes the Virtualmin"
-echo " Professional Webmin modules and no additional packages.  The "
-echo " minimal mode will not modify your existing configurations.  The "
-echo " full install is recommended only if this system is a fresh install of"
-echo " the OS.  Would you like to perform a minimal installation or"
-echo " upgrade Virtualmin GPL?"
-read line
-case $line in
-	y|Y)	mode=minimal
-	;;
-	*) 		mode=full;;
-esac
-threelines
-echo "Installation type: $mode"
-sleep 5
-threelines
+sleep 10
 
 # Check for a fully qualified hostname
 echo "Checking for fully qualified hostname..."
 accept_if_fully_qualified() {
 	case $1 in
-	localhost.localdomain)
-		echo "Hostname $name is not fully qualified.  Installation cannot continue."
-		exit 1
-		;;
 	*.*)
 		echo "Hostname OK: fully qualified as $1"
 		return 0
@@ -178,7 +151,7 @@ else exit 1
 fi
 cd ..
 
-# Get operating system type
+# Ask for operating system type
 echo "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
@@ -198,7 +171,9 @@ threelines
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	echo "Downloading virtualmin-release package for $real_os_type $real_os_version..."
-	if [[ "$os_type" = "fedora" || $os_type = "rhel" || $os_type = "mandriva" || $os_type = "mandrake" ]]; then
+	if [[ "$os_type" = "fedora" || $os_type = "rhel"]]; then
+		echo "Disabling SELinux during installation..."
+		/usr/sbin/setenforce 0
 		package_type="rpm"
 		deps=$rhdeps
 		if [ -e /usr/bin/yum ]; then
@@ -292,7 +267,7 @@ elif [ "$os_type" = "rhel" ]; then
 	install="/usr/bin/up2date --nox"
 	rpm --import /usr/share/rhn/RPM-GPG-KEY
 elif [ "$os_type" = "suse" ]; then
-	install="/usr/bin/y2pmsh isc"
+	install="/sbin/yast -i"
 elif [ "$os_type" = "mandriva" ]; then
 	install="/usr/bin/urpmi"
 elif [ "$os_type" = "debian" ]; then
@@ -395,17 +370,20 @@ else
 	install_virtualmin # Install the virtualmin packages and configure them.
 fi
 
-# Temporary fixes
-# Fix RHEL/CentOS Mailman config
-if [ "$os_type" = "rhel" ]; then
-  case $os_version in
-  3*)
-    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux /etc/webmin/virtualmin-mailman/config
-    ;;
-	4*)
-		cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\* /etc/webmin/virtualmin-mailman/config
-		;;
-	esac
-fi
+# Functions that are used in the OS specific modifications section
+disable_selinux () {
+	seconfigfiles="/etc/selinux/config /etc/sysconfig/selinux"
+  for i in $seconfigfiles; do
+		if [ -e $i ]; then
+			sed -i "s/SELINUX=.*/SELINUX=disabled/" $i
+		fi
+	done
+}
+
+# Changes that are specific to OS
+case $os_type in
+  "fedora" | "centos" | "rhel"  ) disable_selinux;;
+esac
+
 
 exit 0
