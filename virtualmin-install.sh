@@ -11,21 +11,20 @@
 # will not work.  Don't even bother trying it.  Trust me.
 
 # Currently supported systems:
-# Fedora Core 3 and 4
-# CentOS and RHEL 3 and 4
-# SuSE 9.3
+# Fedora Core 3 and 4 for i386 and x86_64
+# CentOS and RHEL 3 and 4	i386 and x86_64
 
 LANG=
 export LANG
 
 SERIAL=ZZZZZZZZ
 KEY=sdfru8eu38jjdf
-VER=EA2a
+VER=EA2b
 arch=i386 # XXX need to detect x86_64
 deps=
 # RPM-based systems (maybe needs to be broken down by OS)
 rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl perl-DBI perl-DBD-Pg perl-DBD-mysql quota iptables openssl python mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server logrotate webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl y2pmsh proftpd"
+yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
@@ -70,12 +69,40 @@ echo " major problems, but be prepared for some occasional discomfort on"
 echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
 echo " by creating issues in the bugtracker at Virtualmin.com."
 threelines
-sleep 10
+echo " Continue? (y/n)"
+read line
+case $line in
+	y|Y)  continue;;
+	*)		exit 0;;
+esac
+threelines
+echo " INSTALL or UPGRADE "
+echo " It is possible to upgrade an existing Virtualmin GPL installation,"
+echo " or perform a minimal installation which only includes the Virtualmin"
+echo " Professional Webmin modules and no additional packages.  The "
+echo " minimal mode will not modify your existing configurations.  The "
+echo " full install is recommended only if this system is a fresh install of"
+echo " the OS.  Would you like to perform a minimal installation or"
+echo " upgrade Virtualmin GPL?"
+read line
+case $line in
+	y|Y)	mode=minimal
+	;;
+	*) 		mode=full;;
+esac
+threelines
+echo "Installation type: $mode"
+sleep 5
+threelines
 
 # Check for a fully qualified hostname
 echo "Checking for fully qualified hostname..."
 accept_if_fully_qualified() {
 	case $1 in
+	localhost.localdomain)
+		echo "Hostname $name is not fully qualified.  Installation cannot continue."
+		exit 1
+		;;
 	*.*)
 		echo "Hostname OK: fully qualified as $1"
 		return 0
@@ -151,7 +178,7 @@ else exit 1
 fi
 cd ..
 
-# Ask for operating system type
+# Get operating system type
 echo "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
