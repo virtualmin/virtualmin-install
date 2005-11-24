@@ -23,9 +23,10 @@ KEY=sdfru8eu38jjdf
 VER=EA2a
 arch=i386 # XXX need to detect x86_64
 deps=
-# RPM-based systems (maybe needs to be broken down by OS)
+# Red Hat-based systems 
 rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl perl-DBI perl-DBD-Pg perl-DBD-mysql quota iptables openssl python mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server logrotate webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl y2pmsh proftpd"
+# SUSE systems (SUSE and OpenSUSE)
+yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
@@ -33,10 +34,26 @@ portsdeps="postfix bind9 p5-Mail-SpamAssassin procmail perl p5-Class-DBI-Pg p5-C
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
+# == Some simple functions ==
 threelines () {
 	echo
 	echo
 	echo
+}
+
+yesno () {
+  while read line; do
+    case $line in
+      y|Y|Yes|YES|yes|yES|yEs|YeS|yeS) return 0
+      ;;
+      n|N|No|NO|no|nO) return 1
+      ;;
+      *)
+        printf "\nPlease enter y or n: "
+        continue
+      ;;
+    esac
+  done
 }
 
 fatal () {
@@ -60,20 +77,6 @@ remove_virtualmin_release () {
 	esac
 }
 
-echo "***********************************************************************"
-echo "*   Welcome to the Virtualmin Professional installer, version $VER    *"
-echo "***********************************************************************"
-echo ""
-echo " WARNING: This is an Early Adopter release.  It may not be wholly "
-echo " compatible with future releases of the installer.  We don't expect"
-echo " major problems, but be prepared for some occasional discomfort on"
-echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
-echo " by creating issues in the bugtracker at Virtualmin.com."
-threelines
-sleep 10
-
-# Check for a fully qualified hostname
-echo "Checking for fully qualified hostname..."
 accept_if_fully_qualified() {
 	case $1 in
 	*.*)
@@ -84,6 +87,47 @@ accept_if_fully_qualified() {
 	echo "Hostname $name is not fully qualified.  Installation cannot continue."
 	exit 1
 }
+# == End of functions ==
+
+
+echo "***********************************************************************"
+echo "*   Welcome to the Virtualmin Professional installer, version $VER    *"
+echo "***********************************************************************"
+echo ""
+echo " WARNING: This is an Early Adopter release.  It may not be wholly "
+echo " compatible with future releases of the installer.  We don't expect"
+echo " major problems, but be prepared for some occasional discomfort on"
+echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
+echo " by creating issues in the bugtracker at Virtualmin.com."
+threelines
+printf " Continue? (y/n) "
+if yesno
+	continue
+else
+	exit
+fi
+threelines
+echo " FULL or MINIMAL INSTALLATION "
+echo " It is possible to upgrade an existing Virtualmin GPL installation"
+echo " or install without replacing existing mail/web/DNS configuration"
+echo " or packages.  This mode of installation is called the minimal mode"
+echo " because only Webmin, Usermin and the Virtualmin-related modules and"
+echo " themes are installed.  The minimal mode will not modify your"
+echo " existing configurations.  The full install is recommended only if"
+echo " this system is a fresh install of the OS.  Would you like to "
+printf " perform a minimal installation? (y/n)"
+if yesno
+	mode=minimal
+else
+	mode=full
+fi
+threelines
+echo "Installation type: $mode"
+sleep 3
+threelines
+
+# Check for a fully qualified hostname
+echo "Checking for fully qualified hostname..."
 name=`hostname`
 accept_if_fully_qualified $name
 
@@ -171,7 +215,7 @@ threelines
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	echo "Downloading virtualmin-release package for $real_os_type $real_os_version..."
-	if [[ "$os_type" = "fedora" || $os_type = "rhel"]]; then
+	if [[ "$os_type" = "fedora" || "$os_type" = "rhel" ]]; then
 		echo "Disabling SELinux during installation..."
 		/usr/sbin/setenforce 0
 		package_type="rpm"
