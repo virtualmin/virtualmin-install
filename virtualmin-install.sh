@@ -21,7 +21,7 @@ export LANG
 SERIAL=ZZZZZZZZ
 KEY=sdfru8eu38jjdf
 VER=EA2a
-arch=i386 # XXX need to detect x86_64
+arch=`uname -i`
 deps=
 # Red Hat-based systems 
 rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
@@ -72,12 +72,11 @@ remove_virtualmin_release () {
 		"suse"	)
 			vmsrcs=`y2pmsh source -s | grep "virtualmin" | grep "^[[:digit:]]" | cut -d ":" -f 1`
 			y2pmsh source -R $vmsrcs
-			sed -i "s/.*virtualmin.*//g" /etc/youservers
 			;;
 	esac
 }
 
-accept_if_fully_qualified() {
+accept_if_fully_qualified () {
 	case $1 in
 	*.*)
 		echo "Hostname OK: fully qualified as $1"
@@ -102,9 +101,8 @@ echo " by creating issues in the bugtracker at Virtualmin.com."
 threelines
 printf " Continue? (y/n) "
 if yesno
-	continue
-else
-	exit
+then continue
+else exit
 fi
 threelines
 echo " FULL or MINIMAL INSTALLATION "
@@ -117,9 +115,8 @@ echo " existing configurations.  The full install is recommended only if"
 echo " this system is a fresh install of the OS.  Would you like to "
 printf " perform a minimal installation? (y/n)"
 if yesno
-	mode=minimal
-else
-	mode=full
+then mode=minimal
+else mode=full
 fi
 threelines
 echo "Installation type: $mode"
@@ -245,13 +242,18 @@ install_virtualmin_release () {
 		# No release for suse.  Their RPM locks when we try to import keys...
 		package_type="rpm"
 		deps=$yastdeps
+		# SUSE uses i586 for x86 binary RPMs instead of i386
+		if [ "$arch" = "i386" ]
+		then cputype="i586"
+		else cputype="x86_64"
+		fi
 		if yast -i y2pmsh; then
 			continue
 		else
 			echo "Failed to install y2pmsh package.  Cannot continue."
 			exit 0
 		fi
-		if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version; then
+		if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
 			continue
 		else
 			fatal "Unable to add yast2 installation source."
@@ -267,6 +269,8 @@ install_virtualmin_release () {
 #    else
 #      fatal "Unable to add yast2 installation source."
 #    fi
+# This bit doesn't work, because youservers are some wholly other format...yast needs to make up its
+# mind about update repository formats.  This is ridiculous.
 #		echo "Adding Virtualmin repositories to /etc/youservers..."
 #		echo "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version" >> /etc/youservers
 #		echo "http://$SERIAL:$KEY@software.virtualmin.com/universal" >> /etc/youservers
@@ -322,7 +326,7 @@ else
 	echo "Your OS is not currently supported by this installer.  Please contact us at"
 	echo "support@virtualmin.com to let us know what OS you'd like to install Virtualmin"
 	echo "Professional on, and we'll try to help."
-	exit 1
+	exit
 fi
 
 # Functions
@@ -352,7 +356,8 @@ install_with_yast () {
 		y2pmsh source -d $sources
 	fi
 
-	if y2pmsh install virtualmin-base; then
+#	if y2pmsh install virtualmin-base; then
+	if $install virtualmin-base; then
 		echo "Installation completed."
 		return 0
 	else
@@ -428,6 +433,5 @@ disable_selinux () {
 case $os_type in
   "fedora" | "centos" | "rhel"  ) disable_selinux;;
 esac
-
 
 exit 0
