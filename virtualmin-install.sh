@@ -111,12 +111,12 @@ echo " or install without replacing existing mail/web/DNS configuration"
 echo " or packages.  This mode of installation is called the minimal mode"
 echo " because only Webmin, Usermin and the Virtualmin-related modules and"
 echo " themes are installed.  The minimal mode will not modify your"
-echo " existing configurations.  The full install is recommended only if"
+echo " existing configuration.  The full install is recommended if"
 echo " this system is a fresh install of the OS.  Would you like to "
-printf " perform a minimal installation? (y/n)"
+printf " perform a full installation? (y/n) "
 if yesno
-then mode=minimal
-else mode=full
+then mode=full
+else mode=minimal
 fi
 threelines
 echo "Installation type: $mode"
