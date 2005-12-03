@@ -99,12 +99,17 @@ echo " major problems, but be prepared for some occasional discomfort on"
 echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
 echo " by creating issues in the bugtracker at Virtualmin.com."
 threelines
+echo " The installer in its current form cannot safely perform an upgrade "
+echo " of an existing Virtualmin GPL system.  An upgradeable installer will"
+echo " be available in a couple of days."
+threelines
 printf " Continue? (y/n) "
 if yesno
 then continue
 else exit
 fi
 threelines
+get_mode () {
 echo " FULL or MINIMAL INSTALLATION "
 echo " It is possible to upgrade an existing Virtualmin GPL installation"
 echo " or install without replacing existing mail/web/DNS configuration"
@@ -122,6 +127,13 @@ threelines
 echo "Installation type: $mode"
 sleep 3
 threelines
+}
+mode=full
+getmode
+# If minimal, we don't install any extra packages, or perform any configuration
+if [ "$mode" = minimal ]; then
+	rhdeps=yastdeps=debdeps=portagedeps=portsdeps=""
+fi
 
 # Check for a fully qualified hostname
 echo "Checking for fully qualified hostname..."
@@ -263,17 +275,6 @@ install_virtualmin_release () {
 		else
 			fatal "Unable to add yast2 installation source."
     fi
-#		echo "Adding SuSE $os_version yast repository.  This will take a while."
-#		if y2pmsh source -a http://mirrors.kernel.org/suse/i386/$os_version; then
-#      continue
-#    else
-#      fatal "Unable to add yast2 installation source."
-#    fi
-# This bit doesn't work, because youservers are some wholly other format...yast needs to make up its
-# mind about update repository formats.  This is ridiculous.
-#		echo "Adding Virtualmin repositories to /etc/youservers..."
-#		echo "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version" >> /etc/youservers
-#		echo "http://$SERIAL:$KEY@software.virtualmin.com/universal" >> /etc/youservers
 	elif [ "$os_type" = "freebsd" ]; then
 		package_type="tar"
 		deps=$portsdeps
@@ -333,23 +334,32 @@ fi
 install_with_yum () {
 	threelines
 	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "yum -y install virtualmin-base"
+	echo "$install virtualmin-base"
 
 	if yum -y install virtualmin-base; then
-		echo "Installation completed."
-		return 0
+		echo "Installation of virtualmin-base completed."
 	else
 		echo "Installation failed: $?"
 		echo "Removing virtualmin-release package, so that installation can be re-attempted"
 		echo "after any problems reported are resolved."
 		return $?
 	fi
+
+	echo "Updating all packages to the latest versions now using the command:"
+	echo "yum -y update"
+	if yum -y update; then
+		echo "Update completed successfully."
+	else
+		echo "Update failed: $?"
+		echo "This probably isn't directly harmful, but correcting the problem is recommended."
+	fi
+	return 0
 }
 
 install_with_yast () {
 	threelines
 	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "y2pmsh install virtualmin-base"
+	echo "$install virtualmin-base"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
 	if [ $sources != "" ]; then
 		echo "Disabling existing y2pmsh sources."
@@ -366,7 +376,7 @@ install_with_yast () {
 		echo "after any problems reported are resolved."
 		return $?
 	fi
-	if [ $sources != "" ]; then
+	if [ "$sources" != "" ]; then
 		echo "Re-enabling any existing sources."
 		y2pmsh source -e $sources
 	fi
@@ -386,38 +396,48 @@ install_virtualmin () {
 # Install with yum or from tarball
 # Install virtualmin-release so we know where to find our packages and 
 # how to install them
-	echo "package_type = $package_type"
-	if [ "$package_type" = "rpm" ]; then
-		if [ "$os_type" = "suse" ]; then
-			install_with_yast
-		elif [[ "$os_type" = "mandriva" || "$os_type" = "mandrake" ]]; then
-			install_with_urpmi
-		else
-			install_with_yum
-		fi
-	elif [ "$package_type" = "deb" ]; then
-		install_with_apt
-	elif [ "$package_type" = "tar" ]; then
-		install_with_tar
-	fi
+	echo "Package Type = $package_type"
+	case $package_type in
+		rpm)
+			case $os_type in
+				suse)
+					install_with_yast
+					;;
+				mandr*)
+					install_with_urpmi
+					;;
+				*)
+					install_with_yum
+					;;
+			esac
+		deb)
+			install_with_apt
+			;;
+		*)
+			install_with_tar
+			;;
+	esac
 	return 0
 }
 
 # We may have to use $install to pre-install all deps.
-if [ "$os_type" = "fedora" ]; then
-  install_virtualmin_release # We need some data from this later
-  install_deps_the_hard_way # Argh...virtualmin-base is broken...
-	install_with_yum # Everyting is simple with yum...
-elif [ "$os_type" = "suse" ]; then
-	install_virtualmin_release
-  install_deps_the_hard_way # Why doesn't yast resolve deps?!?!
-	install_with_yast
-else
-  # If not yum, we have our work cut out for us...
-	install_virtualmin_release # Must be run first to setup deps.
-	install_deps_the_hard_way # Everything is pear-shaped without yum...
-	install_virtualmin # Install the virtualmin packages and configure them.
-fi
+case $os_type in
+	fedora)
+		install_virtualmin_release # We need some data from this later
+    install_deps_the_hard_way # Argh...virtualmin-base is broken...
+    install_with_yum # Everyting is simple with yum...
+  	;;
+	suse)
+		install_virtualmin_release
+    install_deps_the_hard_way # Why doesn't yast resolve deps?!?!
+    install_with_yasta # Okey, it does in OpenSUSE, but we need it to work on 9.3
+  	;;
+	*)
+		install_virtualmin_release # Must be run first to setup deps.
+    install_deps_the_hard_way # Everything is pear-shaped without yum...
+    install_virtualmin # Install the virtualmin packages and configure them.
+		;;
+esac
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
@@ -429,9 +449,26 @@ disable_selinux () {
 	done
 }
 
+fix_mailman_config () {
+# Fix RHEL/CentOS Mailman config
+if [ "$os_type" = "rhel" ]; then
+  case $os_version in
+  3*)
+    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux /etc/webmin/virtualmin-mailman/config
+    ;;
+  4*)
+    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\* /etc/webmin/virtualmin-mailman/config
+		;;
+	esac
+fi
+}
+
 # Changes that are specific to OS
 case $os_type in
-  "fedora" | "centos" | "rhel"  ) disable_selinux;;
+  "fedora" | "centos" | "rhel"  )
+		disable_selinux
+		fix_mailman_config
+		;;
 esac
 
 exit 0
