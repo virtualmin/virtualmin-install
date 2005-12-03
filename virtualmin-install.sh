@@ -22,6 +22,7 @@ SERIAL=ZZZZZZZZ
 KEY=sdfru8eu38jjdf
 VER=EA2a
 arch=`uname -i`
+vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
 deps=
 # Red Hat-based systems 
 rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
@@ -128,11 +129,13 @@ echo "Installation type: $mode"
 sleep 3
 threelines
 }
-mode=full
+mode="full"
+virtualminmeta="virtualmin-base"
 getmode
 # If minimal, we don't install any extra packages, or perform any configuration
 if [ "$mode" = minimal ]; then
 	rhdeps=yastdeps=debdeps=portagedeps=portsdeps=""
+	virtualminmeta=$vmpackages
 fi
 
 # Check for a fully qualified hostname
@@ -334,10 +337,10 @@ fi
 install_with_yum () {
 	threelines
 	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "$install virtualmin-base"
+	echo "$install $virtualminmeta"
 
-	if yum -y install virtualmin-base; then
-		echo "Installation of virtualmin-base completed."
+	if yum -y install $virtualminmeta; then
+		echo "Installation of $virtualminmeta completed."
 	else
 		echo "Installation failed: $?"
 		echo "Removing virtualmin-release package, so that installation can be re-attempted"
@@ -359,15 +362,15 @@ install_with_yum () {
 install_with_yast () {
 	threelines
 	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "$install virtualmin-base"
+	echo "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
 	if [ $sources != "" ]; then
 		echo "Disabling existing y2pmsh sources."
 		y2pmsh source -d $sources
 	fi
 
-#	if y2pmsh install virtualmin-base; then
-	if $install virtualmin-base; then
+#	if y2pmsh install $virtualminmeta; then
+	if $install $virtualminmeta; then
 		echo "Installation completed."
 		return 0
 	else
