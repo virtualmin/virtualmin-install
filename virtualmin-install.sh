@@ -11,9 +11,9 @@
 # will not work.  Don't even bother trying it.  Trust me.
 
 # Currently supported systems:
-# Fedora Core 3 and 4
-# CentOS and RHEL 3 and 4
-# SuSE 9.3
+# Fedora Core 3 and 4 on i386 and x86_64
+# CentOS and RHEL 3 and 4 on i486 and x86_64
+# SuSE 9.3 and OpenSUSE 10.0 on i586
 
 LANG=
 export LANG
@@ -25,9 +25,9 @@ arch=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
 deps=
 # Red Hat-based systems 
-rhdeps="postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
+rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
 # SUSE systems (SUSE and OpenSUSE)
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
+yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
@@ -37,9 +37,9 @@ portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota open
 
 # == Some simple functions ==
 threelines () {
-	echo
-	echo
-	echo
+	logger_info
+	logger_info
+	logger_info
 }
 
 yesno () {
@@ -58,11 +58,11 @@ yesno () {
 }
 
 fatal () {
-	echo
-	echo "Fatal Error Occurred: $1"
-	echo "Cannot continue installation."
-	echo "Attempting to remove virtualmin-release, so the installation can be "
-	echo "re-attempted after any problems have been resolved."
+	logger_info
+	logger_info "Fatal Error Occurred: $1"
+	logger_info "Cannot continue installation."
+	logger_info "Attempting to remove virtualmin-release, so the installation can be "
+	logger_info "re-attempted after any problems have been resolved."
 	remove_virtualmin_release
 	exit
 }
@@ -80,29 +80,29 @@ remove_virtualmin_release () {
 accept_if_fully_qualified () {
 	case $1 in
 	*.*)
-		echo "Hostname OK: fully qualified as $1"
+		logger_info "Hostname OK: fully qualified as $1"
 		return 0
 		;;
 	esac
-	echo "Hostname $name is not fully qualified.  Installation cannot continue."
+	logger_info "Hostname $name is not fully qualified.  Installation cannot continue."
 	exit 1
 }
 # == End of functions ==
 
 
-echo "***********************************************************************"
-echo "*   Welcome to the Virtualmin Professional installer, version $VER    *"
-echo "***********************************************************************"
-echo ""
-echo " WARNING: This is an Early Adopter release.  It may not be wholly "
-echo " compatible with future releases of the installer.  We don't expect"
-echo " major problems, but be prepared for some occasional discomfort on"
-echo " upgrades for a few weeks.  Be sure to let us know when problems arise"
-echo " by creating issues in the bugtracker at Virtualmin.com."
+logger_info "***********************************************************************"
+logger_info "*   Welcome to the Virtualmin Professional installer, version $VER    *"
+logger_info "***********************************************************************"
+logger_info ""
+logger_info " WARNING: This is an Early Adopter release.  It may not be wholly "
+logger_info " compatible with future releases of the installer.  We don't expect"
+logger_info " major problems, but be prepared for some occasional discomfort on"
+logger_info " upgrades for a few weeks.  Be sure to let us know when problems arise"
+logger_info " by creating issues in the bugtracker at Virtualmin.com."
 threelines
-echo " The installer in its current form cannot safely perform an upgrade "
-echo " of an existing Virtualmin GPL system.  An upgradeable installer will"
-echo " be available in a couple of days."
+logger_info " The installer in its current form cannot safely perform an upgrade "
+logger_info " of an existing Virtualmin GPL system.  An upgradeable installer will"
+logger_info " be available in a couple of days."
 threelines
 printf " Continue? (y/n) "
 if yesno
@@ -111,21 +111,21 @@ else exit
 fi
 threelines
 get_mode () {
-echo " FULL or MINIMAL INSTALLATION "
-echo " It is possible to upgrade an existing Virtualmin GPL installation"
-echo " or install without replacing existing mail/web/DNS configuration"
-echo " or packages.  This mode of installation is called the minimal mode"
-echo " because only Webmin, Usermin and the Virtualmin-related modules and"
-echo " themes are installed.  The minimal mode will not modify your"
-echo " existing configuration.  The full install is recommended if"
-echo " this system is a fresh install of the OS.  Would you like to "
+logger_info " FULL or MINIMAL INSTALLATION "
+logger_info " It is possible to upgrade an existing Virtualmin GPL installation"
+logger_info " or install without replacing existing mail/web/DNS configuration"
+logger_info " or packages.  This mode of installation is called the minimal mode"
+logger_info " because only Webmin, Usermin and the Virtualmin-related modules and"
+logger_info " themes are installed.  The minimal mode will not modify your"
+logger_info " existing configuration.  The full install is recommended if"
+logger_info " this system is a fresh install of the OS.  Would you like to "
 printf " perform a full installation? (y/n) "
 if yesno
 then mode=full
 else mode=minimal
 fi
 threelines
-echo "Installation type: $mode"
+logger_info "Installation type: $mode"
 sleep 3
 threelines
 }
@@ -139,7 +139,7 @@ if [ "$mode" = minimal ]; then
 fi
 
 # Check for a fully qualified hostname
-echo "Checking for fully qualified hostname..."
+logger_info "Checking for fully qualified hostname..."
 name=`hostname`
 accept_if_fully_qualified $name
 
@@ -150,8 +150,8 @@ if [ -x "/usr/bin/curl" ]; then
 elif [ -x "/usr/bin/wget" ]; then
 	download="/usr/bin/wget"
 else
-	echo "No web download program available: Please install curl or wget"
-	echo "and try again."
+	logger_info "No web download program available: Please install curl or wget"
+	logger_info "and try again."
 	exit 1
 fi
 printf "found $download\n"
@@ -163,7 +163,7 @@ if [ -x "/usr/bin/perl" ]; then
 elif [ -x "/usr/local/bin/perl" ]; then
 	perl="/usr/local/bin/perl"
 else
-	echo "Perl was not found on your system: Please install perl and try again"
+	logger_info "Perl was not found on your system: Please install perl and try again"
 	exit 1
 fi
 printf "found $perl\n"
@@ -173,22 +173,22 @@ id | grep "uid=0(" >/dev/null
 if [ $? != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
 	if [ $? != "0" ]; then
-		echo "Fatal Error: The Virtualmin install script must be run as root"
+		logger_info "Fatal Error: The Virtualmin install script must be run as root"
 		threelines
 		exit 1
 	fi
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
-echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
-echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
+logger_info "SerialNumber=$SERIAL" > /etc/virtualmin-license
+logger_info "LicenseKey=$KEY"	>> /etc/virtualmin-license
 
 # Find temp directory
 if [ "$tempdir" = "" ]; then
-	if [ -e "/tmp/.virtualmin" ]; then
-		rm -rf /tmp/.virtualmin
+	tempdir=/tmp/.virtualmin-$$
+	if [ -e "/tmp/.virtualmin*" ]; then
+		rm -rf /tmp/.virtualmin*
 	fi
-	tempdir=/tmp/.virtualmin
 	mkdir $tempdir
 fi
 
@@ -197,18 +197,40 @@ fi
 mkdir $tempdir/files
 srcdir=$tempdir/files
 cd $srcdir
-if $download http://$SERIAL:$KEY@software.virtualmin.com/lib/oschooser.pl
+if $download http://software.virtualmin.com/lib/oschooser.pl
 then continue
-else exit 1
+else
+	logger_info "Could not load OS selection library from software.virtualmin.com.  Cannot continue."
+	exit 1
 fi
-if $download http://$SERIAL:$KEY@software.virtualmin.com/lib/os_list.txt
+if $download http://software.virtualmin.com/lib/os_list.txt
 then continue
-else exit 1
+else
+	logger_info "Could not load OS list from software.virtualmin.com.  Cannot continue." 
+	exit 1
 fi
+if $download http://software.virtualmin.com/lib/log4sh
+then 
+	. ./log4sh
+	continue
+else
+	logger_info "Could not load logging library from software.virtualmin.com.  Cannot continue."
+	exit 1
+fi
+
+# Setup log4sh properties
+# Console output
+logger_setlevel INFO
+# Debug log
+logger_addAppender virtualmin
+appender_setAppenderType virtualmin FileAppender
+appender_setAppenderFile virtualmin virtualmin-install.log
+appender_setLevel virtualmin DEBUG
+
 cd ..
 
 # Ask for operating system type
-echo "***********************************************************************"  
+logger_info "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
       autoos=2
@@ -220,15 +242,15 @@ if [ "$os_type" = "" ]; then
     . $tempdir/$$.os
     rm -f $tempdir/$$.os
   fi
-echo "Operating system name:    $real_os_type"
-echo "Operating system version: $real_os_version"
+logger_info "Operating system name:    $real_os_type"
+logger_info "Operating system version: $real_os_version"
 threelines
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	echo "Downloading virtualmin-release package for $real_os_type $real_os_version..."
+	logger_info "Downloading virtualmin-release package for $real_os_type $real_os_version..."
 	if [[ "$os_type" = "fedora" || "$os_type" = "rhel" ]]; then
-		echo "Disabling SELinux during installation..."
+		logger_info "Disabling SELinux during installation..."
 		/usr/sbin/setenforce 0
 		package_type="rpm"
 		deps=$rhdeps
@@ -238,11 +260,11 @@ install_virtualmin_release () {
 			# Install yum, which makes installing and upgrading our packages easier
  			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
 			then
-				echo "yum not found, installing yum from software.virtualmin.com..."
+				logger_info "yum not found, installing yum from software.virtualmin.com..."
 				rpm -Uvh yum-latest.noarch.rpm
   			continue
   		else
-    		echo "Failed to download yum package for $os_type.  Cannot continue."
+    		logger_info "Failed to download yum package for $os_type.  Cannot continue."
     		exit
 			fi
 		fi
@@ -250,7 +272,7 @@ install_virtualmin_release () {
 		then
 			rpm -Uvh virtualmin-release-latest.noarch.rpm
 		else
-			echo "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
 			exit
 		fi
 	elif [ "$os_type" = "suse" ]; then
@@ -265,7 +287,7 @@ install_virtualmin_release () {
 		if yast -i y2pmsh; then
 			continue
 		else
-			echo "Failed to install y2pmsh package.  Cannot continue."
+			logger_info "Failed to install y2pmsh package.  Cannot continue."
 			exit 0
 		fi
 		if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
@@ -284,7 +306,7 @@ install_virtualmin_release () {
 		if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
 		then continue
 		else
-			echo "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
 			exit 0
 			exit
 		fi
@@ -295,7 +317,7 @@ install_virtualmin_release () {
 			return $?
   	then continue
   	else
-  		echo "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+  		logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
     	exit
 		fi
 	elif [ "$os_type" = "debian" ]; then
@@ -305,7 +327,7 @@ install_virtualmin_release () {
 		then 
 			dpkg -i virtualmin-release-latest_$arch.deb	
 		else
-			echo "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
 			exit
 		fi
 	fi
@@ -327,70 +349,70 @@ elif [ "$os_type" = "debian" ]; then
 elif [ "$os_type" = "gentoo" ]; then
 	install="/usr/bin/emerge"
 else
-	echo "Your OS is not currently supported by this installer.  Please contact us at"
-	echo "support@virtualmin.com to let us know what OS you'd like to install Virtualmin"
-	echo "Professional on, and we'll try to help."
+	logger_info "Your OS is not currently supported by this installer.  Please contact us at"
+	logger_info "support@virtualmin.com to let us know what OS you'd like to install Virtualmin"
+	logger_info "Professional on, and we'll try to help."
 	exit
 fi
 
 # Functions
 install_with_yum () {
 	threelines
-	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "$install $virtualminmeta"
+	logger_info "Installing Virtualmin and all related packages now using the command:"
+	logger_info "$install $virtualminmeta"
 
 	if yum -y install $virtualminmeta; then
-		echo "Installation of $virtualminmeta completed."
+		logger_info "Installation of $virtualminmeta completed."
 	else
-		echo "Installation failed: $?"
-		echo "Removing virtualmin-release package, so that installation can be re-attempted"
-		echo "after any problems reported are resolved."
+		logger_info "Installation failed: $?"
+		logger_info "Removing virtualmin-release package, so that installation can be re-attempted"
+		logger_info "after any problems reported are resolved."
 		return $?
 	fi
 
-	echo "Updating all packages to the latest versions now using the command:"
-	echo "yum -y update"
+	logger_info "Updating all packages to the latest versions now using the command:"
+	logger_info "yum -y update"
 	if yum -y update; then
-		echo "Update completed successfully."
+		logger_info "Update completed successfully."
 	else
-		echo "Update failed: $?"
-		echo "This probably isn't directly harmful, but correcting the problem is recommended."
+		logger_info "Update failed: $?"
+		logger_info "This probably isn't directly harmful, but correcting the problem is recommended."
 	fi
 	return 0
 }
 
 install_with_yast () {
 	threelines
-	echo "Installing Virtualmin and all related packages now using the command:"
-	echo "$install $virtualminmeta"
+	logger_info "Installing Virtualmin and all related packages now using the command:"
+	logger_info "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
 	if [ $sources != "" ]; then
-		echo "Disabling existing y2pmsh sources."
+		logger_info "Disabling existing y2pmsh sources."
 		y2pmsh source -d $sources
 	fi
 
 #	if y2pmsh install $virtualminmeta; then
 	if $install $virtualminmeta; then
-		echo "Installation completed."
+		logger_info "Installation completed."
 		return 0
 	else
-		echo "Installation failed: $?"
-		echo "Removing virtualmin-release package, so that installation can be re-attempted"
-		echo "after any problems reported are resolved."
+		logger_info "Installation failed: $?"
+		logger_info "Removing virtualmin-release package, so that installation can be re-attempted"
+		logger_info "after any problems reported are resolved."
 		return $?
 	fi
 	if [ "$sources" != "" ]; then
-		echo "Re-enabling any existing sources."
+		logger_info "Re-enabling any existing sources."
 		y2pmsh source -e $sources
 	fi
 }
 
 install_deps_the_hard_way () {
-	echo "Installing dependencies using command: $install $deps"
+	logger_info "Installing dependencies using command: $install $deps"
 	if $install $deps
 	then return 0
 	else
-		echo "Something went wrong during installation: $?"
+		logger_info "Something went wrong during installation: $?"
 	fi
 	exit $?
 }
@@ -399,7 +421,7 @@ install_virtualmin () {
 # Install with yum or from tarball
 # Install virtualmin-release so we know where to find our packages and 
 # how to install them
-	echo "Package Type = $package_type"
+	logger_info "Package Type = $package_type"
 	case $package_type in
 		rpm)
 			case $os_type in
