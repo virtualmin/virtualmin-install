@@ -37,9 +37,9 @@ portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota open
 
 # == Some simple functions ==
 threelines () {
-	logger_info
-	logger_info
-	logger_info
+	echo
+	echo
+	echo
 }
 
 yesno () {
@@ -58,11 +58,11 @@ yesno () {
 }
 
 fatal () {
-	logger_info
-	logger_info "Fatal Error Occurred: $1"
-	logger_info "Cannot continue installation."
-	logger_info "Attempting to remove virtualmin-release, so the installation can be "
-	logger_info "re-attempted after any problems have been resolved."
+	echo
+	echo "Fatal Error Occurred: $1"
+	echo "Cannot continue installation."
+	echo "Attempting to remove virtualmin-release, so the installation can be "
+	echo "re-attempted after any problems have been resolved."
 	remove_virtualmin_release
 	exit
 }
@@ -79,31 +79,38 @@ remove_virtualmin_release () {
 
 accept_if_fully_qualified () {
 	case $1 in
+	localhost.localdomain)
+		echo "Hostname cannot be localhost.localdomain.  Installation cannot continue."
+		exit 1
+		;;
 	*.*)
-		logger_info "Hostname OK: fully qualified as $1"
+		echo "Hostname OK: fully qualified as $1"
 		return 0
 		;;
 	esac
-	logger_info "Hostname $name is not fully qualified.  Installation cannot continue."
+	echo "Hostname $name is not fully qualified.  Installation cannot continue."
 	exit 1
 }
 # == End of functions ==
 
 
-logger_info "***********************************************************************"
-logger_info "*   Welcome to the Virtualmin Professional installer, version $VER    *"
-logger_info "***********************************************************************"
-logger_info ""
-logger_info " WARNING: This is an Early Adopter release.  It may not be wholly "
-logger_info " compatible with future releases of the installer.  We don't expect"
-logger_info " major problems, but be prepared for some occasional discomfort on"
-logger_info " upgrades for a few weeks.  Be sure to let us know when problems arise"
-logger_info " by creating issues in the bugtracker at Virtualmin.com."
-threelines
-logger_info " The installer in its current form cannot safely perform an upgrade "
-logger_info " of an existing Virtualmin GPL system.  An upgradeable installer will"
-logger_info " be available in a couple of days."
-threelines
+cat <<EOF
+***********************************************************************
+*   Welcome to the Virtualmin Professional installer, version $VER    *
+***********************************************************************
+
+ WARNING: This is an Early Adopter release.  It may not be wholly 
+ compatible with future releases of the installer.  We don't expect
+ major problems, but be prepared for some occasional discomfort on
+ upgrades for a few weeks.  Be sure to let us know when problems arise
+ by creating issues in the bugtracker at Virtualmin.com.
+
+
+ The installer in its current form cannot safely perform an upgrade 
+ of an existing Virtualmin GPL system.  An upgradeable installer will
+ be available in a couple of days.
+
+EOF
 printf " Continue? (y/n) "
 if yesno
 then continue
@@ -111,27 +118,30 @@ else exit
 fi
 threelines
 get_mode () {
-logger_info " FULL or MINIMAL INSTALLATION "
-logger_info " It is possible to upgrade an existing Virtualmin GPL installation"
-logger_info " or install without replacing existing mail/web/DNS configuration"
-logger_info " or packages.  This mode of installation is called the minimal mode"
-logger_info " because only Webmin, Usermin and the Virtualmin-related modules and"
-logger_info " themes are installed.  The minimal mode will not modify your"
-logger_info " existing configuration.  The full install is recommended if"
-logger_info " this system is a fresh install of the OS.  Would you like to "
-printf " perform a full installation? (y/n) "
+cat <<EOF
+ FULL or MINIMAL INSTALLATION "
+ It is possible to upgrade an existing Virtualmin GPL installation
+ or install without replacing existing mail/web/DNS configuration
+ or packages.  This mode of installation is called the minimal mode
+ because only Webmin, Usermin and the Virtualmin-related modules and
+ themes are installed.  The minimal mode will not modify your
+ existing configuration.  The full install is recommended if
+ this system is a fresh install of the OS.
+
+EOF
+printf " Perform a full installation? (y/n) "
 if yesno
 then mode=full
 else mode=minimal
 fi
 threelines
-logger_info "Installation type: $mode"
+echo "Installation type: $mode"
 sleep 3
 threelines
 }
 mode="full"
 virtualminmeta="virtualmin-base"
-getmode
+get_mode
 # If minimal, we don't install any extra packages, or perform any configuration
 if [ "$mode" = minimal ]; then
 	rhdeps=yastdeps=debdeps=portagedeps=portsdeps=""
@@ -150,8 +160,8 @@ if [ -x "/usr/bin/curl" ]; then
 elif [ -x "/usr/bin/wget" ]; then
 	download="/usr/bin/wget"
 else
-	logger_info "No web download program available: Please install curl or wget"
-	logger_info "and try again."
+	echo "No web download program available: Please install curl or wget"
+	echo "and try again."
 	exit 1
 fi
 printf "found $download\n"
@@ -163,7 +173,7 @@ if [ -x "/usr/bin/perl" ]; then
 elif [ -x "/usr/local/bin/perl" ]; then
 	perl="/usr/local/bin/perl"
 else
-	logger_info "Perl was not found on your system: Please install perl and try again"
+	echo "Perl was not found on your system: Please install perl and try again"
 	exit 1
 fi
 printf "found $perl\n"
@@ -173,15 +183,15 @@ id | grep "uid=0(" >/dev/null
 if [ $? != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
 	if [ $? != "0" ]; then
-		logger_info "Fatal Error: The Virtualmin install script must be run as root"
+		echo "Fatal Error: The Virtualmin install script must be run as root"
 		threelines
 		exit 1
 	fi
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
-logger_info "SerialNumber=$SERIAL" > /etc/virtualmin-license
-logger_info "LicenseKey=$KEY"	>> /etc/virtualmin-license
+echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
+echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
 
 # Find temp directory
 if [ "$tempdir" = "" ]; then
@@ -192,8 +202,31 @@ if [ "$tempdir" = "" ]; then
 	mkdir $tempdir
 fi
 
+# Setup log4sh so we can start keeping a proper log while also feeding output
+# to the console.
+echo "Loading log4sh logging library..."
+if $download http://software.virtualmin.com/lib/log4sh
+then 
+	. ./log4sh
+	continue
+else
+	echo "Could not load logging library from software.virtualmin.com.  Cannot continue."
+	exit 1
+fi
+
+# Setup log4sh properties
+# Console output
+logger_setlevel INFO
+# Debug log
+logger_addAppender virtualmin
+appender_setAppenderType virtualmin FileAppender
+appender_setAppenderFile virtualmin virtualmin-install.log
+appender_setLevel virtualmin DEBUG
+logger_info "Started installation log in virtualmin-install.log"
+
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
+logger_info "Loading OS selection library..."
 mkdir $tempdir/files
 srcdir=$tempdir/files
 cd $srcdir
@@ -209,23 +242,6 @@ else
 	logger_info "Could not load OS list from software.virtualmin.com.  Cannot continue." 
 	exit 1
 fi
-if $download http://software.virtualmin.com/lib/log4sh
-then 
-	. ./log4sh
-	continue
-else
-	logger_info "Could not load logging library from software.virtualmin.com.  Cannot continue."
-	exit 1
-fi
-
-# Setup log4sh properties
-# Console output
-logger_setlevel INFO
-# Debug log
-logger_addAppender virtualmin
-appender_setAppenderType virtualmin FileAppender
-appender_setAppenderFile virtualmin virtualmin-install.log
-appender_setLevel virtualmin DEBUG
 
 cd ..
 
@@ -244,7 +260,6 @@ if [ "$os_type" = "" ]; then
   fi
 logger_info "Operating system name:    $real_os_type"
 logger_info "Operating system version: $real_os_version"
-threelines
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
