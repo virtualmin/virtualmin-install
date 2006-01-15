@@ -2,8 +2,8 @@
 # virtualmin-install.sh
 # Copyright 2005 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
-# The packages do most of the hard work, so this script can be small and 
-# lazy.
+# The packages do most of the hard work, so this script can be small-ish and 
+# lazy-ish.
 
 # WARNING: Anything not listed in the currently supported systems list is not
 # going to work, despite the fact that you might see code that detects your
@@ -25,7 +25,7 @@ arch=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
 deps=
 # Red Hat-based systems 
-rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin"
+rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn"
 # SUSE systems (SUSE and OpenSUSE)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
 # Debian-based systems (Ubuntu and Debian)
@@ -59,11 +59,13 @@ yesno () {
 
 fatal () {
 	echo
-	echo "Fatal Error Occurred: $1"
-	echo "Cannot continue installation."
-	echo "Attempting to remove virtualmin-release, so the installation can be "
-	echo "re-attempted after any problems have been resolved."
+	logger_fatal "Fatal Error Occurred: $1"
+	logger_fatal "Cannot continue installation."
+	logger_fatal "Attempting to remove virtualmin-release, so the installation can be "
+	logger_fatal "re-attempted after any problems have been resolved."
 	remove_virtualmin_release
+	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
+	logger_fatal "in virtualmin-install.log."
 	exit
 }
 
@@ -91,6 +93,11 @@ accept_if_fully_qualified () {
 	echo "Hostname $name is not fully qualified.  Installation cannot continue."
 	exit 1
 }
+
+success () {
+	logger_info "Succeeded."
+}
+
 # == End of functions ==
 
 
@@ -119,7 +126,7 @@ fi
 threelines
 get_mode () {
 cat <<EOF
- FULL or MINIMAL INSTALLATION "
+ FULL or MINIMAL INSTALLATION
  It is possible to upgrade an existing Virtualmin GPL installation
  or install without replacing existing mail/web/DNS configuration
  or packages.  This mode of installation is called the minimal mode
@@ -149,8 +156,8 @@ if [ "$mode" = minimal ]; then
 fi
 
 # Check for a fully qualified hostname
-logger_info "Checking for fully qualified hostname..."
-name=`hostname`
+echo "Checking for fully qualified hostname..."
+name=`hostname -f`
 accept_if_fully_qualified $name
 
 # Check for wget or curl
@@ -180,9 +187,9 @@ printf "found $perl\n"
 
 # Only root can run this
 id | grep "uid=0(" >/dev/null
-if [ $? != "0" ]; then
+if [ "$?" != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
-	if [ $? != "0" ]; then
+	if [ "$?" != "0" ]; then
 		echo "Fatal Error: The Virtualmin install script must be run as root"
 		threelines
 		exit 1
@@ -207,7 +214,8 @@ fi
 echo "Loading log4sh logging library..."
 if $download http://software.virtualmin.com/lib/log4sh
 then 
-	. ./log4sh
+	# source log4sh (disabling properties file warning)
+	LOG4SH_CONFIGURATION="none" . ./log4sh
 	continue
 else
 	echo "Could not load logging library from software.virtualmin.com.  Cannot continue."
@@ -221,7 +229,7 @@ logger_setlevel INFO
 logger_addAppender virtualmin
 appender_setAppenderType virtualmin FileAppender
 appender_setAppenderFile virtualmin virtualmin-install.log
-appender_setLevel virtualmin DEBUG
+appender_setLevel virtualmin ALL
 logger_info "Started installation log in virtualmin-install.log"
 
 # Detecting the OS
@@ -231,7 +239,9 @@ mkdir $tempdir/files
 srcdir=$tempdir/files
 cd $srcdir
 if $download http://software.virtualmin.com/lib/oschooser.pl
-then continue
+then 
+	success
+	continue
 else
 	logger_info "Could not load OS selection library from software.virtualmin.com.  Cannot continue."
 	exit 1
@@ -245,14 +255,14 @@ fi
 
 cd ..
 
-# Ask for operating system type
+# Get operating system type
 logger_info "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
       autoos=2
     fi
     $perl "$srcdir/oschooser.pl" "$srcdir/os_list.txt" $tempdir/$$.os $autoos
-    if [ $? != 0 ]; then
+    if [ "$?" != 0 ]; then
       exit $?
     fi
     . $tempdir/$$.os
@@ -401,7 +411,7 @@ install_with_yast () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
-	if [ $sources != "" ]; then
+	if [ "$sources" != "" ]; then
 		logger_info "Disabling existing y2pmsh sources."
 		y2pmsh source -d $sources
 	fi
@@ -450,6 +460,7 @@ install_virtualmin () {
 					install_with_yum
 					;;
 			esac
+			;;
 		deb)
 			install_with_apt
 			;;
@@ -470,7 +481,7 @@ case $os_type in
 	suse)
 		install_virtualmin_release
     install_deps_the_hard_way # Why doesn't yast resolve deps?!?!
-    install_with_yasta # Okey, it does in OpenSUSE, but we need it to work on 9.3
+    install_with_yast # Okey, it does in OpenSUSE, but we need it to work on 9.3
   	;;
 	*)
 		install_virtualmin_release # Must be run first to setup deps.
