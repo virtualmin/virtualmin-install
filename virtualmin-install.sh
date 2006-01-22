@@ -274,89 +274,92 @@ logger_info "Operating system version: $real_os_version"
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	logger_info "Downloading virtualmin-release package for $real_os_type $real_os_version..."
-	if [[ "$os_type" = "fedora" || "$os_type" = "rhel" ]]; then
-		logger_info "Disabling SELinux during installation..."
-		/usr/sbin/setenforce 0
-		package_type="rpm"
-		deps=$rhdeps
-		if [ -e /usr/bin/yum ]; then
-			continue
-		else
-			# Install yum, which makes installing and upgrading our packages easier
- 			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
-			then
-				logger_info "yum not found, installing yum from software.virtualmin.com..."
-				rpm -Uvh yum-latest.noarch.rpm
-  			continue
-  		else
-    		logger_info "Failed to download yum package for $os_type.  Cannot continue."
-    		exit
+  case $os_type in
+		fedora|rhel)
+			logger_info "Disabling SELinux during installation..."
+			/usr/sbin/setenforce 0
+			package_type="rpm"
+			deps=$rhdeps
+			if [ -e /usr/bin/yum ]; then
+				continue
+			else
+				# Install yum, which makes installing and upgrading our packages easier
+ 				if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
+				then
+					logger_info "yum not found, installing yum from software.virtualmin.com..."
+					rpm -Uvh yum-latest.noarch.rpm
+  				continue
+  			else
+    			logger_info "Failed to download yum package for $os_type.  Cannot continue."
+   	 			exit
+				fi
 			fi
-		fi
-		if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-		then
-			rpm -Uvh virtualmin-release-latest.noarch.rpm
-		else
-			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
-			exit
-		fi
-	elif [ "$os_type" = "suse" ]; then
-		# No release for suse.  Their RPM locks when we try to import keys...
-		package_type="rpm"
-		deps=$yastdeps
-		# SUSE uses i586 for x86 binary RPMs instead of i386
-		if [ "$arch" = "i386" ]
-		then cputype="i586"
-		else cputype="x86_64"
-		fi
-		if yast -i y2pmsh; then
-			continue
-		else
-			logger_info "Failed to install y2pmsh package.  Cannot continue."
-			exit 0
-		fi
-		if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
-			continue
-		else
-			fatal "Unable to add yast2 installation source."
-		fi
-		if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/universal; then
-			continue
-		else
-			fatal "Unable to add yast2 installation source."
-    fi
-	elif [ "$os_type" = "freebsd" ]; then
-		package_type="tar"
-		deps=$portsdeps
-		if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
-		then continue
-		else
-			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
-			exit 0
-			exit
-		fi
-	elif [ "$os_type" = "gentoo" ]; then
-		package_type="tar"
-  	deps=$portagedeps
- 		if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
-			return $?
-  	then continue
-  	else
-  		logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
-    	exit
-		fi
-	elif [ "$os_type" = "debian" ]; then
-		package_type="deb"
-		deps=$debdeps
-		if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest_$arch.deb
-		then 
-			dpkg -i virtualmin-release-latest_$arch.deb	
-		else
-			logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
-			exit
-		fi
-	fi
-  return $?
+			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+			then
+				rpm -Uvh virtualmin-release-latest.noarch.rpm
+			else
+				logger_info "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+				exit
+			fi
+		;;
+		suse)
+			# No release for suse.  Their RPM locks when we try to import keys...
+			package_type="rpm"
+			deps=$yastdeps
+			# SUSE uses i586 for x86 binary RPMs instead of i386
+			if [ "$arch" = "i386" ]
+			then cputype="i586"
+			else cputype="x86_64"
+			fi
+			if yast -i y2pmsh; then
+				continue
+			else
+				logger_info "Failed to install y2pmsh package.  Cannot continue."
+				exit 0
+			fi
+			if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
+				continue
+			else
+				fatal "Unable to add yast2 installation source."
+			fi
+			if y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/universal; then
+				continue
+			else
+				fatal "Unable to add yast2 installation source."
+    	fi
+		;;
+		freebsd)
+			package_type="tar"
+			deps=$portsdeps
+			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
+			then continue
+			else
+				fatal "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			fi
+		;;
+		gentoo)
+			package_type="tar"
+  		deps=$portagedeps
+ 			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
+				return $?
+  		then continue
+  		else
+  		fatal "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			fi
+		debian)
+			package_type="deb"
+			deps=$debdeps
+			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest_$arch.deb
+			then 
+				dpkg -i virtualmin-release-latest_$arch.deb	
+			else
+				fatal "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+			fi
+		;;
+		*)
+			fatal "Your OS/version does not seem to be supported at this time."
+		;;
+	esac
 }
 
 # Choose apt-get, y2pmsh, yum, or up2date to install the deps
@@ -472,21 +475,26 @@ install_virtualmin () {
 }
 
 # We may have to use $install to pre-install all deps.
+install_virtualmin_release
+install_deps_the_hard_way
 case $os_type in
 	fedora)
-		install_virtualmin_release # We need some data from this later
-    install_deps_the_hard_way # Argh...virtualmin-base is broken...
     install_with_yum # Everyting is simple with yum...
   	;;
 	suse)
-		install_virtualmin_release
-    install_deps_the_hard_way # Why doesn't yast resolve deps?!?!
-    install_with_yast # Okey, it does in OpenSUSE, but we need it to work on 9.3
+    install_with_yast
   	;;
+	debian)
+		install_with_apt
+		;;
+	mandrake)
+		install_with_urpmi
+		;;
+	gentoo)
+		install_with_emerge
+		;;
 	*)
-		install_virtualmin_release # Must be run first to setup deps.
-    install_deps_the_hard_way # Everything is pear-shaped without yum...
-    install_virtualmin # Install the virtualmin packages and configure them.
+    install_virtualmin
 		;;
 esac
 
