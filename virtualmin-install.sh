@@ -28,6 +28,8 @@ deps=
 rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn"
 # SUSE systems (SUSE and OpenSUSE)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl proftpd"
+# Mandrake/Mandriva
+urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils cyrus-sasl"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl proftpd proftpd-common proftpd-doc proftpd-ldap proftpd-mysql proftpd-pgsql"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
