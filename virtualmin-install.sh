@@ -20,7 +20,7 @@ export LANG
 
 SERIAL=ZZZZZZZZ
 KEY=sdfru8eu38jjdf
-VER=EA2a
+VER=EA2b
 arch=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
 deps=
@@ -225,7 +225,10 @@ then
 	LOG4SH_CONFIGURATION="none" . ./log4sh
 	continue
 else
-	echo "Could not load logging library from software.virtualmin.com.  Cannot continue."
+	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
+	echo " We're not just stopping because we don't have a logging library--this probably"
+	echo " indicates much larger problems that will prevent successful installation anyway."
+	echo " Check network connectivity, name resolution and disk space and try again."
 	exit 1
 fi
 
@@ -240,6 +243,10 @@ appender_setLevel virtualmin ALL
 appender_setLayout virtualmin PatternLayout
 
 logger_info "Started installation log in virtualmin-install.log"
+
+# Print out some details that we gather before logging existed
+logger_debug "Install mode: $mode"
+logger_debug "Virtualmin Meta-Packages list: $virtualminmeta"
 
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
@@ -400,10 +407,7 @@ install_with_yum () {
 	if yum -y install $virtualminmeta; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
-		logger_info "Installation failed: $?"
-		logger_info "Removing virtualmin-release package, so that installation can be re-attempted"
-		logger_info "after any problems reported are resolved."
-		return $?
+		fatal "Installation failed: $?"
 	fi
 
 	logger_info "Updating all packages to the latest versions now using the command:"
@@ -435,13 +439,10 @@ install_with_yast () {
 		logger_debug "$install returned: $?"
 		return 0
 	else
-		logger_info "Installation failed: $?"
-		logger_info "Removing virtualmin-release package, so that installation can be re-attempted"
-		logger_info "after any problems reported are resolved."
-		return $?
+		fatal "Installation failed: $?"
 	fi
 	if [ "$sources" != "" ]; then
-		logger_info "Re-enabling any existing sources."
+		logger_info "Re-enabling any pre-existing sources."
 		y2pmsh source -e $sources
 	fi
 }
@@ -487,7 +488,10 @@ install_virtualmin () {
 
 # We may have to use $install to pre-install all deps.
 install_virtualmin_release
-install_deps_the_hard_way
+if [ "$mode" = "full" ]; then
+	install_deps_the_hard_way
+fi
+
 case $os_type in
 	fedora)
     install_with_yum # Everyting is simple with yum...
@@ -524,10 +528,14 @@ fix_mailman_config () {
 if [ "$os_type" = "rhel" ]; then
   case $os_version in
   3*)
-    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux /etc/webmin/virtualmin-mailman/config
+		if [ -e "/usr/libexec/webmin/virtualmin-mailman/config-redhat-linux" ]; then
+    	cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux /etc/webmin/virtualmin-mailman/config
+		fi
     ;;
   4*)
-    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\* /etc/webmin/virtualmin-mailman/config
+		if [ -e "/usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\*" ]; then
+	    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\* /etc/webmin/virtualmin-mailman/config
+		fi
 		;;
 	esac
 fi
