@@ -18,14 +18,14 @@
 LANG=
 export LANG
 
-SERIAL=ZZZZZZZZ
+SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA2b
 arch=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
 deps=
 # Red Hat-based systems 
-rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi"
+rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_fastcgi"
 # SUSE systems (SUSE and OpenSUSE)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # Mandrake/Mandriva
@@ -201,6 +201,7 @@ fi
 # Insert the serial number and password into /etc/virtualmin-license
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
 echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
+chmod 700 /etc/virtualmin-license
 
 # Find temp directory
 if [ "$tempdir" = "" ]; then
@@ -402,7 +403,7 @@ fi
 install_with_yum () {
 	threelines
 	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "$install $virtualminmeta"
+	logger_info "yum -y $virtualminmeta"
 
 	if yum -y install $virtualminmeta; then
 		logger_info "Installation of $virtualminmeta completed."
@@ -545,7 +546,7 @@ fi
 case $os_type in
   "fedora" | "centos" | "rhel"  )
 		disable_selinux
-		fix_mailman_config
+#		fix_mailman_config
 		;;
 esac
 
