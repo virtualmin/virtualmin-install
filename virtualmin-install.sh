@@ -354,9 +354,11 @@ install_virtualmin_release () {
 			if urpmi.addmedia virtualmin-universal http://$SERIAL:$KEY@software.virtualmin.com/universal; then
 				continue
 			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
+			fi
 			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$oos_version/$cputype/; then
 				continue
       else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
+			fi
 		;;
 		freebsd)
 			package_type="tar"
