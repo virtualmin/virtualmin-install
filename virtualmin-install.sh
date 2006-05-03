@@ -342,6 +342,22 @@ install_virtualmin_release () {
 				fatal "Unable to add yast2 installation source."
     	fi
 		;;
+		mandriva)
+			# No release for mandriva either...
+			package_type="rpm"
+			deps=$urpmideps
+			# Mandriva uses i586 for x86 binary RPMs instead of i386
+			if [ "$arch" = "i386" ]
+      then cputype="i586"
+      else cputype="x86_64"
+      fi
+			if urpmi.addmedia virtualmin-universal http://$SERIAL:$KEY@software.virtualmin.com/universal; then
+				continue
+			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
+			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$oos_version/$cputype/; then
+				continue
+      else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
+		;;
 		freebsd)
 			package_type="tar"
 			deps=$portsdeps
@@ -448,6 +464,20 @@ install_with_yast () {
 	fi
 }
 
+install_with_urpmi () {
+	threelines
+	logger_info "Installing Virtualmin and all related packages now using the command:"
+	logger_info "urpmi $virtualminmeta"
+
+	if urpmi $virtualminmeta; then
+		logger_info "Installation of $virtualminmeta completed."
+	else
+		fatal "Installation failed: $?"
+	fi
+
+	return 0
+}
+
 install_deps_the_hard_way () {
 	logger_info "Installing dependencies using command: $install $deps"
 	if $install $deps
@@ -503,7 +533,7 @@ case $os_type in
 	debian)
 		install_with_apt
 		;;
-	mandrake)
+	mandriva)
 		install_with_urpmi
 		;;
 	gentoo)
@@ -524,29 +554,10 @@ disable_selinux () {
 	done
 }
 
-fix_mailman_config () {
-# Fix RHEL/CentOS Mailman config
-if [ "$os_type" = "rhel" ]; then
-  case $os_version in
-  3*)
-		if [ -e "/usr/libexec/webmin/virtualmin-mailman/config-redhat-linux" ]; then
-    	cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux /etc/webmin/virtualmin-mailman/config
-		fi
-    ;;
-  4*)
-		if [ -e "/usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\*" ]; then
-	    cp /usr/libexec/webmin/virtualmin-mailman/config-redhat-linux-11.0-\* /etc/webmin/virtualmin-mailman/config
-		fi
-		;;
-	esac
-fi
-}
-
 # Changes that are specific to OS
 case $os_type in
   "fedora" | "centos" | "rhel"  )
 		disable_selinux
-#		fix_mailman_config
 		;;
 esac
 
