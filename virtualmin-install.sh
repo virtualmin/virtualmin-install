@@ -350,8 +350,8 @@ install_virtualmin_release () {
 			# No release for mandriva either...
 			package_type="rpm"
 			deps=$urpmideps
-			# Mandriva uses i586 for x86 binary RPMs instead of i386
-			if [ "$arch" = "i386" ]
+			# Mandriva uses i586 for x86 binary RPMs instead of i386--uname is also utterly broken
+			if [ "$arch" = "i386" || "$arch" = "unknown" ]
       then cputype="i586"
       else cputype="x86_64"
       fi
@@ -359,7 +359,7 @@ install_virtualmin_release () {
 				continue
 			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
 			fi
-			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$oos_version/$cputype/; then
+			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
 				continue
       else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
 			fi
