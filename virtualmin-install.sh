@@ -22,14 +22,14 @@ SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA2b
 arch=`uname -i`
-vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola*"
+vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
 rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_fastcgi"
 # SUSE systems (SUSE and OpenSUSE)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # Mandrake/Mandriva
-urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby"
+urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot"
 # Debian-based systems (Ubuntu and Debian)
 debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl proftpd proftpd-common proftpd-doc proftpd-ldap proftpd-mysql proftpd-pgsql"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
@@ -81,6 +81,7 @@ remove_virtualmin_release () {
 		"mandriva" )
 			urpmi.removemedia virtualmin
 			urpmi.removemedia virtualmin-universal
+			rpm -e virtualmin-release
       ;;
 	esac
 }
@@ -351,7 +352,7 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$urpmideps
 			# Mandriva uses i586 for x86 binary RPMs instead of i386--uname is also utterly broken
-			if [ "$arch" = "i386" || "$arch" = "unknown" ]
+			if [[ "$arch" = "i386" || "$arch" = "unknown" ]]
       then cputype="i586"
       else cputype="x86_64"
       fi
@@ -363,6 +364,17 @@ install_virtualmin_release () {
 				continue
       else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
 			fi
+			# Install some keys
+			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm
+      then
+        res=`rpm -Uvh virtualmin-release-latest.noarch.rpm`
+        logger_debug $res
+				rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-webmin
+				rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
+        success
+      else
+        fatal "Failed to download virtualmin-release package for $os_type.  Cannot continue."
+      fi
 		;;
 		freebsd)
 			package_type="tar"
