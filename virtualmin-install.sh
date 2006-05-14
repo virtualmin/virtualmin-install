@@ -20,7 +20,7 @@ export LANG
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA2b
+VER=EA2d
 arch=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
