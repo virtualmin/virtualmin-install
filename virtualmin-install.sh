@@ -21,11 +21,11 @@ export LANG
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA2e
-arch=`uname -i`
+ARCH=`UNAme -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_fastcgi mod_ssl"
+rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_fastcgi mod_ssl"
 # SUSE systems (SUSE and OpenSUSE)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # Mandrake/Mandriva
@@ -164,7 +164,10 @@ fi
 
 # Check for a fully qualified hostname
 echo "Checking for fully qualified hostname..."
-name=`hostname -f`
+# XXXhostname -f is broken on ubuntu, wing it with sysctl direct kernel check
+# XXXwill have to change again for Solaris and FreeBSD
+name=`sysctl kernel.hostname | awk '{print $3}'`
+#name=`hostname -f`
 accept_if_fully_qualified $name
 
 # Check for wget or curl
@@ -276,7 +279,7 @@ cd ..
 logger_info "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
-      autoos=2
+      autoos=1
     fi
     $perl "$srcdir/oschooser.pl" "$srcdir/os_list.txt" $tempdir/$$.os $autoos
     if [ "$?" != 0 ]; then
@@ -424,6 +427,7 @@ elif [ "$os_type" = "mandriva" ]; then
 	install="/usr/sbin/urpmi"
 elif [ "$os_type" = "debian" ]; then
 	install="/usr/bin/apt-get -y install"
+	# XXX Make sure universe is available, and all CD access are disabled
 elif [ "$os_type" = "gentoo" ]; then
 	install="/usr/bin/emerge"
 else
