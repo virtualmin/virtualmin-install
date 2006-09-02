@@ -63,7 +63,7 @@ fatal () {
 	echo
 	logger_fatal "Fatal Error Occurred: $1"
 	logger_fatal "Cannot continue installation."
-	logger_fatal "Attempting to remove virtualmin-release, so the installation can be "
+	logger_fatal "Attempting to remove virtualmin repository configuration, so the installation can be "
 	logger_fatal "re-attempted after any problems have been resolved."
 	remove_virtualmin_release
 	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
@@ -83,6 +83,8 @@ remove_virtualmin_release () {
 			urpmi.removemedia virtualmin-universal
 			rpm -e virtualmin-release
       ;;
+		"debian" )
+			;;
 	esac
 }
 
@@ -113,22 +115,69 @@ cat <<EOF
 *   Welcome to the Virtualmin Professional installer, version $VER    *
 ***********************************************************************
 
- WARNING: This is an Early Adopter release.  It may not be wholly 
- compatible with future releases of the installer.  We don't expect
- major problems, but be prepared for some occasional discomfort on
- upgrades for a few weeks.  Be sure to let us know when problems arise
- by creating issues in the bugtracker at Virtualmin.com.
+ WARNING: This is an Early Adopter release.
 
+ The installation is quite stable and functional when run on a freshly
+ installed supported Operating System, but upgrades from Virtualmin GPL
+ systems, or systems that already have Apache VirtualHost directives or
+ mail users, will very likely run into numerous problems.  Please read
+ the Virtualmin and Early Adopter FAQs before proceeding if your system
+ is not a freshly installed and supported OS.
 
- The installer in its current form cannot safely perform an upgrade 
- of an existing Virtualmin GPL system.  An upgradeable installer will
- be available in a couple of days.
+ The systems currently supported by our install.sh are:
 
+ Fedora Core 3-5 on i386 and x86_64
+ CentOS and RHEL 3 and 4 on i386 and x86_64
+ SUSE 9.3 and OpenSUSE 10.0 on i386
+ Mandriva 10.2 (also known as 2006.0 and 2006.1) on i386
+
+ If your OS is not listed above, this script will fail (and attempting
+ to run it on an unsupported OS is not recommended, or...supported).
+ 
 EOF
 printf " Continue? (y/n) "
 if yesno
 then continue
 else exit
+fi
+threelines
+if [ -x /usr/libexec/webmin/virtual-server ]; then
+  oldmodule="/usr/libexec/webmin/virtual-server"
+else if [ -x /usr/share/webmin/virtual-server ]; then
+  oldmodule="/usr/share/webmin/virtual-server"
+fi
+if [ $oldmodule ]; then
+cat <<EOF
+ It appears you already have some version of the Virtualmin virtual-server
+ module installed.  The package that will be installed during the Virtualmin
+ Professional installation won't overwrite an existing installation, and so
+ installation will fail if it the old module remains in place.
+
+ I can move your old installation of the Virtualmin module out of the way,
+ which will allow the new Virtualmin to be installed.  This process will not
+ delete your existing Virtualmin domains, if any.  It usually also allows
+ for a reasonably clean upgrade from Virtualmin GPL to Virtualmin Professional.
+
+ However, if you did not backup your server immediately before you began this
+ installation, I strongly recommend you exit now (enter "n") and do so.  There
+ are many things that can go wrong during an upgrade, and while we won't be 
+ doing very many things that aren't easily reverted, there is still potential
+ for data loss.
+
+ Is it OK for me to move your current installation out of the way, so that
+ installation can proceed?
+
+EOF
+printf " Move existing Virtualmin module and proceed with installation? (y/n) "
+if yesno
+then
+	mkdir /root/virtualmin-install-backup-files
+  mv $oldmodule /root/virtualmin-install-backup-files
+else
+  echo " Installation interrupted.  If you have any questions about upgrading,"
+  echo " please file an issue in the Customer Issues tracker or post in the "
+  echo " support forums at Virtualmin.com."
+  exit
 fi
 threelines
 get_mode () {
