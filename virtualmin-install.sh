@@ -498,16 +498,22 @@ install_with_yum () {
 		fatal "Installation failed: $?"
 	fi
 
-	logger_info "Updating all packages to the latest versions now using the command:"
-	logger_info "yum -y update"
-	if yum -y update; then
-		logger_info "Update completed successfully."
-		logger_debug "yum returned: $?"
-	else
-		logger_info "Update failed: $?"
-		logger_info "This probably isn't directly harmful, but correcting the problem is recommended."
-		logger_info "It is likely that yum is misconfigured or network access is unavailable."
-	fi
+# Removed because CentOS/RHEL/Fedora all have buggy kernels now that won't bloody boot on 
+# some systems.
+#	logger_info "Updating all packages to the latest versions now using the command:"
+#	logger_info "yum -y update"
+#	if yum -y update; then
+#		logger_info "Update completed successfully."
+#		logger_debug "yum returned: $?"
+#	else
+#		logger_info "Update failed: $?"
+#		logger_info "This probably isn't directly harmful, but correcting the problem is recommended."
+#		logger_info "It is likely that yum is misconfigured or network access is unavailable."
+#	fi
+  logger_info "If you are not regularly updating your system nightly using yum or up2date"
+  logger_info "we strongly recommend you update now, using the following commands:"
+  logger_info "Fedora/CentOS: yum update"
+  logger_info "RHEL: up2date -u; yum update"
 	return 0
 }
 
@@ -521,11 +527,9 @@ install_with_yast () {
 		y2pmsh source -d $sources
 	fi
 
-#	if y2pmsh install $virtualminmeta; then
 	if $install $virtualminmeta; then
 		logger_info "Installation completed."
 		logger_debug "$install returned: $?"
-		return 0
 	else
 		fatal "Installation failed: $?"
 	fi
@@ -533,6 +537,10 @@ install_with_yast () {
 		logger_info "Re-enabling any pre-existing sources."
 		y2pmsh source -e $sources
 	fi
+
+  logger_info "If you are not regularly updating your system nightly using yum or up2date"
+  logger_info "we strongly recommend you update now, using yast."
+	return 0
 }
 
 install_with_urpmi () {
@@ -546,6 +554,10 @@ install_with_urpmi () {
 		fatal "Installation failed: $?"
 	fi
 
+  logger_info "If you are not regularly updating your system nightly using yum or up2date"
+  logger_info "we strongly recommend you update now, using the following commands:"
+  logger_info "urpmi.update -a"
+  logger_info "urpmi --auto-select"
 	return 0
 }
 
