@@ -18,6 +18,21 @@
 LANG=
 export LANG
 
+case $1 in
+  --help|-h)
+    echo "Usage: `basename $0` [--uninstall|-u|--help|-h]"
+    echo "If called without arguments, installs Virtualmin Professional."
+    echo "--uninstall|-u: Removes all Virtualmin packages (do not use on production systems"
+    echo "--help|-h: This message"
+    ;;
+  --uninstall|-u)
+    mode="uninstall"
+    ;;
+  *)
+    continue
+    ;;
+esac
+
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA2g
@@ -147,8 +162,36 @@ success () {
 	logger_info "Succeeded."
 }
 
-# == End of functions ==
+uninstall () {
+  # This function performs a rudimentary uninstallation of Virtualmin Professional
+  # It is neither complete, nor correct, but it almost certainly won't break
+  # anything.  It is primarily useful for cleaning up a botched install, so you
+  # can run the installer again.
+  
+  # This is a crummy way to detect package manager...but going through half the installer
+  # just to get here is even crummier.
+  if [ `which rpm` ]; then package_type=rpm
+  elif [ `which dpkg` ]; then package_type=deb
+  fi
 
+  case $package_type in
+    rpm)
+      rpm -e --nodeps virtualmin-base
+      rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn
+      rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme
+      rpm -e --nodeps webmin usermin awstats
+    ;;
+    deb)
+      dpkg --remove virtualmin-base
+      dpkg --remove wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn
+      dpkg --remove wbt-virtual-server-theme ust-virtual-server-theme
+      dpkg --remove webmin usermin awstats
+    ;;
+    *)
+      echo "I don't know how to uninstall on this operating system."
+
+  remove_virtualmin_release
+esac
 
 cat <<EOF
 ***********************************************************************
@@ -242,7 +285,12 @@ echo "Installation type: $mode"
 sleep 3
 threelines
 }
-mode="full"
+
+# If we didn't set the mode to uninstall at the start, set it now
+if [ $mode = "uninstall" ]; then uninstall
+else mode="full"
+fi
+
 virtualminmeta="virtualmin-base"
 #get_mode
 # If minimal, we don't install any extra packages, or perform any configuration
@@ -331,7 +379,7 @@ logger_info "Started installation log in virtualmin-install.log"
 
 # Print out some details that we gather before logging existed
 logger_debug "Install mode: $mode"
-logger_debug "Virtualmin Meta-Packages list: $virtualminmeta"
+logger_debug "Virtualmin Meta-Package list: $virtualminmeta"
 
 # Check for a fully qualified hostname
 logger_info "Checking for fully qualified hostname..."
