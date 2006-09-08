@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005 Virtualmin, Inc.
+# Copyright 2005-2006 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -11,7 +11,7 @@
 # will not work.  Don't even bother trying it.  Trust me.
 
 # Currently supported systems:
-# Fedora Core 3 and 4 on i386 and x86_64
+# Fedora Core 3, 4 and 5 on i386 and x86_64
 # CentOS and RHEL 3 and 4 on i486 and x86_64
 # SuSE 9.3 and OpenSUSE 10.0 on i586
 
@@ -20,8 +20,8 @@ export LANG
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA2e
-ARCH=`UNAme -i`
+VER=EA2g
+ARCH=`uname -i`
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
@@ -39,9 +39,7 @@ portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota open
 
 # == Some simple functions ==
 threelines () {
-	echo
-	echo
-	echo
+	echo; echo; echo
 }
 
 yesno () {
@@ -88,19 +86,61 @@ remove_virtualmin_release () {
 	esac
 }
 
-accept_if_fully_qualified () {
-	case $1 in
-	localhost.localdomain)
-		echo "Hostname cannot be localhost.localdomain.  Installation cannot continue."
-		exit 1
-		;;
-	*.*)
-		echo "Hostname OK: fully qualified as $1"
-		return 0
-		;;
-	esac
-	echo "Hostname $name is not fully qualified.  Installation cannot continue."
-	exit 1
+detect_ip() {
+  primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+  if [ $primaryaddr ]; then
+    logger_info "Primary address detected as $primaryaddr"
+    return $primaryaddr
+  else
+    logger_info "Unable to determine IP address of primary interface."
+    echo "Please enter the name of your primary network interface: "
+    read primaryinterface
+    primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+    if [ $primaryaddr ]; then
+      logger_info "Primary address detected as $primaryaddr"
+      return $primaryaddr
+    else
+      logger_info "Unable to determine IP address of selected interface.  Cannot continue."
+      exit 1
+    fi
+}
+
+set_hostname () {
+  i=0
+  while [ $i -eq 0 ]; do
+    printf "Please enter a fully qualified hostname (for example, virtualmin.com): "
+    read line
+    if [ ! is_fully_qualified($line) ]; then
+      logger_info "Hostname $line is not fully qualified."
+    else
+      hostname $line
+      address=detect_ip
+      if [ `grep $address /etc/hosts` ]; then
+        logger_info "Entry for IP $address exists in /etc/hosts.  Updating with new hostname."
+        shortname=`echo $line | cut -d"." -f1`
+        sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
+      else
+        logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
+        echo "$address\t$line\t$shortname" >> /etc/hosts
+      fi
+      i=1
+    fi
+  done
+}
+  
+is_fully_qualified () {
+  case $1 in
+  localhost.localdomain)
+    logger_info "Hostname cannot be localhost.localdomain."
+    return 1
+  ;;
+  *.*)
+    logger_info "Hostname OK: fully qualified as $1"
+    return 0
+  ;;
+  esac
+  logger_info "Hostname $name is not fully qualified."
+  return 1
 }
 
 success () {
@@ -138,7 +178,7 @@ EOF
 printf " Continue? (y/n) "
 if yesno
 then continue
-else exit
+else exit 0
 fi
 threelines
 if [ -x /usr/libexec/webmin/virtual-server ]; then
@@ -151,7 +191,7 @@ cat <<EOF
  It appears you already have some version of the Virtualmin virtual-server
  module installed.  The package that will be installed during the Virtualmin
  Professional installation won't overwrite an existing installation, and so
- installation will fail if it the old module remains in place.
+ installation will fail if the old module remains in place.
 
  I can move your old installation of the Virtualmin module out of the way,
  which will allow the new Virtualmin to be installed.  This process will not
@@ -164,8 +204,8 @@ cat <<EOF
  doing very many things that aren't easily reverted, there is still potential
  for data loss.
 
- Is it OK for me to move your current installation out of the way, so that
- installation can proceed?
+ If it is OK for me to move your current installation out of the way, so that
+ installation can proceed, enter "y" here.
 
 EOF
 printf " Move existing Virtualmin module and proceed with installation? (y/n) "
@@ -211,14 +251,6 @@ if [ "$mode" = "minimal" ]; then
 	virtualminmeta=$vmpackages
 fi
 
-# Check for a fully qualified hostname
-echo "Checking for fully qualified hostname..."
-# XXXhostname -f is broken on ubuntu, wing it with sysctl direct kernel check
-# XXXwill have to change again for Solaris and FreeBSD
-name=`sysctl kernel.hostname | awk '{print $3}'`
-#name=`hostname -f`
-accept_if_fully_qualified $name
-
 # Check for wget or curl
 printf "Checking for curl or wget..."
 if [ -x "/usr/bin/curl" ]; then
@@ -254,11 +286,6 @@ if [ "$?" != "0" ]; then
 		exit 1
 	fi
 fi
-
-# Insert the serial number and password into /etc/virtualmin-license
-echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
-echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
-chmod 700 /etc/virtualmin-license
 
 # Find temp directory
 if [ "$tempdir" = "" ]; then
@@ -306,6 +333,18 @@ logger_info "Started installation log in virtualmin-install.log"
 logger_debug "Install mode: $mode"
 logger_debug "Virtualmin Meta-Packages list: $virtualminmeta"
 
+# Check for a fully qualified hostname
+logger_info "Checking for fully qualified hostname..."
+name=`hostname -f`
+if [ is_fully_qualified $name ]; then continue
+else set_hostname
+
+# Insert the serial number and password into /etc/virtualmin-license
+logger_info "Installing serial number and license key into /etc/virtualmin-license"
+echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
+echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
+chmod 700 /etc/virtualmin-license
+
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
 logger_info "Loading OS selection library..."
@@ -346,20 +385,29 @@ install_virtualmin_release () {
 	logger_info "Installing virtualmin-release package for $real_os_type $real_os_version..."
   case $os_type in
 		fedora|rhel)
-			logger_info "Disabling SELinux during installation..."
-			res=`/usr/sbin/setenforce 0`
-			logger_debug "setenforce 0 returned $res"
+      if [ -x /usr/sbin/setenforce ]; then
+			  logger_info "Disabling SELinux during installation..."
+			  if [ `/usr/sbin/setenforce 0` ]; then logger_debug " setenforce 0 succeeded"
+        else logger_info "  setenforce 0 failed: $?"
+        fi
+      fi
 			package_type="rpm"
 			deps=$rhdeps
 			if [ -e /usr/bin/yum ]; then
+        # We have yum, so we'll assume we're able to install all deps with it
+				install="/usr/bin/yum -y install"
 				continue
 			else
+        # Red Hat doesn't have yum for OS updates, so we'll get those with up2date
+				install="/usr/bin/up2date --nox"
+				rpm --import /usr/share/rhn/RPM-GPG-KEY
 				# Install yum, which makes installing and upgrading our packages easier
  				if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
 				then
 					logger_info "yum not found, installing yum from software.virtualmin.com..."
-					res=`rpm -Uvh yum-latest.noarch.rpm`
-					logger_debug $res
+					if [ `rpm -U yum-latest.noarch.rpm` ]; then sucess
+          else fatal "Installation of yum failed: $?"
+          fi
   				continue
   			else
     			fatal "Failed to download yum package for $os_type.  Cannot continue."
@@ -367,9 +415,9 @@ install_virtualmin_release () {
 			fi
 			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
 			then
-				res=`rpm -Uvh virtualmin-release-latest.noarch.rpm`
-				logger_debug $res
-				success
+				if [ `rpm -U virtualmin-release-latest.noarch.rpm` ]; then sucess
+				else fatal "Installation of virtualmin-release failed: $?"
+        fi 
 			else
 				fatal "Failed to download virtualmin-release package for $os_type.  Cannot continue."
 			fi
@@ -378,6 +426,7 @@ install_virtualmin_release () {
 			# No release for suse.  Their RPM locks when we try to import keys...
 			package_type="rpm"
 			deps=$yastdeps
+      install="/sbin/yast -i"
 			# SUSE uses i586 for x86 binary RPMs instead of i386
 			if [ "$arch" = "i386" ]
 			then cputype="i586"
@@ -403,6 +452,10 @@ install_virtualmin_release () {
 			# No release for mandriva either...
 			package_type="rpm"
 			deps=$urpmideps
+      install="/usr/sbin/urpmi"
+      if urpmi.update -a; then
+        continue
+      else fatal "urpmi.update failed with $?.  This installation script requires a functional urpmi"
 			# Mandriva uses i586 for x86 binary RPMs instead of i386--uname is also utterly broken
 			if [[ "$arch" = "i386" || "$arch" = "unknown" ]]
       then cputype="i586"
@@ -419,9 +472,10 @@ install_virtualmin_release () {
 			# Install some keys
 			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm
       then
-        res=`rpm -Uvh virtualmin-release-latest.noarch.rpm`
-        logger_debug $res
-				rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-webmin
+        if [ `rpm -Uvh virtualmin-release-latest.noarch.rpm` ]; then success
+        else fatal "Failed to install virtualmin-release package."
+        fi
+			  rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-webmin
 				rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
         success
       else
@@ -438,8 +492,9 @@ install_virtualmin_release () {
 			fi
 		;;
 		gentoo)
-			package_type="tar"
+			package_type="ebuild"
   		deps=$portagedeps
+	    install="/usr/bin/emerge"
  			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
 				return $?
   		then continue
@@ -450,8 +505,10 @@ install_virtualmin_release () {
 		debian)
 			package_type="deb"
 			deps=$debdeps
-			if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest_$arch.deb
-			then 
+	    install="/usr/bin/apt-get -y install"
+	    # XXX Make sure universe is available, and all CD repos are disabled
+      if $download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest_$arch.deb
+      then 
 				res=`dpkg -i virtualmin-release-latest_$arch.deb`
 				logger_debug "dpkg returned: $?"
 			else
@@ -459,32 +516,13 @@ install_virtualmin_release () {
 			fi
 		;;
 		*)
-			fatal "Your OS/version does not seem to be supported at this time."
+	    logger_info "Your OS is not currently supported by this installer.  Please contact us at"
+	    logger_info "support@virtualmin.com to let us know what OS you'd like to install Virtualmin"
+	    logger_info "Professional on, and we'll try to help."
+      exit 1
 		;;
 	esac
 }
-
-# Choose apt-get, y2pmsh, yum, or up2date to install the deps
-if [ "$os_type" = "fedora" ]; then
-	install="/usr/bin/yum -y install"
-elif [ "$os_type" = "rhel" ]; then
-	install="/usr/bin/up2date --nox"
-	rpm --import /usr/share/rhn/RPM-GPG-KEY
-elif [ "$os_type" = "suse" ]; then
-	install="/sbin/yast -i"
-elif [ "$os_type" = "mandriva" ]; then
-	install="/usr/sbin/urpmi"
-elif [ "$os_type" = "debian" ]; then
-	install="/usr/bin/apt-get -y install"
-	# XXX Make sure universe is available, and all CD access are disabled
-elif [ "$os_type" = "gentoo" ]; then
-	install="/usr/bin/emerge"
-else
-	logger_info "Your OS is not currently supported by this installer.  Please contact us at"
-	logger_info "support@virtualmin.com to let us know what OS you'd like to install Virtualmin"
-	logger_info "Professional on, and we'll try to help."
-	exit
-fi
 
 # Functions
 install_with_yum () {
@@ -498,18 +536,6 @@ install_with_yum () {
 		fatal "Installation failed: $?"
 	fi
 
-# Removed because CentOS/RHEL/Fedora all have buggy kernels now that won't bloody boot on 
-# some systems.
-#	logger_info "Updating all packages to the latest versions now using the command:"
-#	logger_info "yum -y update"
-#	if yum -y update; then
-#		logger_info "Update completed successfully."
-#		logger_debug "yum returned: $?"
-#	else
-#		logger_info "Update failed: $?"
-#		logger_info "This probably isn't directly harmful, but correcting the problem is recommended."
-#		logger_info "It is likely that yum is misconfigured or network access is unavailable."
-#	fi
   logger_info "If you are not regularly updating your system nightly using yum or up2date"
   logger_info "we strongly recommend you update now, using the following commands:"
   logger_info "Fedora/CentOS: yum update"
@@ -572,10 +598,6 @@ install_deps_the_hard_way () {
 }
 
 install_virtualmin () {
-# Install with yum or from tarball
-# Install virtualmin-release so we know where to find our packages and 
-# how to install them
-	logger_info "Package Type = $package_type"
 	case $package_type in
 		rpm)
 			case $os_type in
@@ -593,6 +615,9 @@ install_virtualmin () {
 		deb)
 			install_with_apt
 			;;
+    ebuild)
+      install_with_emerge
+      ;;
 		*)
 			install_with_tar
 			;;
@@ -606,26 +631,7 @@ if [ "$mode" = "full" ]; then
 	install_deps_the_hard_way
 fi
 
-case $os_type in
-	fedora)
-    install_with_yum # Everyting is simple with yum...
-  	;;
-	suse)
-    install_with_yast
-  	;;
-	debian)
-		install_with_apt
-		;;
-	mandriva)
-		install_with_urpmi
-		;;
-	gentoo)
-		install_with_emerge
-		;;
-	*)
-    install_virtualmin
-		;;
-esac
+install_virtualmin
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
