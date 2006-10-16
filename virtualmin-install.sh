@@ -50,8 +50,9 @@ yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail pe
 rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot"
-# Debian-based systems (Ubuntu and Debian)
-debdeps="postfix postfix-tls bind9 spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl proftpd proftpd-common proftpd-doc proftpd-ldap proftpd-mysql proftpd-pgsql"
+# Debian-based systems (Ubuntu and Debian) -- XXX Not needed.  task-virtualmin-base
+# can do it all.
+debdeps="postfix postfix-tls bind spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl proftpd proftpd-common proftpd-doc proftpd-ldap proftpd-mysql proftpd-pgsql"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
 portsdeps="postfix bind9 p5-Mail-SpamAssassin procmail perl p5-Class-DBI-Pg p5-Class-DBI-mysql setquota openssl python mailman subversion ruby irb rdoc ri mysql-client mysql-server postgresql-client postgresql-server postgresql-contrib logrotate awstats webalizer php4 clamav dovecot cyrus-sasl"
 # Gentoo
@@ -108,6 +109,8 @@ remove_virtualmin_release () {
 			rpm -e virtualmin-release
       ;;
 		"debian" )
+      grep -v "virtualmin" /etc/apt/sources.list > /tmp/sources.list
+      mv /tmp/sources.list /etc/apt/sources.list 
 			;;
 	esac
 }
@@ -579,9 +582,13 @@ install_virtualmin_release () {
 	    install="DEBIAN_FRONTEND=noninteractive DEBCONF_ADMIN_EMAIL="" /usr/bin/apt-get --config-file apt.conf.noninteractive -y install"
       # Get the noninteractive apt-get configuration file (this is stupid... -y
       # ought to do all of this).
-      download http://$SERIAL:$KEY@software.virtualmin.com/lib/apt.conf.noninteractive
-	    # XXX Make sure universe is available, and all CD repos are disabled
-      download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest_$arch.deb
+      download http://software.virtualmin.com/lib/apt.conf.noninteractive
+	    # Make sure universe is available, and all CD repos are disabled
+      logger_info "Disabling any CD-based apt repositories because this install needs to be noninteractive..."
+      sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
+      echo "deb http://$SERIAL:$KEY@software.virtualmin.com/debian/ stable main" >> /etc/apt/sources.list
+      logger_info "Removing Debian standard Webmin packages, if they exist (because they're broken)..."
+      logger_debug `apt-get -y --purge remove webmin webmin-core usermin webmin-*`
 			logger_debug `dpkg -i virtualmin-release-latest_$arch.deb`
 		;;
 		*)
@@ -592,6 +599,11 @@ install_virtualmin_release () {
       logger_info "information.  You may also wish to open a customer support issue so"
       logger_info "that we can guide you through the process--depending on your needs"
       logger_info "and environment, it can be rather complex."
+      logger_info "Attempting to trick this automatic installation script into running"
+      logger_info "is almost certainly a really bad idea.  Platform support requires"
+      logger_info "numerous custom binary executables.  Those packages will almost "
+      logger_info "certainly fail to run, or worse, on any platform other than the one"
+      logger_info "they were built for."
       exit 1
 		;;
 	esac
@@ -599,7 +611,24 @@ install_virtualmin_release () {
   return 0
 }
 
-# Functions
+# Install Functions
+install_with_apt () {
+  threelines
+  logger_info "Installing Virtualmin and all related packages now using the command:"
+  logger_info "$install $virtualminmeta"
+
+  if $install $virtualminmeta; then
+    logger_info "Installation of $virtualminmeta completed."
+  else
+    fatal "Installation failed: $?"
+  fi
+
+  logger_info "If you are not regularly updating your system nightly using apt-get"
+  logger_info "we strongly recommend you update now, using the following commands:"
+  logger_info "apt-get update"
+  logger_info "apt-get upgrade"
+}
+
 install_with_yum () {
 	threelines
 	logger_info "Installing Virtualmin and all related packages now using the command:"
@@ -721,8 +750,11 @@ install_virtualmin () {
 	return 0
 }
 
-# We may have to use $install to pre-install all deps.
+# virtualmin-release only exists for one platform...but it's as good a function
+# name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
+# We have to use $install to pre-install all deps, because some systems don't
+# cooperate with our repositories (that's RHEL and SUSE 10.1, so far).
 if [ "$mode" = "full" ]; then
 	install_deps_the_hard_way
 fi
