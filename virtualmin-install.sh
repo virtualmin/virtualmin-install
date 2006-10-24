@@ -14,6 +14,8 @@
 # Fedora Core 3, 4 and 5 on i386 and x86_64
 # CentOS and RHEL 3 and 4 on i486 and x86_64
 # SuSE 9.3 and OpenSUSE 10.0 on i586
+# Debian 3.1 on i386
+# Ubuntu 6.06 on i386
 
 LANG=
 export LANG
@@ -39,7 +41,10 @@ esac
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA3
-arch=`uname -i`
+arch=`uname -m`
+if [ "$arch" = "i686" ]; then
+  arch=i386
+fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
@@ -50,9 +55,10 @@ yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail pe
 rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot"
-# Debian-based systems (Ubuntu and Debian) -- XXX Not needed.  task-virtualmin-base
-# can do it all.
-debdeps="postfix postfix-tls bind spamassassin spamc procmail perl libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql mysql-server mysql-client mysql-admin-common mysql-common postgresql postgresql-client logrotate awstats webalizer php4 clamav awstats dovecot cyrus-sasl proftpd proftpd-common proftpd-doc proftpd-ldap proftpd-mysql proftpd-pgsql"
+# Debian
+debdeps="postfix postfix-tls postfix-pcre webmin usermin"
+# Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
+ubudeps="postfix postfix-pcre webmin usermin"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
 portsdeps="postfix bind9 p5-Mail-SpamAssassin procmail perl p5-Class-DBI-Pg p5-Class-DBI-mysql setquota openssl python mailman subversion ruby irb rdoc ri mysql-client mysql-server postgresql-client postgresql-server postgresql-contrib logrotate awstats webalizer php4 clamav dovecot cyrus-sasl"
 # Gentoo
@@ -120,7 +126,8 @@ detect_ip () {
   # XXX syntax is probably wrong for this test 
   if [ $primaryaddr ]; then
     logger_info "Primary address detected as $primaryaddr"
-    return $primaryaddr
+    address=$primaryaddr
+    return 0
   else
     logger_info "Unable to determine IP address of primary interface."
     echo "Please enter the name of your primary network interface: "
@@ -128,11 +135,12 @@ detect_ip () {
     primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
     if [ $primaryaddr ]; then
       logger_info "Primary address detected as $primaryaddr"
-      return $primaryaddr
+      address=$primaryaddr
     else
-      logger_info "Unable to determine IP address of selected interface.  Cannot continue."
+      fatal "Unable to determine IP address of selected interface.  Cannot continue."
       exit 1
     fi
+    return 0
   fi
 }
 
@@ -145,14 +153,14 @@ set_hostname () {
       logger_info "Hostname $line is not fully qualified."
     else
       hostname $line
-      address=detect_ip
+      detect_ip
       if grep $address /etc/hosts; then
         logger_info "Entry for IP $address exists in /etc/hosts.  Updating with new hostname."
         shortname=`echo $line | cut -d"." -f1`
         sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
       else
         logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
-        echo "$address\t$line\t$shortname" >> /etc/hosts
+        echo -e "$address\t$line\t$shortname" >> /etc/hosts
       fi
       i=1
     fi
@@ -198,17 +206,26 @@ uninstall () {
       rpm -e --nodeps webmin usermin awstats
     ;;
     deb)
-      dpkg --remove virtualmin-base
-      dpkg --remove wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn
-      dpkg --remove wbt-virtual-server-theme ust-virtual-server-theme
-      dpkg --remove webmin usermin awstats
+      dpkg --purge virtualmin-base
+      dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn
+      dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme
+      dpkg --purge webmin usermin webmin-*
+      apt-get clean
+      apt-get update
+      apt-get -f install
     ;;
     *)
       echo "I don't know how to uninstall on this operating system."
     ;;
     esac
   remove_virtualmin_release
+  echo "Done.  There's probably quite a bit of related packages and such left behind..."
+  echo "but all of the Virtualmin-specific packages have been removed."
+  exit 0
 }
+if [ "$mode" = "uninstall" ]; then
+  uninstall
+fi
 
 cat <<EOF
 ***********************************************************************
@@ -230,6 +247,8 @@ cat <<EOF
  CentOS and RHEL 3 and 4 on i386 and x86_64
  SUSE 9.3 and OpenSUSE 10.0 on i386
  Mandriva 10.2 (also known as 2006.0 and 2006.1) on i386
+ Debian 3.1 (sarge) on i386
+ Ubuntu 6.06 on i386
 
  If your OS is not listed above, this script will fail (and attempting
  to run it on an unsupported OS is not recommended, or...supported).
@@ -317,16 +336,15 @@ EOF
   threelines
 }
 
-# If we didn't get uninstall on the command line, set the mode (switch to get_mode when 
+# Set the mode (switch to get_mode when 
 # minimal mode is finished)
-if [ "$mode" = "uninstall" ]; then uninstall
-else get_mode
-fi
+#get_mode
+mode=full
 
 virtualminmeta="virtualmin-base"
 # If minimal, we don't install any extra packages, or perform any configuration
 if [ "$mode" = "minimal" ]; then
-	rhdeps=yastdeps=debdeps=portagedeps=portsdeps=""
+	rhdeps=yastdeps=debdeps=ubudeps=portagedeps=portsdeps=""
 	virtualminmeta=$vmpackages
 fi
 
@@ -343,15 +361,15 @@ else
 fi
 printf "found $download\n"
 
-# download_or_fail()
+# download()
 # Use $download to download the provided filename or exit with an error.
-download_or_fail() {
+download() {
   if $download $1
   then
     success
     return $?
   else
-    fatal "Failed to download $1.\nCannot continue installation."
+    fatal "Failed to download $1."
   fi
 }
 
@@ -423,6 +441,7 @@ logger_info "Started installation log in virtualmin-install.log"
 # Print out some details that we gather before logging existed
 logger_debug "Install mode: $mode"
 logger_debug "Virtualmin Meta-Package list: $virtualminmeta"
+logger_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
 logger_info "Checking for fully qualified hostname..."
@@ -468,13 +487,13 @@ install_virtualmin_release () {
 		fedora|rhel)
       if [ -x /usr/sbin/setenforce ]; then
 			  logger_info "Disabling SELinux during installation..."
-			  if [ `/usr/sbin/setenforce 0` ]; then logger_debug " setenforce 0 succeeded"
+			  if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
         else logger_info "  setenforce 0 failed: $?"
         fi
       fi
 			package_type="rpm"
 			deps=$rhdeps
-			if [ -e /usr/bin/yum ]; then
+			if [ -x /usr/bin/yum ]; then
         # We have yum, so we'll assume we're able to install all deps with it
         # XXX: after a failed install, this may be a bad way to detect this!
 				install="/usr/bin/yum -y install"
@@ -491,7 +510,7 @@ install_virtualmin_release () {
         fi
 			fi
 			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-			if [ `rpm -U virtualmin-release-latest.noarch.rpm` ]; then sucess
+			if rpm -U virtualmin-release-latest.noarch.rpm; then sucess
 			else fatal "Installation of virtualmin-release failed: $?"
       fi 
 		;;
@@ -558,8 +577,8 @@ install_virtualmin_release () {
       else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
 			fi
 			# Install some keys
-			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm
-      if [ `rpm -Uvh virtualmin-release-latest.noarch.rpm` ]; then success
+			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm"
+      if rpm -Uvh virtualmin-release-latest.noarch.rpm; then success
       else fatal "Failed to install virtualmin-release package."
       fi
 			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-webmin
@@ -568,28 +587,36 @@ install_virtualmin_release () {
 		freebsd)
 			package_type="tar"
 			deps=$portsdeps
-			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
+			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz"
 		;;
 		gentoo)
 			package_type="ebuild"
   		deps=$portagedeps
 	    install="/usr/bin/emerge"
- 			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz
+ 			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz"
  		;;
 		debian)
 			package_type="deb"
-			deps=$debdeps
-	    install="DEBIAN_FRONTEND=noninteractive DEBCONF_ADMIN_EMAIL="" /usr/bin/apt-get --config-file apt.conf.noninteractive -y install"
+      if [ -e "/etc/lsb-release" ]; then
+        deps=$ubudeps
+      else
+			  deps=$debdeps
+      fi
+	    install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
+      export DEBIAN_FRONTEND=noninteractive
+      logger_info "Cleaning up apt headers and packages, so we can start fresh..."
+      logger_info `apt-get clean`
       # Get the noninteractive apt-get configuration file (this is stupid... -y
       # ought to do all of this).
-      download http://software.virtualmin.com/lib/apt.conf.noninteractive
+      download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
 	    # Make sure universe is available, and all CD repos are disabled
       logger_info "Disabling any CD-based apt repositories because this install needs to be noninteractive..."
       sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
-      echo "deb http://$SERIAL:$KEY@software.virtualmin.com/debian/ stable main" >> /etc/apt/sources.list
-      logger_info "Removing Debian standard Webmin packages, if they exist (because they're broken)..."
-      logger_debug `apt-get -y --purge remove webmin webmin-core usermin webmin-*`
-			logger_debug `dpkg -i virtualmin-release-latest_$arch.deb`
+      echo "deb http://$SERIAL:$KEY@software.virtualmin.com/debian/ virtualmin-sarge main" >> /etc/apt/sources.list
+      logger_info `apt-get update`
+      logger_info "Removing Debian standard Webmin package, if they exist (because they're broken)..."
+      logger_info "Removing Debian apache 1.3 package (because we use apache2)..."
+      logger_debug `apt-get -y --purge remove webmin-core apache`
 		;;
 		*)
 	    logger_info "Your OS is not currently supported by this installer."
@@ -599,6 +626,7 @@ install_virtualmin_release () {
       logger_info "information.  You may also wish to open a customer support issue so"
       logger_info "that we can guide you through the process--depending on your needs"
       logger_info "and environment, it can be rather complex."
+      logger_info ""
       logger_info "Attempting to trick this automatic installation script into running"
       logger_info "is almost certainly a really bad idea.  Platform support requires"
       logger_info "numerous custom binary executables.  Those packages will almost "
@@ -710,7 +738,7 @@ install_deps_the_hard_way () {
 	if $install $deps
 	then return 0
 	else
-		logger_info "Something went wrong during installation: $?"
+		fatal "Something went wrong during installation: $?"
 	fi
 	exit $?
 }
