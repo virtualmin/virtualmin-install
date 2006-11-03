@@ -34,13 +34,12 @@ case $1 in
     mode="uninstall"
   ;;
   *)
-    continue
   ;;
 esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA3
+VER=EA3.1
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
   arch=i386
@@ -48,13 +47,13 @@ fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_fastcgi mod_ssl"
+rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl"
 # SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fastcgi apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
+yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # SUSE rug installer systems (OpenSUSE 10.1)
 rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
 # Mandrake/Mandriva
-urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_fastcgi apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot"
+urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot"
 # Debian
 debdeps="postfix postfix-tls postfix-pcre webmin usermin"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -63,13 +62,6 @@ ubudeps="postfix postfix-pcre webmin usermin"
 portsdeps="postfix bind9 p5-Mail-SpamAssassin procmail perl p5-Class-DBI-Pg p5-Class-DBI-mysql setquota openssl python mailman subversion ruby irb rdoc ri mysql-client mysql-server postgresql-client postgresql-server postgresql-contrib logrotate awstats webalizer php4 clamav dovecot cyrus-sasl"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
-
-# == Some simple functions ==
-threelines () {
-	echo
-  echo
-  echo
-}
 
 yesno () {
   while read line; do
@@ -80,7 +72,6 @@ yesno () {
       ;;
       *)
         printf "\nPlease enter y or n: "
-        continue
       ;;
     esac
   done
@@ -229,7 +220,7 @@ fi
 
 cat <<EOF
 ***********************************************************************
-*   Welcome to the Virtualmin Professional installer, version $VER    *
+*   Welcome to the Virtualmin Professional installer, version $VER   *
 ***********************************************************************
 
  WARNING: This is an Early Adopter release.
@@ -258,8 +249,6 @@ printf " Continue? (y/n) "
 if ! yesno
 then exit
 fi
-
-threelines
 
 oldmodule=""
 if [ -x /usr/libexec/webmin/virtual-server ]; then
@@ -304,7 +293,6 @@ EOF
   fi
 fi
 
-threelines
 
 get_mode () {
 cat <<EOF
@@ -328,12 +316,8 @@ EOF
   else mode=minimal
   fi
 
-  threelines
-
   echo "Installation type: $mode"
   sleep 3
-
-  threelines
 }
 
 # Set the mode (switch to get_mode when 
@@ -351,7 +335,7 @@ fi
 # Check for wget or curl
 printf "Checking for curl or wget..."
 if [ -x "/usr/bin/curl" ]; then
-	download="/usr/bin/curl -O "
+	download="/usr/bin/curl -s -O "
 elif [ -x "/usr/bin/wget" ]; then
 	download="/usr/bin/wget -nv"
 else
@@ -391,7 +375,7 @@ if [ "$?" != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
 	if [ "$?" != "0" ]; then
 		echo "Fatal Error: The Virtualmin install script must be run as root"
-		threelines
+		twolines
 		exit 1
 	fi
 fi
@@ -417,7 +401,6 @@ if $download http://software.virtualmin.com/lib/log4sh
 then 
 	# source log4sh (disabling properties file warning)
 	LOG4SH_CONFIGURATION="none" . ./log4sh
-	continue
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
 	echo " We're not just stopping because we don't have a logging library--this probably"
@@ -435,6 +418,7 @@ appender_setAppenderType virtualmin FileAppender
 appender_setAppenderFile virtualmin /root/virtualmin-install.log
 appender_setLevel virtualmin ALL
 appender_setLayout virtualmin PatternLayout
+appender_setPattern virtualmin '%p - %d - %m%n'
 
 logger_info "Started installation log in virtualmin-install.log"
 
@@ -459,12 +443,12 @@ chmod 700 /etc/virtualmin-license
 # Grab the Webmin oschooser.pl script
 logger_info "Loading OS selection library..."
 download http://software.virtualmin.com/lib/oschooser.pl
+logger_info "Loading OS list..."
 download http://software.virtualmin.com/lib/os_list.txt
 
 cd ..
 
 # Get operating system type
-logger_info "***********************************************************************"  
 if [ "$os_type" = "" ]; then
   if [ "$autoos" = "" ]; then
       autoos=1
@@ -478,13 +462,26 @@ if [ "$os_type" = "" ]; then
   fi
 logger_info "Operating system name:    $real_os_type"
 logger_info "Operating system version: $real_os_version"
-logger_info "***********************************************************************"
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	logger_info "Installing virtualmin-release package for $real_os_type $real_os_version..."
   case $os_type in
-		fedora|rhel)
+		fedora)
+      if [ -x /usr/sbin/setenforce ]; then
+        logger_info "Disabling SELinux during installation..."
+        if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
+        else logger_info "  setenforce 0 failed: $?"
+        fi 
+      fi
+      package_type="rpm"
+      install="/usr/bin/yum -y -d 0 install"
+      download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+      if rpm -U virtualmin-release-latest.noarch.rpm; then success
+      else fatal "Installation of virtualmin-release failed: $?"
+      fi
+    ;;
+    rhel)
       if [ -x /usr/sbin/setenforce ]; then
 			  logger_info "Disabling SELinux during installation..."
 			  if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
@@ -496,8 +493,7 @@ install_virtualmin_release () {
 			if [ -x /usr/bin/yum ]; then
         # We have yum, so we'll assume we're able to install all deps with it
         # XXX: after a failed install, this may be a bad way to detect this!
-				install="/usr/bin/yum -y install"
-				continue
+				install="/usr/bin/yum -y -d 0 install"
 			else
         # Red Hat doesn't have yum for OS updates, so we'll get those with up2date
 				install="/usr/bin/up2date --nox"
@@ -505,12 +501,12 @@ install_virtualmin_release () {
 				# Install yum, which makes installing and upgrading our packages easier
  				download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
 				logger_info "yum not found, installing yum from software.virtualmin.com..."
-				if rpm -U yum-latest.noarch.rpm; then sucess
+				if rpm -U yum-latest.noarch.rpm; then success
         else fatal "Installation of yum failed: $?"
         fi
 			fi
 			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-			if rpm -U virtualmin-release-latest.noarch.rpm; then sucess
+			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
       fi 
 		;;
@@ -560,7 +556,8 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$urpmideps
       install="/usr/sbin/urpmi"
-      if urpmi.update -a; then continue
+      logger_info "Updating urpmi repository data..."
+      if urpmi.update -a; then success
       else fatal "urpmi.update failed with $?.  This installation script requires a functional urpmi"
       fi
 			# Mandriva uses i586 for x86 binary RPMs instead of i386--uname is also utterly broken
@@ -568,12 +565,14 @@ install_virtualmin_release () {
       then cputype="i586"
       else cputype="x86_64"
       fi
+      logger_info "Adding virtualmin-universal repository..."
 			if urpmi.addmedia virtualmin-universal http://$SERIAL:$KEY@software.virtualmin.com/universal; then
-				continue
+        success
 			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
 			fi
+      logger_info "Adding virtualmin Mandriva $os_version repository..."
 			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
-				continue
+        success
       else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
 			fi
 			# Install some keys
@@ -641,7 +640,6 @@ install_virtualmin_release () {
 
 # Install Functions
 install_with_apt () {
-  threelines
   logger_info "Installing Virtualmin and all related packages now using the command:"
   logger_info "$install $virtualminmeta"
 
@@ -658,11 +656,10 @@ install_with_apt () {
 }
 
 install_with_yum () {
-	threelines
 	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "yum -y $virtualminmeta"
+	logger_info "yum -y -d 0 install $virtualminmeta"
 
-	if yum -y install $virtualminmeta; then
+	if yum -y -d 0 -e 0 install $virtualminmeta >> /root/virtualmin-install.log; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -676,7 +673,6 @@ install_with_yum () {
 }
 
 install_with_yast () {
-	threelines
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
@@ -702,7 +698,6 @@ install_with_yast () {
 }
 
 install_with_rug () {
-  threelines
   logger_info "Installing Virtualmin and all related packages now using the command:"
   logger_info "$install $virtualminmeta"
 
@@ -716,7 +711,6 @@ install_with_rug () {
 }
 
 install_with_urpmi () {
-	threelines
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "urpmi $virtualminmeta"
 
@@ -735,7 +729,7 @@ install_with_urpmi () {
 
 install_deps_the_hard_way () {
 	logger_info "Installing dependencies using command: $install $deps"
-	if $install $deps
+	if $install $deps >> /root/virtualmin-install.log 
 	then return 0
 	else
 		fatal "Something went wrong during installation: $?"
@@ -785,6 +779,7 @@ install_virtualmin_release
 # cooperate with our repositories (that's RHEL and SUSE 10.1, so far).
 if [ "$mode" = "full" ]; then
 	install_deps_the_hard_way
+  success
 fi
 
 install_virtualmin
