@@ -475,6 +475,7 @@ install_virtualmin_release () {
         fi 
       fi
       package_type="rpm"
+      deps=$rhdeps
       install="/usr/bin/yum -y -d 0 install"
       download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
       if rpm -U virtualmin-release-latest.noarch.rpm; then success
