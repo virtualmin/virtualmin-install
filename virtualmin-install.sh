@@ -20,7 +20,7 @@ supported=" Fedora Core 3-6 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  SuSE 9.3 on i586
  Debian 3.1 on i386
- Ubuntu 6.06 on i386"
+ Ubuntu 6.06 and 6.06.1 on i386"
 
 LANG=
 export LANG
@@ -44,7 +44,7 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA3.6
+VER=EA3.7
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
   arch=i386
@@ -131,7 +131,7 @@ remove_virtualmin_release () {
 			urpmi.removemedia virtualmin-universal
 			rpm -e virtualmin-release
       ;;
-		"debian" )
+		"debian" | "ubuntu" )
       grep -v "virtualmin" /etc/apt/sources.list > /tmp/sources.list
       mv /tmp/sources.list /etc/apt/sources.list 
 			;;
@@ -619,12 +619,14 @@ install_virtualmin_release () {
 	    install="/usr/bin/emerge"
  			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz"
  		;;
-		debian)
+		debian | ubuntu)
 			package_type="deb"
-      if [ -e "/etc/lsb-release" ]; then
+      if [ $os_type = "ubuntu" ]; then
         deps=$ubudeps
+        repo="virtualmin-dapper"
       else
 			  deps=$debdeps
+        repo="virtualmin-sarge"
       fi
 	    install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
       export DEBIAN_FRONTEND=noninteractive
@@ -636,7 +638,7 @@ install_virtualmin_release () {
 	    # Make sure universe is available, and all CD repos are disabled
       logger_info "Disabling any CD-based apt repositories because this install needs to be noninteractive..."
       sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
-      echo "deb http://$SERIAL:$KEY@software.virtualmin.com/debian/ virtualmin-sarge main" >> /etc/apt/sources.list
+      echo "deb http://$SERIAL:$KEY@software.virtualmin.com/$os_type/ $repo main" >> /etc/apt/sources.list
       logger_info `apt-get update`
       logger_info "Removing Debian standard Webmin package, if they exist (because they're broken)..."
       logger_info "Removing Debian apache 1.3 package (because we use apache2)..."
