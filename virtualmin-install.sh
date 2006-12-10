@@ -8,14 +8,19 @@
 # WARNING: Anything not listed in the currently supported systems list is not
 # going to work, despite the fact that you might see code that detects your
 # OS and acts on it.  If it isn't in the list, the code is not complete and
-# will not work.  Don't even bother trying it.  Trust me.
+# will not work.  More importantly, the packages that this script installs
+# are not complete, if the OS isn't listed.  Don't even bother trying it.
+#
+# A manual install might work for you though.
+# See here: http://www.virtualmin.com/support/documentation/virtualmin-admin-guide/ch02.html#id2654070
 
 # Currently supported systems:
-# Fedora Core 3, 4 and 5 on i386 and x86_64
-# CentOS and RHEL 3 and 4 on i486 and x86_64
-# SuSE 9.3 and OpenSUSE 10.0 on i586
-# Debian 3.1 on i386
-# Ubuntu 6.06 on i386
+supported=" Fedora Core 3-6 on i386 and x86_64
+ CentOS and RHEL 3 and 4 on i386 and x86_64
+ OpenSUSE 10.0 on i586 and x86_64
+ SuSE 9.3 on i586
+ Debian 3.1 on i386
+ Ubuntu 6.06 on i386"
 
 LANG=
 export LANG
@@ -39,15 +44,15 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA3.1
+VER=EA3.6
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
   arch=i386
 fi
-vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbt-virtualmin-nuvola* ust-virtualmin-nuvola* ust-virtual-server-theme wbt-virtual-server-theme"
+vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="httpd-devel postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl"
+rhdeps="bind bind-chroot bind-utils caching-nameserver httpd postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl"
 # SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # SUSE rug installer systems (OpenSUSE 10.1)
@@ -75,6 +80,27 @@ yesno () {
       ;;
     esac
   done
+}
+
+# Perform an action, log it, and run the spinner throughout
+run () {
+  msg=$1
+  cmd=$2
+  touch busy
+  logger_info "$msg"
+  $srcdir/spinner busy &
+  if $cmd >> /root/virtualmin-install.log; then
+    success "$msg"
+    rm busy
+  else
+    echo "$msg failed.  Error (if any): $?"
+    echo
+    echo "Displaying the last 15 lines of the install.log to help troubleshoot this problem:"
+    tail -15 /root/virtualmin-install.log
+    rm busy
+    exit
+  fi
+  return 0
 }
 
 fatal () {
@@ -146,7 +172,7 @@ set_hostname () {
       hostname $line
       detect_ip
       if grep $address /etc/hosts; then
-        logger_info "Entry for IP $address exists in /etc/hosts.  Updating with new hostname."
+      logger_info "Entry for IP $address exists in /etc/hosts.  Updating with new hostname."
         shortname=`echo $line | cut -d"." -f1`
         sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
       else
@@ -174,11 +200,11 @@ is_fully_qualified () {
 }
 
 success () {
-	logger_info "Succeeded."
+	logger_info "$1 Succeeded."
 }
 
 uninstall () {
-  # This function performs a rudimentary uninstallation of Virtualmin Professional
+  # This function performs a rough uninstallation of Virtualmin Professional
   # It is neither complete, nor correct, but it almost certainly won't break
   # anything.  It is primarily useful for cleaning up a botched install, so you
   # can run the installer again.
@@ -214,6 +240,7 @@ uninstall () {
   echo "but all of the Virtualmin-specific packages have been removed."
   exit 0
 }
+# XXX Needs to move after os_detection
 if [ "$mode" = "uninstall" ]; then
   uninstall
 fi
@@ -233,13 +260,9 @@ cat <<EOF
  is not a freshly installed and supported OS.
 
  The systems currently supported by our install.sh are:
-
- Fedora Core 3-5 on i386 and x86_64
- CentOS and RHEL 3 and 4 on i386 and x86_64
- SUSE 9.3 and OpenSUSE 10.0 on i386
- Mandriva 10.2 (also known as 2006.0 and 2006.1) on i386
- Debian 3.1 (sarge) on i386
- Ubuntu 6.06 on i386
+EOF
+echo "$supported"
+cat <<EOF
 
  If your OS is not listed above, this script will fail (and attempting
  to run it on an unsupported OS is not recommended, or...supported).
@@ -394,6 +417,9 @@ mkdir $tempdir/files
 srcdir=$tempdir/files
 cd $srcdir
 
+# Download spinner
+$download http://software.virtualmin.com/lib/spinner
+
 # Setup log4sh so we can start keeping a proper log while also feeding output
 # to the console.
 echo "Loading log4sh logging library..."
@@ -404,7 +430,7 @@ then
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
 	echo " We're not just stopping because we don't have a logging library--this probably"
-	echo " indicates much larger problems that will prevent successful installation anyway."
+	echo " indicates a serious that will prevent successful installation anyway."
 	echo " Check network connectivity, name resolution and disk space and try again."
 	exit 1
 fi
@@ -476,7 +502,7 @@ install_virtualmin_release () {
       fi
       package_type="rpm"
       deps=$rhdeps
-      install="/usr/bin/yum -y -d 0 install"
+      install="/usr/bin/yum -y -d 2 install"
       download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
       if rpm -U virtualmin-release-latest.noarch.rpm; then success
       else fatal "Installation of virtualmin-release failed: $?"
@@ -489,15 +515,13 @@ install_virtualmin_release () {
         else logger_info "  setenforce 0 failed: $?"
         fi
       fi
-			package_type="rpm"
-			deps=$rhdeps
-			if [ -x /usr/bin/yum ]; then
-        # We have yum, so we'll assume we're able to install all deps with it
-        # XXX: after a failed install, this may be a bad way to detect this!
-				install="/usr/bin/yum -y -d 0 install"
-			else
-        # Red Hat doesn't have yum for OS updates, so we'll get those with up2date
+      package_type="rpm"
+      deps=$rhdeps
+      if [ -x /usr/bin/up2date ]; then
 				install="/usr/bin/up2date --nox"
+			else
+        # CentOS doesn't always have up2date?
+				install="/usr/bin/yum -y -d 2 install"
 				rpm --import /usr/share/rhn/RPM-GPG-KEY
 				# Install yum, which makes installing and upgrading our packages easier
  				download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
@@ -506,9 +530,9 @@ install_virtualmin_release () {
         else fatal "Installation of yum failed: $?"
         fi
 			fi
-			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-			if rpm -U virtualmin-release-latest.noarch.rpm; then success
-			else fatal "Installation of virtualmin-release failed: $?"
+      download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+      if rpm -U virtualmin-release-latest.noarch.rpm; then success
+      else fatal "Installation of virtualmin-release failed: $?"
       fi 
 		;;
 		suse)
@@ -658,9 +682,9 @@ install_with_apt () {
 
 install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "yum -y -d 0 install $virtualminmeta"
+	logger_info "yum -y -d 2 install $virtualminmeta"
 
-	if yum -y -d 0 -e 0 install $virtualminmeta >> /root/virtualmin-install.log; then
+	if yum -y -d 2 install $virtualminmeta >> /root/virtualmin-install.log; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -677,10 +701,10 @@ install_with_yast () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
-	if [ "$sources" != "" ]; then
-		logger_info "Disabling existing y2pmsh sources."
-		y2pmsh source -d $sources
-	fi
+#	if [ "$sources" != "" ]; then
+#		logger_info "Disabling existing y2pmsh sources."
+#		y2pmsh source -d $sources
+#	fi
 
 	if $install $virtualminmeta; then
 		logger_info "Installation completed."
@@ -688,10 +712,10 @@ install_with_yast () {
 	else
 		fatal "Installation failed: $?"
 	fi
-	if [ "$sources" != "" ]; then
-		logger_info "Re-enabling any pre-existing sources."
-		y2pmsh source -e $sources
-	fi
+#	if [ "$sources" != "" ]; then
+#		logger_info "Re-enabling any pre-existing sources."
+#		y2pmsh source -e $sources
+#	fi
 
   logger_info "If you are not regularly updating your system nightly using yum or up2date"
   logger_info "we strongly recommend you update now, using yast."
