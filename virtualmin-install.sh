@@ -83,7 +83,7 @@ yesno () {
 }
 
 # Perform an action, log it, and run the spinner throughout
-run () {
+runner () {
   msg=$1
   cmd=$2
   touch busy
@@ -641,8 +641,8 @@ install_virtualmin_release () {
       echo "deb http://$SERIAL:$KEY@software.virtualmin.com/$os_type/ $repo main" >> /etc/apt/sources.list
       logger_info `apt-get update`
       logger_info "Removing Debian standard Webmin package, if they exist (because they're broken)..."
-      logger_info "Removing Debian apache 1.3 package (because we use apache2)..."
-      logger_debug `apt-get -y --purge remove webmin-core apache`
+      logger_info "Removing Debian apache packages..."
+      logger_debug `apt-get -y --purge remove webmin-core apache apache2`
 		;;
 		*)
 	    logger_info "Your OS is not currently supported by this installer."
