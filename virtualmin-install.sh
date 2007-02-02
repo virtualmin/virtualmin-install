@@ -519,6 +519,12 @@ install_virtualmin_release () {
       deps=$rhdeps
       if [ -x /usr/bin/up2date ]; then
 				install="/usr/bin/up2date --nox"
+        echo "If you haven't run up2date before this installation, the installation"
+        echo "will fail.  Have you run up2date at least once before starting this installer?"
+        if ! yesno; then
+          echo "Exiting.  Please run 'up2date -u' and then run install.sh again."
+          exit
+        fi
 			else
         # CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
