@@ -19,8 +19,8 @@ supported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3 and 4 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  SuSE 9.3 on i586
- Debian 3.1 on i386 amd64
- Ubuntu 6.06 and 6.06.1 on amd64"
+ Debian 3.1 on i386 and amd64
+ Ubuntu 6.06 and 6.06.1 on i386 and amd64"
 
 LANG=
 export LANG
