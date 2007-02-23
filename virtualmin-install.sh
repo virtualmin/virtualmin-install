@@ -19,8 +19,8 @@ supported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3 and 4 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  SuSE 9.3 on i586
- Debian 3.1 on i386
- Ubuntu 6.06 and 6.06.1 on i386"
+ Debian 3.1 on i386 amd64
+ Ubuntu 6.06 and 6.06.1 on amd64"
 
 LANG=
 export LANG
@@ -524,10 +524,10 @@ install_virtualmin_release () {
         if ! yesno; then
           echo "Exiting.  Please run 'up2date -u' and then run install.sh again."
           exit
-        fi
 			else
         # CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
+      fi
 				rpm --import /usr/share/rhn/RPM-GPG-KEY
 				# Install yum, which makes installing and upgrading our packages easier
  				download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
