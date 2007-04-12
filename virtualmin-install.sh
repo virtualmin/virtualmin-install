@@ -49,7 +49,7 @@ arch=`uname -m`
 if [ "$arch" = "i686" ]; then
   arch=i386
 fi
-vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme wbm-security-updates"
+vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme wbm-security-updates wbm-php-pear"
 deps=
 # Red Hat-based systems 
 rhdeps="bind bind-chroot bind-utils caching-nameserver httpd postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby rubygems perl-XML-Simple perl-Crypt-SSLeay"
