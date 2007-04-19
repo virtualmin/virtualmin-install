@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2006 Virtualmin, Inc.
+# Copyright 2005-2007 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -18,7 +18,7 @@
 supported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3 and 4 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
- SuSE 9.3 on i586
+ Mandriva 2007 on i386
  Debian 3.1 on i386 and amd64
  Ubuntu 6.06 and 6.06.1 on i386 and amd64"
 
@@ -90,17 +90,19 @@ runner () {
   logger_info "$msg"
   $srcdir/spinner busy &
   if $cmd >> /root/virtualmin-install.log; then
-    success "$msg"
     rm busy
+    sleep 1
+    success "$msg"
+    return 0
   else
+    rm busy
+    sleep 1
     echo "$msg failed.  Error (if any): $?"
     echo
     echo "Displaying the last 15 lines of the install.log to help troubleshoot this problem:"
     tail -15 /root/virtualmin-install.log
-    rm busy
-    exit
+    return 1
   fi
-  return 0
 }
 
 fatal () {
@@ -127,6 +129,8 @@ remove_virtualmin_release () {
 			y2pmsh source -R $vmsrcs
 			;;
 		"mandriva" )
+      rpm --import http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin
+      rpm --import http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin
 			urpmi.removemedia virtualmin
 			urpmi.removemedia virtualmin-universal
 			rpm -e virtualmin-release
@@ -273,50 +277,6 @@ if ! yesno
 then exit
 fi
 
-oldmodule=""
-if [ -x /usr/libexec/webmin/virtual-server ]; then
-  oldmodule="/usr/libexec/webmin/virtual-server"
-elif [ -x /usr/share/webmin/virtual-server ]; then
-  oldmodule="/usr/share/webmin/virtual-server"
-fi
-
-if [ -n "$oldmodule" ]; then
-cat <<EOF
- It appears you already have some version of the Virtualmin virtual-server
- module installed.  The package that will be installed during the Virtualmin
- Professional installation won't overwrite an existing installation, and so
- installation will fail if the old module remains in place.
-
- I can move your old installation of the Virtualmin module out of the way,
- which will allow the new Virtualmin to be installed.  This process will not
- delete your existing Virtualmin domains, if any.  It usually also allows
- for a reasonably clean upgrade from Virtualmin GPL to Virtualmin Professional.
-
- However, if you did not backup your server immediately before you began this
- installation, I strongly recommend you exit now (enter "n") and do so.  There
- are many things that can go wrong during an upgrade, and while we won't be 
- doing very many things that aren't easily reverted, there is still potential
- for data loss.  And even the changes that are reversible are numerous, and so
- returning to a previous state could be time consuming.
-
- If it is OK for me to move your current installation out of the way, so that
- installation can proceed, enter "y" here.
-
-EOF
-  printf " Move existing Virtualmin module and proceed with installation? (y/n) "
-  if yesno
-  then
-	  mkdir /root/virtualmin-install-backup-files
-    mv $oldmodule /root/virtualmin-install-backup-files
-  else
-    echo " Installation interrupted.  If you have any questions about upgrading"
-    echo " or installation please file an issue in the Customer Issues tracker or"
-    echo " post in the support forums at Virtualmin.com."
-    exit
-  fi
-fi
-
-
 get_mode () {
 cat <<EOF
  FULL or MINIMAL INSTALLATION
@@ -419,6 +379,7 @@ cd $srcdir
 
 # Download spinner
 $download http://software.virtualmin.com/lib/spinner
+chmod +x spinner
 
 # Setup log4sh so we can start keeping a proper log while also feeding output
 # to the console.
@@ -519,16 +480,20 @@ install_virtualmin_release () {
       deps=$rhdeps
       if [ -x /usr/bin/up2date ]; then
 				install="/usr/bin/up2date --nox"
+        echo;echo
         echo "If you haven't run up2date before this installation, the installation"
         echo "will fail.  Have you run up2date at least once before starting this installer?"
         if ! yesno; then
+          echo
           echo "Exiting.  Please run 'up2date -u' and then run install.sh again."
           exit
+        fi
 			else
         # CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
       fi
-				rpm --import /usr/share/rhn/RPM-GPG-KEY
+      rpm --import /usr/share/rhn/RPM-GPG-KEY
+      if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
  				download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
 				logger_info "yum not found, installing yum from software.virtualmin.com..."
@@ -676,7 +641,7 @@ install_with_apt () {
   logger_info "Installing Virtualmin and all related packages now using the command:"
   logger_info "$install $virtualminmeta"
 
-  if $install $virtualminmeta; then
+  if runner "...in progress, please wait..." "$install $virtualminmeta"; then
     logger_info "Installation of $virtualminmeta completed."
   else
     fatal "Installation failed: $?"
@@ -692,7 +657,7 @@ install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "yum -y -d 2 install $virtualminmeta"
 
-	if yum -y -d 2 install $virtualminmeta >> /root/virtualmin-install.log; then
+	if runner "...in progress, please wait..." "yum -y -d 2 install $virtualminmeta"; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -753,7 +718,7 @@ install_with_urpmi () {
 		fatal "Installation failed: $?"
 	fi
 
-  logger_info "If you are not regularly updating your system nightly using yum or up2date"
+  logger_info "If you are not regularly updating your system nightly using urpmi"
   logger_info "we strongly recommend you update now, using the following commands:"
   logger_info "urpmi.update -a"
   logger_info "urpmi --auto-select"
@@ -762,7 +727,7 @@ install_with_urpmi () {
 
 install_deps_the_hard_way () {
 	logger_info "Installing dependencies using command: $install $deps"
-	if $install $deps >> /root/virtualmin-install.log 
+	if runner "...in progress, please wait..." "$install $deps"
 	then return 0
 	else
 		fatal "Something went wrong during installation: $?"
@@ -815,6 +780,10 @@ if [ "$mode" = "full" ]; then
   success
 fi
 
+# update_deps
+# We want to make sure we're running our version of packages if we have
+# our own version.  There's no good way to do this, but we'll 
+
 install_virtualmin
 
 # Functions that are used in the OS specific modifications section
@@ -831,6 +800,7 @@ disable_selinux () {
 case $os_type in
   "fedora" | "centos" | "rhel"  )
 		disable_selinux
+    update_deps $rhdeps
 		;;
 esac
 
