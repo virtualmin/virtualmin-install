@@ -780,11 +780,16 @@ if [ "$mode" = "full" ]; then
   success
 fi
 
-# update_deps
+install_virtualmin
+
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
-
-install_virtualmin
+logger_info "Checking for updates to Virtualmin-related packages..."
+if runner "...in progress, please wait..." $install deps; then
+  success
+else
+  logger_info "There may have been a problem updating some packages."
+fi
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
@@ -800,7 +805,6 @@ disable_selinux () {
 case $os_type in
   "fedora" | "centos" | "rhel"  )
 		disable_selinux
-    update_deps $rhdeps
 		;;
 esac
 
