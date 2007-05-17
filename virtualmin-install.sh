@@ -19,7 +19,7 @@ supported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3 and 4 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Mandriva 2007 on i386
- Debian 3.1 on i386 and amd64
+ Debian 3.1 and 4.0 on i386 and amd64
  Ubuntu 6.06 and 6.06.1 on i386 and amd64"
 
 LANG=
@@ -44,7 +44,7 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA3.7
+VER=EA3.8
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
   arch=i386
@@ -596,8 +596,15 @@ install_virtualmin_release () {
         deps=$ubudeps
         repo="virtualmin-dapper"
       else
-			  deps=$debdeps
-        repo="virtualmin-sarge"
+		deps=$debdeps
+		case $os_version in
+			3.1)
+        		repo="virtualmin-sarge"
+			;;
+			4.0)
+				repo="virtualmin-etch"
+			;;
+		esac
       fi
 	    install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
       export DEBIAN_FRONTEND=noninteractive
