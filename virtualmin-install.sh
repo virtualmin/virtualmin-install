@@ -795,7 +795,7 @@ install_virtualmin
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
 logger_info "Checking for updates to Virtualmin-related packages..."
-if runner "...in progress, please wait..." $install deps; then
+if runner "...in progress, please wait..." $install $deps; then
 	success
 else
 	logger_info "There may have been a problem updating some packages."
