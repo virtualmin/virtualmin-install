@@ -20,7 +20,7 @@ supported=" Fedora Core 3-6 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Mandriva 2007 on i386
  Debian 3.1 and 4.0 on i386 and amd64
- Ubuntu 6.06 and 6.06.1 on i386 and amd64"
+ Ubuntu 6.06 LTS on i386 and amd64"
 
 LANG=
 export LANG
@@ -44,7 +44,7 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA4.0
+VER=EA4.1
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
@@ -54,7 +54,7 @@ fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="bind bind-chroot bind-utils caching-nameserver httpd postfix bind spamassassin procmail perl perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby rubygems perl-XML-Simple perl-Crypt-SSLeay"
+rhdeps="bind bind-utils caching-nameserver httpd postfix bind spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion ruby rdoc ri mysql mysql-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby rubygems perl-XML-Simple perl-Crypt-SSLeay"
 # SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # SUSE rug installer systems (OpenSUSE 10.1)
@@ -609,6 +609,10 @@ install_virtualmin_release () {
 					;;
 				esac
 			fi
+			# Make sure universe repos are available
+			logger_info "Enabling universe repositories, if not already available..."
+			sed -ie "s/#*[ ]*deb \(.*\) universe$/deb \1 universe/" /etc/apt/sources.list
+			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
 			logger_info "Cleaning up apt headers and packages, so we can start fresh..."
