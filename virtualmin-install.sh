@@ -234,8 +234,6 @@ uninstall () {
 			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme
 			dpkg --purge webmin usermin webmin-*
 			apt-get clean
-			apt-get update
-			apt-get -f install
 		;;
 		*)
 			echo "I don't know how to uninstall on this operating system."
