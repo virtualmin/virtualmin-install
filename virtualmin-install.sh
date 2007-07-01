@@ -622,6 +622,12 @@ install_virtualmin_release () {
 			logger_info "Disabling any CD-based apt repositories so the process can run without assistance"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
 			echo "deb http://$SERIAL:$KEY@software.virtualmin.com/$os_type/ $repo main" >> /etc/apt/sources.list
+			# Install our keys
+			logger_info "Installing Webmin and Virtualmin package signing keys..."
+			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
+			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
+			logger_info `apt-key add RPM-GPG-KEY-virtualmin`
+			logger_info `apt-key add RPM-GPG-KEY-webmin`
 			logger_info `apt-get update`
 			logger_info "Removing Debian standard Webmin package, if they exist (because they're broken)..."
 			logger_info "Removing Debian apache packages..."
