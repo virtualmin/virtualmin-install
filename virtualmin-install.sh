@@ -264,13 +264,24 @@ cat <<EOF
  the Virtualmin and Early Adopter FAQs before proceeding if your system
  is not a freshly installed and supported OS.
 
+ This script is not intended to update your system.  It should only be
+ used to install Virtualmin Professional, or to upgrade a Virtualmin
+ GPL system that was installed manually via .wbm packages.  If you have
+ previously installed Virtualmin via this script or the GPL version of 
+ this script, upgrades and updates should be handled within Virtualmin
+ only.
+
  The systems currently supported by our install.sh are:
 EOF
 echo "$supported"
 cat <<EOF
 
- If your OS is not listed above, this script will fail (and attempting
- to run it on an unsupported OS is not recommended, or...supported).
+ If your OS is not listed above, this script will fail and attempting
+ to run it on an unsupported OS is not recommended, or supported.  The
+ recommended operating systems for Virtualmin Professional, and more
+ details about them, can be found here: 
+
+   http://www.virtualmin.com/os-support.html
  
 EOF
 	printf " Continue? (y/n) "
