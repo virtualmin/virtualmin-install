@@ -562,10 +562,10 @@ install_virtualmin_release () {
 							fatal "ZMD failed to start, installation cannot continue without functioning package management."
 						fi
 					fi
-					if ! rug sa --type=YUM http://${LOGIN}@software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin; then
+					if ! rug sa --type=YUM http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin; then
 						fatal "Unable to add rug installation source: $?"
 					fi
-					if ! rug sa --type=YUM http://${LOGIN}@software.virtualmin.com/${repopath}universal virtualmin-universal; then
+					if ! rug sa --type=YUM http://${LOGIN}software.virtualmin.com/${repopath}universal virtualmin-universal; then
 						fatal "Unable to add rug installation source: $?"
 					fi
 				;;
@@ -612,7 +612,7 @@ install_virtualmin_release () {
 			package_type="ebuild"
 			deps=$portagedeps
 			install="/usr/bin/emerge"
- 			download "http://${LOGIN}@software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
+ 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
  		;;
 		debian | ubuntu)
 			package_type="deb"
