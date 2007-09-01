@@ -15,12 +15,14 @@
 # See here: http://www.virtualmin.com/support/documentation/virtualmin-admin-guide/ch02.html#id2654070
 
 # Currently supported systems:
-supported=" Fedora Core 3-6 on i386 and x86_64
+prosupported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Mandriva 2007 on i386
  Debian 3.1 and 4.0 on i386 and amd64
  Ubuntu 6.06 LTS on i386 and amd64"
+gplsupported=" CentOS 5 on i386 and x86_64
+ Debian 4.0 on i386 and amd64"
 
 LANG=
 export LANG
@@ -48,6 +50,17 @@ VER=EA4.1
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
+fi
+if [ $SERIAL="GPL" ]; then
+	LOGIN=""
+	PRODUCT="GPL"
+	supported=$gplsupported
+  repopath="/gpl/"
+else
+	LOGIN="$SERIAL:$KEY@"
+	PRODUCT="Professional"
+	supported=$prosupported
+  repopath=""
 fi
 
 # Virtualmin-provided packages
@@ -210,7 +223,7 @@ success () {
 	logger_info "$1 Succeeded."
 }
 
-# This function performs a rough uninstallation of Virtualmin Professional
+# This function performs a rough uninstallation of Virtualmin
 # It is neither complete, nor correct, but it almost certainly won't break
 # anything.  It is primarily useful for cleaning up a botched install, so you
 # can run the installer again.
@@ -251,18 +264,17 @@ if [ "$mode" = "uninstall" ]; then
 fi
 
 cat <<EOF
-***********************************************************************
-*   Welcome to the Virtualmin Professional installer, version $VER   *
-***********************************************************************
+
+Welcome to the Virtualmin $PRODUCT installer, version $VER
 
  WARNING: This is an Early Adopter release.
 
  The installation is quite stable and functional when run on a freshly
- installed supported Operating System, but upgrades from Virtualmin GPL
- systems, or systems that already have Apache VirtualHost directives or
- mail users, will very likely run into numerous problems.  Please read
- the Virtualmin and Early Adopter FAQs before proceeding if your system
- is not a freshly installed and supported OS.
+ installed supported Operating System, but upgrades from existing .wbm-
+ based systems, or systems that already have Apache VirtualHost 
+ directives or mail users, will very likely run into numerous problems.
+ Please read the Virtualmin and Early Adopter FAQs before proceeding if
+ your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system.  It should only be
  used to install Virtualmin Professional, or to upgrade a Virtualmin
@@ -476,7 +488,7 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$rhdeps
 			install="/usr/bin/yum -y -d 2 install"
-			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
@@ -507,13 +519,13 @@ install_virtualmin_release () {
 			rpm --import /usr/share/rhn/RPM-GPG-KEY
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
-				download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/yum-latest.noarch.rpm
+				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm
 				logger_info "yum not found, installing yum from software.virtualmin.com..."
 				if rpm -U yum-latest.noarch.rpm; then success
 				else fatal "Installation of yum failed: $?"
 				fi
 			fi
-			download http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
@@ -533,10 +545,10 @@ install_virtualmin_release () {
 					if ! yast -i y2pmsh; then
 						fatal "Failed to install y2pmsh package.  Cannot continue."
 					fi
-					if ! y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
+					if ! y2pmsh source -a http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype; then
 						fatal "Unable to add yast2 installation source."
 					fi
-					if ! y2pmsh source -a http://$SERIAL:$KEY@software.virtualmin.com/universal; then
+					if ! y2pmsh source -a http://${LOGIN}software.virtualmin.com/${repopath}universal; then
 					fatal "Unable to add yast2 installation source: $?"
 					fi
 				;;
@@ -550,10 +562,10 @@ install_virtualmin_release () {
 							fatal "ZMD failed to start, installation cannot continue without functioning package management."
 						fi
 					fi
-					if ! rug sa --type=YUM http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype virtualmin; then
+					if ! rug sa --type=YUM http://${LOGIN}@software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin; then
 						fatal "Unable to add rug installation source: $?"
 					fi
-					if ! rug sa --type=YUM http://$SERIAL:$KEY@software.virtualmin.com/universal virtualmin-universal; then
+					if ! rug sa --type=YUM http://${LOGIN}@software.virtualmin.com/${repopath}universal virtualmin-universal; then
 						fatal "Unable to add rug installation source: $?"
 					fi
 				;;
@@ -574,17 +586,17 @@ install_virtualmin_release () {
 			else cputype="x86_64"
 			fi
 			logger_info "Adding virtualmin-universal repository..."
-			if urpmi.addmedia virtualmin-universal http://$SERIAL:$KEY@software.virtualmin.com/universal; then
+			if urpmi.addmedia virtualmin-universal http://${LOGIN}software.virtualmin.com/${repopath}universal; then
 			success "Adding repository"
 			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
 			fi
 			logger_info "Adding virtualmin Mandriva $os_version repository..."
-			if urpmi.addmedia virtualmin http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype; then
+			if urpmi.addmedia virtualmin http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype; then
 				success
 			else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
 			fi
 			# Install some keys
-			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm"
+			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm"
 			if rpm -Uvh virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Failed to install virtualmin-release package."
 			fi
@@ -594,13 +606,13 @@ install_virtualmin_release () {
 		freebsd)
 			package_type="tar"
 			deps=$portsdeps
-			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz"
+			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
 		;;
 		gentoo)
 			package_type="ebuild"
 			deps=$portagedeps
 			install="/usr/bin/emerge"
- 			download "http://$SERIAL:$KEY@software.virtualmin.com/$os_type/$arch/virtualmin-release-latest.tar.gz"
+ 			download "http://${LOGIN}@software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
  		;;
 		debian | ubuntu)
 			package_type="deb"
@@ -632,7 +644,7 @@ install_virtualmin_release () {
 			# Make sure universe is available, and all CD repos are disabled
 			logger_info "Disabling any CD-based apt repositories so the process can run without assistance"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
-			echo "deb http://$SERIAL:$KEY@software.virtualmin.com/$os_type/ $repo main" >> /etc/apt/sources.list
+			echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
 			# Install our keys
 			logger_info "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
@@ -645,19 +657,19 @@ install_virtualmin_release () {
 			logger_debug `apt-get -y --purge remove webmin-core apache apache2`
 		;;
 		*)
-			logger_info "Your OS is not currently supported by this installer."
-			logger_info "You may be able to run Virtualmin Professional on your system, anyway,"
-			logger_info "but you'll have to install it using the manual installation process."
-			logger_info "Refer to Chapter 2 of the Virtualmin Administrator's Guide for more"
-			logger_info "information.  You may also wish to open a customer support issue so"
-			logger_info "that we can guide you through the process--depending on your needs"
-			logger_info "and environment, it can be rather complex."
+			logger_info " Your OS is not currently supported by this installer."
+			logger_info " You may be able to run Virtualmin Professional on your system, anyway,"
+			logger_info " but you'll have to install it using the manual installation process."
+			logger_info " Refer to Chapter 2 of the Virtualmin Administrator's Guide for more"
+			logger_info " information.  You may also wish to open a customer support issue so"
+			logger_info " that we can guide you through the process--depending on your needs"
+			logger_info " and environment, it can be rather complex."
 			logger_info ""
-			logger_info "Attempting to trick this automatic installation script into running"
-			logger_info "is almost certainly a really bad idea.  Platform support requires"
-			logger_info "numerous custom binary executables.  Those packages will almost "
-			logger_info "certainly fail to run, or worse, on any platform other than the one"
-			logger_info "they were built for."
+			logger_info " Attempting to trick this automatic installation script into running"
+			logger_info " is almost certainly a really bad idea.  Platform support requires"
+			logger_info " numerous custom binary executables.  Those packages will almost "
+			logger_info " certainly fail to run, or worse, on any platform other than the one"
+			logger_info " they were built for."
 			exit 1
 		;;
 	esac
