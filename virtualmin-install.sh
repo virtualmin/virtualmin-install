@@ -46,7 +46,7 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA4.1
+VER=EA4.2
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
