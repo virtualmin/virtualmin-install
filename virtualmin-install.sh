@@ -55,7 +55,7 @@ if [ $SERIAL="GPL" ]; then
 	LOGIN=""
 	PRODUCT="GPL"
 	supported=$gplsupported
-  repopath="/gpl/"
+  repopath="gpl/"
 else
 	LOGIN="$SERIAL:$KEY@"
 	PRODUCT="Professional"
