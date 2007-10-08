@@ -51,7 +51,7 @@ arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
 fi
-if [ $SERIAL="GPL" ]; then
+if [ "$SERIAL" = "GPL" ]; then
 	LOGIN=""
 	PRODUCT="GPL"
 	supported=$gplsupported
