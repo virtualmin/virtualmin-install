@@ -633,6 +633,7 @@ install_virtualmin_release () {
 			# Make sure universe repos are available
 			logger_info "Enabling universe repositories, if not already available..."
 			sed -ie "s/#*[ ]*deb \(.*\) universe$/deb \1 universe/" /etc/apt/sources.list
+			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
 			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
