@@ -516,7 +516,9 @@ install_virtualmin_release () {
 				# CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
 			fi
-			rpm --import /usr/share/rhn/RPM-GPG-KEY
+			if [ -r /usr/share/rhn/RPM-GPG-KEY ]; then
+				rpm --import /usr/share/rhn/RPM-GPG-KEY
+			fi
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
 				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm
