@@ -20,7 +20,8 @@ prosupported=" Fedora Core 3-6 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Mandriva 2007 on i386
  Debian 3.1 and 4.0 on i386 and amd64
- Ubuntu 6.06 LTS on i386 and amd64"
+ Ubuntu 6.06 LTS on i386 and amd64
+ FreeBSD 7-RELEASE on i386 and amd64"
 gplsupported=" CentOS 5 on i386 and x86_64
  Debian 4.0 on i386 and amd64"
 
@@ -46,7 +47,7 @@ esac
 
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
-VER=EA4.2
+VER=EA5.0
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
@@ -229,7 +230,7 @@ success () {
 # can run the installer again.
 uninstall () {
 	# This is a crummy way to detect package manager...but going through 
-    # half the installer just to get here is even crummier.
+	# half the installer just to get here is even crummier.
 	if which rpm>/dev/null; then package_type=rpm
 	elif which dpkg>/dev/null; then package_type=deb
 	fi
@@ -339,14 +340,16 @@ if [ "$mode" = "minimal" ]; then
 	virtualminmeta=$vmpackages
 fi
 
-# Check for wget or curl
-printf "Checking for curl or wget..."
+# Check for wget or curl or fetch
+printf "Checking for HTTP client..."
 if [ -x "/usr/bin/curl" ]; then
 	download="/usr/bin/curl -s -O "
 elif [ -x "/usr/bin/wget" ]; then
 	download="/usr/bin/wget -nv"
+elif [ -x "/usr/bin/fetch" ]; then
+	download="/usr/bin/fetch"
 else
-	echo "No web download program available: Please install curl or wget"
+	echo "No web download program available: Please install curl, wget, or fetch"
 	echo "and try again."
 	exit 1
 fi
@@ -473,6 +476,7 @@ if [ "$os_type" = "" ]; then
 fi
 logger_info "Operating system name:    $real_os_type"
 logger_info "Operating system version: $real_os_version"
+exit
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
