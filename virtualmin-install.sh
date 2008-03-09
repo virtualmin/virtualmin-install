@@ -79,7 +79,7 @@ debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-rub
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
-portsdeps="postfix bind9 p5-Mail-SpamAssassin procmail perl p5-Class-DBI-Pg p5-Class-DBI-mysql setquota openssl python mailman subversion ruby irb rdoc ri mysql-client mysql-server postgresql-client postgresql-server postgresql-contrib logrotate awstats webalizer php4 clamav dovecot cyrus-sasl"
+portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql setquota openssl python mailman subversion ruby irb rdoc ri mysql-client mysql-server postgresql-client postgresql-server postgresql-contrib logrotate awstats webalizer php5 php4 clamav dovecot cyrus-sasl"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -609,6 +609,7 @@ install_virtualmin_release () {
 			package_type="tar"
 			deps=$portsdeps
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
+			install="pkg_add -rI"
 		;;
 		gentoo)
 			package_type="ebuild"
