@@ -523,6 +523,9 @@ install_virtualmin_release () {
 			if [ -r /usr/share/rhn/RPM-GPG-KEY ]; then
 				rpm --import /usr/share/rhn/RPM-GPG-KEY
 			fi
+			if [ -r /etc/pki/rpm-gpg/RPM-GPG-KEY ]; then
+				rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY
+			fi
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
 				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm
