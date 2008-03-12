@@ -18,7 +18,6 @@
 prosupported=" Fedora Core 3-6 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
- Mandriva 2007 on i386
  Debian 3.1 and 4.0 on i386 and amd64
  Ubuntu 6.06 LTS on i386 and amd64
  FreeBSD 7-RELEASE on i386 and amd64"
@@ -476,7 +475,6 @@ if [ "$os_type" = "" ]; then
 fi
 logger_info "Operating system name:    $real_os_type"
 logger_info "Operating system version: $real_os_version"
-exit
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
