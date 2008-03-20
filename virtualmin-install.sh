@@ -521,8 +521,8 @@ install_virtualmin_release () {
 			if [ -r /usr/share/rhn/RPM-GPG-KEY ]; then
 				rpm --import /usr/share/rhn/RPM-GPG-KEY
 			fi
-			if [ -r /etc/pki/rpm-gpg/RPM-GPG-KEY ]; then
-				rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY
+			if [ -r /etc/pki/rpm-gpg/RPM-GPG-KEY-* ]; then
+				rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-*
 			fi
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
