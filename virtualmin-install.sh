@@ -778,29 +778,31 @@ install_with_urpmi () {
 }
 
 install_deps_the_hard_way () {
-	if [ "$os_type" == "freebsd" ]; then
-		logger_info "Installing dependencies using command: "
-		logger_info " for \$i in $deps; do $install; done"	
-		if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
-		then return 0
-		else
-			logger_warn "Something went wrong during installation: $?"
-			logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
-			logger_warn "so we're going to proceed as if nothing bad happened."
-			logger_warn "This may lead to problems later in the process, and"
-			logger_warn "some packages may not have installed successfully."
-			logger_warn "You may wish to check the virtualmin-install.log for details."
-			return 0
-		fi
-	else
-		logger_info "Installing dependencies using command: $install $deps"
-		if runner "...in progress, please wait..." "$install $deps"
-		then return 0
-		else
-			fatal "Something went wrong during installation: $?"
-		fi
-	fi
-	exit $?
+	case $os_type in
+		freebsd)
+			logger_info "Installing dependencies using command: "
+			logger_info " for \$i in $deps; do $install; done"	
+			if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
+			then return 0
+			else
+				logger_warn "Something went wrong during installation: $?"
+				logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
+				logger_warn "so we're going to proceed as if nothing bad happened."
+				logger_warn "This may lead to problems later in the process, and"
+				logger_warn "some packages may not have installed successfully."
+				logger_warn "You may wish to check the virtualmin-install.log for details."
+				return 0
+			fi
+		;;
+		*)
+			logger_info "Installing dependencies using command: $install $deps"
+			if runner "...in progress, please wait..." "$install $deps"
+			then return 0
+			else
+				fatal "Something went wrong during installation: $?"
+			fi
+		;;
+	esac
 }
 
 install_virtualmin () {
