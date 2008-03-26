@@ -79,7 +79,8 @@ debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-rub
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
-portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-domxml php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session php4 php4-domxml php4-gd php4-imap php4-mbstring php4-mcrypt php4-mysql php4-pgsql php4-session clamav dovecot cyrus-sasl"
+# FreeBSD php4 and php5 packages conflict, so both versions can't run together
+portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot cyrus-sasl"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -613,7 +614,9 @@ install_virtualmin_release () {
 		freebsd)
 			package_type="tar"
 			deps=$portsdeps
-			install="pkg_add -rI"
+			# Options: remote, skip scripts, don't fatal 
+			# if already installed
+			install="pkg_add -rIF"
 		;;
 		gentoo)
 			package_type="ebuild"
@@ -775,11 +778,27 @@ install_with_urpmi () {
 }
 
 install_deps_the_hard_way () {
-	logger_info "Installing dependencies using command: $install $deps"
-	if runner "...in progress, please wait..." "$install $deps"
-	then return 0
+	if [ "$os_type" == "freebsd" ]; then
+		logger_info "Installing dependencies using command: "
+		logger_info " for \$i in $deps; do $install; done"	
+		if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
+		then return 0
+		else
+			logger_warn "Something went wrong during installation: $?"
+			logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
+			logger_warn "so we're going to proceed as if nothing bad happened."
+			logger_warn "This may lead to problems later in the process, and"
+			logger_warn "some packages may not have installed successfully."
+			logger_warn "You may wish to check the virtualmin-install.log for details."
+			return 0
+		fi
 	else
-		fatal "Something went wrong during installation: $?"
+		logger_info "Installing dependencies using command: $install $deps"
+		if runner "...in progress, please wait..." "$install $deps"
+		then return 0
+		else
+			fatal "Something went wrong during installation: $?"
+		fi
 	fi
 	exit $?
 }
