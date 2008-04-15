@@ -211,6 +211,10 @@ is_fully_qualified () {
 			logger_info "Hostname cannot be localhost.localdomain."
 			return 1
 		;;
+		*.localdomain)
+			logger_info "Hostname cannot be *.localdomain."
+			return 1
+		;;
 		*.*)
 			logger_info "Hostname OK: fully qualified as $1"
 			return 0
