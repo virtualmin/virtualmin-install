@@ -278,21 +278,18 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system.  It should only be
- used to install Virtualmin Professional, or to upgrade a Virtualmin
- GPL system that was installed manually via .wbm packages.  If you have
+ used to install Virtualmin Professional, on a supported OS.  If you have
  previously installed Virtualmin via this script or the GPL version of 
  this script, upgrades and updates should be handled within Virtualmin
- only.
+ itself.
 
  The systems currently supported by our install.sh are:
 EOF
 echo "$supported"
 cat <<EOF
 
- If your OS is not listed above, this script will fail and attempting
- to run it on an unsupported OS is not recommended, or supported.  The
- recommended operating systems for Virtualmin Professional, and more
- details about them, can be found here: 
+ If your OS is not listed above, this script will fail.  More details
+ about the systems supported by the script can be found here:
 
    http://www.virtualmin.com/os-support.html
  
@@ -479,7 +476,7 @@ logger_info "Operating system version: $real_os_version"
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	logger_info "Installing virtualmin-release package for $real_os_type $real_os_version..."
+	logger_info "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
 		fedora)
 			if [ -x /usr/sbin/setenforce ]; then
@@ -491,6 +488,7 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$rhdeps
 			install="/usr/bin/yum -y -d 2 install"
+			install_updates="$install $deps"
 			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
@@ -537,6 +535,7 @@ install_virtualmin_release () {
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
+			install_updates="$install $deps"
 		;;
 		suse)
 			# No release for suse.  Their RPM locks when we try to import keys...
@@ -550,6 +549,7 @@ install_virtualmin_release () {
 				9.3|10.0)
 					deps=$yastdeps
 					install="/sbin/yast -i"
+					install_updates="$install $deps"
 					if ! yast -i y2pmsh; then
 						fatal "Failed to install y2pmsh package.  Cannot continue."
 					fi
@@ -563,6 +563,7 @@ install_virtualmin_release () {
 				10.1|10.2)
 					deps=$rugdeps
 					install="/usr/bin/rug in -y"
+					install_updates="$install $deps"
 					if ! rug ping; then
 						logger_info "The ZENworks Management daemon is not running.  Attempting to start."
 						/usr/sbin/rczmd start
@@ -584,6 +585,7 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$urpmideps
 			install="/usr/sbin/urpmi"
+			install_updates="$install $deps"
 			logger_info "Updating urpmi repository data..."
 			if urpmi.update -a; then success
 			else fatal "urpmi.update failed with $?.  This installation script requires a functional urpmi"
@@ -617,6 +619,9 @@ install_virtualmin_release () {
 			# Options: remote, skip scripts, don't fatal 
 			# if already installed
 			install="pkg_add -rIF"
+			install_updates="echo Skipping checking for updates..."
+			portsenv="BATCH=YES DISABLE_VULNERABILITIES=YES"
+			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home"
 		;;
 		gentoo)
 			package_type="ebuild"
@@ -646,6 +651,7 @@ install_virtualmin_release () {
 			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
 			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
+			install_updates="$install $deps"
 			export DEBIAN_FRONTEND=noninteractive
 			logger_info "Cleaning up apt headers and packages, so we can start fresh..."
 			logger_info `apt-get clean`
@@ -783,7 +789,7 @@ install_deps_the_hard_way () {
 			logger_info "Installing dependencies using command: "
 			logger_info " for \$i in $deps; do $install; done"	
 			if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
-			then return 0
+			then success
 			else
 				logger_warn "Something went wrong during installation: $?"
 				logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
@@ -791,8 +797,12 @@ install_deps_the_hard_way () {
 				logger_warn "This may lead to problems later in the process, and"
 				logger_warn "some packages may not have installed successfully."
 				logger_warn "You may wish to check the virtualmin-install.log for details."
-				return 0
 			fi
+			# Install Apache with suexec_docroot set to /home
+			logger_info "Installing Apache using ports..."
+			cd /usr/ports/www/apache22
+			make $apacheopts install
+			return 0
 		;;
 		*)
 			logger_info "Installing dependencies using command: $install $deps"
@@ -855,7 +865,7 @@ install_virtualmin
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
 logger_info "Checking for updates to Virtualmin-related packages..."
-if runner "...in progress, please wait..." "$install $deps"; then
+if runner "...in progress, please wait..." "$install_updates"; then
 	success
 else
 	logger_info "There may have been a problem updating some packages."
