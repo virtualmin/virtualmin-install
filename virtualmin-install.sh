@@ -799,7 +799,35 @@ install_with_urpmi () {
 }
 
 install_with_tar () {
-	logger_info "Installing Webmin and Usermin using tar packages..."
+	logger_info "Installing Webmin..."
+	# Install Webmin
+	logger_info Installing Webmin
+	if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/webmin-current.tar.gz; then
+		fatal "Retrieving Webmin from software.virtualmin.com failed."
+	fi
+	if ! gunzip -c webmin-current.tar.gz | tar xf -; then
+		fatal "Extracting Webmin from archive failed."
+	fi
+	rm webmin-current.tar.gz
+	cd webmin-[0-9]*
+	config_dir=/etc/webmin
+	var_dir=/var/webmin
+	autoos=3
+	port=10000
+	login=root
+	crypt=x
+	ssl=1
+	atboot=1
+	perl=/usr/bin/perl
+	theme=virtual-server-theme
+	export config_dir var_dir autoos port login crypt ssl atboot perl theme
+	./setup.sh /opt/webmin
+	if [ "$?" != "0" ]; then
+		fatal "Webmin setup script failed."
+	fi
+	cd $tempdir
+	rm -rf webmin-[0-9]*
+
 	return 0
 }
 install_deps_the_hard_way () {
