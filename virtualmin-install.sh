@@ -362,7 +362,7 @@ download() {
 	if $download $1
 	then
 		success "Download of $1"
-    	return $?
+   	return $?
 	else
 		fatal "Failed to download $1."
 	fi
@@ -419,7 +419,7 @@ then
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
 	echo " We're not just stopping because we don't have a logging library--this probably"
-	echo " indicates a serious that will prevent successful installation anyway."
+	echo " indicates a serious problem that will prevent successful installation anyway."
 	echo " Check network connectivity, name resolution and disk space and try again."
 	exit 1
 fi
@@ -618,6 +618,18 @@ install_virtualmin_release () {
 			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
 		;;
 		freebsd)
+			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache22 ]]; then
+				logger_info " You don't have the ports system installed.  Installation cannot  "
+				logger_info " complete without the ports system.  Would you like to fetch "
+				logger_info " ports now using portsnap?  (This may take a long time.)"
+				logger_info " (y/n)"
+				if ! yesno; then 
+					logger_info " Exiting.  Please install the ports system using portsnap, and"
+					logger_info " run this script again."
+					exit
+				fi
+				portsnap fetch; portsnap extract
+			fi
 			package_type="tar"
 			deps=$portsdeps
 			# Options: remote, skip scripts, don't fatal 
@@ -652,6 +664,7 @@ install_virtualmin_release () {
 			# Make sure universe repos are available
 			logger_info "Enabling universe repositories, if not already available..."
 			sed -ie "s/#*[ ]*deb \(.*\) universe$/deb \1 universe/" /etc/apt/sources.list
+			logger_info "Disabling cdrom repositories..."
 			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
 			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
@@ -662,8 +675,6 @@ install_virtualmin_release () {
 			# Get the noninteractive apt-get configuration file (this is 
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
-			# Make sure universe is available, and all CD repos are disabled
-			logger_info "Disabling any CD-based apt repositories so the process can run without assistance"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
 			echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
 			# Install our keys
@@ -787,6 +798,10 @@ install_with_urpmi () {
 	return 0
 }
 
+install_with_tar () {
+	logger_info "Installing Webmin and Usermin using tar packages..."
+	return 0
+}
 install_deps_the_hard_way () {
 	case $os_type in
 		freebsd)
