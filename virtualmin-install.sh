@@ -747,10 +747,6 @@ install_with_yast () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
-#	if [ "$sources" != "" ]; then
-#		logger_info "Disabling existing y2pmsh sources."
-#		y2pmsh source -d $sources
-#	fi
 
 	if $install $virtualminmeta; then
 		logger_info "Installation completed."
@@ -758,10 +754,6 @@ install_with_yast () {
 	else
 		fatal "Installation failed: $?"
 	fi
-#	if [ "$sources" != "" ]; then
-#		logger_info "Re-enabling any pre-existing sources."
-#		y2pmsh source -e $sources
-#	fi
 
 	logger_info "If you are not regularly updating your system nightly using yum or up2date"
 	logger_info "we strongly recommend you update now, using yast."
@@ -801,7 +793,6 @@ install_with_urpmi () {
 install_with_tar () {
 	logger_info "Installing Webmin..."
 	# Install Webmin
-	logger_info Installing Webmin
 	if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/webmin-current.tar.gz; then
 		fatal "Retrieving Webmin from software.virtualmin.com failed."
 	fi
@@ -821,12 +812,34 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=virtual-server-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	./setup.sh /usr/local/webmin
-	if [ "$?" != "0" ]; then
-		fatal "Webmin setup script failed."
-	fi
+	runner "Installing Webmin, please wait..." "./setup.sh /usr/local/webmin"
 	cd $tempdir
 	rm -rf webmin-[0-9]*
+
+  # Install Usermin
+  logger_info "Installing Usermin..."
+  if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/usermin-current.tar.gz; then
+    fatal "Retrieving Usermin from software.virtualmin.com failed."
+  fi
+  if ! gunzip -c usermin-current.tar.gz | tar xf -; then
+    fatal "Extracting Usermin from archive failed."
+  fi
+  rm usermin-current.tar.gz
+  cd usermin-[0-9]*
+  config_dir=/etc/usermin
+  var_dir=/var/usermin
+  autoos=3
+  port=20000
+  login=root
+  crypt=x
+  ssl=1
+  atboot=1
+  perl=/usr/bin/perl
+  theme=virtual-server-theme
+  export config_dir var_dir autoos port login crypt ssl atboot perl theme
+  runner "Installing Usermin, please wait..." "./setup.sh /usr/local/usermin"
+  cd $tempdir
+  rm -rf usermin-[0-9]*
 
 	return 0
 }
