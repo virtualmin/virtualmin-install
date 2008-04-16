@@ -821,7 +821,7 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=virtual-server-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	./setup.sh /opt/webmin
+	./setup.sh /usr/local/webmin
 	if [ "$?" != "0" ]; then
 		fatal "Webmin setup script failed."
 	fi
@@ -847,8 +847,10 @@ install_deps_the_hard_way () {
 			fi
 			# Install Apache with suexec_docroot set to /home
 			logger_info "Installing Apache using ports..."
+			previousdir=`pwd`
 			cd /usr/ports/www/apache22
 			make $apacheopts install
+			cd $previousdir
 			return 0
 		;;
 		*)
