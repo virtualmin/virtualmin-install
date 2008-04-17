@@ -24,6 +24,8 @@ prosupported=" Fedora Core 3-6 on i386 and x86_64
 gplsupported=" CentOS 5 on i386 and x86_64
  Debian 4.0 on i386 and amd64"
 
+log=/root/virtualmin-install.log
+
 LANG=
 export LANG
 
@@ -80,7 +82,7 @@ debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-rub
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
-portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot cyrus-sasl"
+portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -105,7 +107,7 @@ runner () {
 	touch busy
 	logger_info "$msg"
 	$srcdir/spinner busy &
-	if $cmd >> /root/virtualmin-install.log; then
+	if $cmd >> $log; then
 		rm busy
 		sleep 1
 		success "$msg"
@@ -116,7 +118,7 @@ runner () {
 		echo "$msg failed.  Error (if any): $?"
 		echo
 		echo "Displaying the last 15 lines of the install.log to help troubleshoot this problem:"
-		tail -15 /root/virtualmin-install.log
+		tail -15 $log
 		return 1
 	fi
 }
@@ -133,7 +135,7 @@ fatal () {
 		rm -rf /tmp/.virtualmin*
 	fi
 	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
-	logger_fatal "in /root/virtualmin-install.log."
+	logger_fatal "in $log"
 	exit
 }
 
@@ -430,12 +432,12 @@ logger_setLevel INFO
 # Debug log
 logger_addAppender virtualmin
 appender_setAppenderType virtualmin FileAppender
-appender_setAppenderFile virtualmin /root/virtualmin-install.log
+appender_setAppenderFile virtualmin $log
 appender_setLevel virtualmin ALL
 appender_setLayout virtualmin PatternLayout
 appender_setPattern virtualmin '%p - %d - %m%n'
 
-logger_info "Started installation log in virtualmin-install.log"
+logger_info "Started installation log in $log"
 
 # Print out some details that we gather before logging existed
 logger_debug "Install mode: $mode"
@@ -841,6 +843,31 @@ install_with_tar () {
   cd $tempdir
   rm -rf usermin-[0-9]*
 
+	# Install Virtulmin-specific modules and themes, as defined in updates.txt
+	logger_info "Installing Virtualmin modules and themes..."
+	cd $tempdir
+	$download http://$SERIAL:$KEY@software.virtualmin.com/wbm/updates.txt
+	for modpath in `cut -f 3 updates.txt`; do
+		modfile=`basename $modpath`
+		$download http://$SERIAL:$KEY@software.virtualmin.com/$modpath
+		if [ "$?" != "0" ]; then
+			logger_info "Download of Webmin module from $modpath failed"
+		fi
+		/usr/local/webmin/install-module.pl /tmp/$modfile > $log
+		if [ "$?" != "0" ]; then
+			logger_info "Installation of Webmin module from $modpath failed"
+		fi
+		rm -f $tempdir/$modfile
+	done
+
+	# Configure Webmin to use updates.txt
+	echo Configuring Webmin to use Virtualmin updates service
+	echo "upsource=http://software.virtualmin.com/wbm/updates.txt http://www.webmin.com/updates/updates.txt" >>/etc/webmin/webmin/config
+	echo "upthird=1" >>/etc/webmin/webmin/config
+	echo "upuser=$SERIAL" >>/etc/webmin/webmin/config
+	echo "uppass=$KEY" >>/etc/webmin/webmin/config
+	echo "upshow=1" >>/etc/webmin/webmin/config
+
 	return 0
 }
 install_deps_the_hard_way () {
@@ -856,13 +883,17 @@ install_deps_the_hard_way () {
 				logger_warn "so we're going to proceed as if nothing bad happened."
 				logger_warn "This may lead to problems later in the process, and"
 				logger_warn "some packages may not have installed successfully."
-				logger_warn "You may wish to check the virtualmin-install.log for details."
+				logger_warn "You may wish to check $log for details."
 			fi
 			# Install Apache with suexec_docroot set to /home
 			logger_info "Installing Apache using ports..."
 			previousdir=`pwd`
 			cd /usr/ports/www/apache22
-			make $apacheopts install
+			$portsenv make $apacheopts install
+			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
+			logger_info "Installing cyrus-sasl2-saslauthd using ports..."
+			cd /usr/ports/security/cyrus-sasl2-saslauthd
+			$portsenv make install
 			cd $previousdir
 			return 0
 		;;
