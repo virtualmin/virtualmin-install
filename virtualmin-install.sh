@@ -889,11 +889,11 @@ install_deps_the_hard_way () {
 			logger_info "Installing Apache using ports..."
 			previousdir=`pwd`
 			cd /usr/ports/www/apache22
-			$portsenv make $apacheopts install
+			make $portsenv $apacheopts install
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
 			logger_info "Installing cyrus-sasl2-saslauthd using ports..."
 			cd /usr/ports/security/cyrus-sasl2-saslauthd
-			$portsenv make install
+			make $postenv install
 			cd $previousdir
 			return 0
 		;;
