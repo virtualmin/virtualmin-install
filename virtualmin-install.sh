@@ -853,7 +853,7 @@ install_with_tar () {
 		if [ "$?" != "0" ]; then
 			logger_info "Download of Webmin module from $modpath failed"
 		fi
-		/usr/local/webmin/install-module.pl /tmp/$modfile > $log
+		/usr/local/webmin/install-module.pl $tempdir/$modfile > $log
 		if [ "$?" != "0" ]; then
 			logger_info "Installation of Webmin module from $modpath failed"
 		fi
