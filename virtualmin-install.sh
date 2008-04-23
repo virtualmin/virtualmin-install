@@ -620,7 +620,7 @@ install_virtualmin_release () {
 			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
 		;;
 		freebsd)
-			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache22 ]]; then
+			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache2 ]]; then
 				logger_info " You don't have the ports system installed.  Installation cannot  "
 				logger_info " complete without the ports system.  Would you like to fetch "
 				logger_info " ports now using portsnap?  (This may take a long time.)"
@@ -895,11 +895,11 @@ install_deps_the_hard_way () {
 			for i in $portsenv; do
 				export $i
 			done
-			cd /usr/ports/www/apache22
+			cd /usr/ports/www/apache2
 			make $apacheopts install
-			logger_info "Installing mod_fcgid using ports..."
-			cd /usr/ports/www/mod_fcgid
-			make install
+			#logger_info "Installing mod_fcgid using ports..."
+			#cd /usr/ports/www/mod_fcgid
+			#make install
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
 			logger_info "Installing cyrus-sasl2-saslauthd using ports..."
 			cd /usr/ports/security/cyrus-sasl2-saslauthd
