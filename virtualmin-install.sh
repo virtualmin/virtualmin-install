@@ -620,7 +620,7 @@ install_virtualmin_release () {
 			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
 		;;
 		freebsd)
-			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache2 ]]; then
+			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache20 ]]; then
 				logger_info " You don't have the ports system installed.  Installation cannot  "
 				logger_info " complete without the ports system.  Would you like to fetch "
 				logger_info " ports now using portsnap?  (This may take a long time.)"
@@ -883,7 +883,7 @@ install_deps_the_hard_way () {
 			# Install Apache with suexec_docroot set to /home
 			logger_info "Installing Apache from ports..."
 			previousdir=`pwd`
-			cd /usr/ports/www/apache2
+			cd /usr/ports/www/apache20
 			make $apacheopts install
 			#logger_info "Installing mod_fcgid using ports..."
 			#cd /usr/ports/www/mod_fcgid
