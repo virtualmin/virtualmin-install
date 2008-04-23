@@ -80,9 +80,11 @@ urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_da
 debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
-# Ports-based systems (FreeBSD, NetBSD, OpenBSD)
+# pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
-portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd mod_fcgid"
+# Many packages need to be installed via ports, and they require custom
+# config for each...this sucks.
+pkgdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -339,7 +341,7 @@ mode=full
 virtualminmeta="virtualmin-base"
 # If minimal, we don't install any extra packages, or perform any configuration
 if [ "$mode" = "minimal" ]; then
-	rhdeps=yastdeps=debdeps=ubudeps=portagedeps=portsdeps=""
+	rhdeps=yastdeps=debdeps=ubudeps=portagedeps=pkgdeps=""
 	virtualminmeta=$vmpackages
 fi
 
@@ -633,7 +635,7 @@ install_virtualmin_release () {
 				portsnap fetch; portsnap extract
 			fi
 			package_type="tar"
-			deps=$portsdeps
+			deps=$pkgdeps
 			# Options: remote, skip scripts, don't fatal 
 			# if already installed
 			install="pkg_add -rIF"
@@ -880,18 +882,31 @@ install_deps_the_hard_way () {
 			for i in $portsenv; do
 				export $i
 			done
-			# Install Apache with suexec_docroot set to /home
-			logger_info "Installing Apache from ports..."
+
 			previousdir=`pwd`
-			cd /usr/ports/www/apache20
+			logger_info "Installing Apache from ports..."
+			cd /usr/ports/www/apache22
 			make $apacheopts install
-			#logger_info "Installing mod_fcgid using ports..."
-			#cd /usr/ports/www/mod_fcgid
-			#make install
+
+			logger_info "Installing mod_fcgid using ports..."
+			cd /usr/ports/www/mod_fcgid
+			make $APACHE_VERSION=22 install
+
+			logger_info "Installing Subversion using ports..."
+			export WITH_MOD_DAV_SVN=yes
+			cd /usr/ports/www/subversion
+			make install
+
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
 			logger_info "Installing cyrus-sasl2-saslauthd from ports..."
 			cd /usr/ports/security/cyrus-sasl2-saslauthd
 			make install
+
+			logger_info "Installing postfix from ports..."
+			export WITH_SASL2=yes
+			cd /usr/ports/mail/postfix24
+			make install
+
 			cd $previousdir
 			logger_info "Installing dependencies using command: "
 			logger_info " for \$i in $deps; do $install; done"	
