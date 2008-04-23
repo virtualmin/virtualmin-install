@@ -868,6 +868,10 @@ install_with_tar () {
 	echo "uppass=$KEY" >>/etc/webmin/webmin/config
 	echo "upshow=1" >>/etc/webmin/webmin/config
 
+	# Virtualmin configuration
+	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
+	logger_info `perl virtualmin-base-standalone.pl`
+
 	return 0
 }
 install_deps_the_hard_way () {
@@ -888,12 +892,18 @@ install_deps_the_hard_way () {
 			# Install Apache with suexec_docroot set to /home
 			logger_info "Installing Apache using ports..."
 			previousdir=`pwd`
+			for i in $portsenv; do
+				export $i
+			done
 			cd /usr/ports/www/apache22
-			make $portsenv $apacheopts install
+			make $apacheopts install
+			logger_info "Installing mod_fcgid using ports..."
+			cd /usr/ports/www/mod_fcgid
+			make install
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
 			logger_info "Installing cyrus-sasl2-saslauthd using ports..."
 			cd /usr/ports/security/cyrus-sasl2-saslauthd
-			make $postenv install
+			make install
 			cd $previousdir
 			return 0
 		;;
