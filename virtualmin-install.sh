@@ -82,7 +82,7 @@ debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-rub
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ports-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
-portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
+portsdeps="postfix p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman subversion ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd mod_fcgid"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -877,6 +877,22 @@ install_with_tar () {
 install_deps_the_hard_way () {
 	case $os_type in
 		freebsd)
+			for i in $portsenv; do
+				export $i
+			done
+			# Install Apache with suexec_docroot set to /home
+			logger_info "Installing Apache from ports..."
+			previousdir=`pwd`
+			cd /usr/ports/www/apache2
+			make $apacheopts install
+			#logger_info "Installing mod_fcgid using ports..."
+			#cd /usr/ports/www/mod_fcgid
+			#make install
+			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
+			logger_info "Installing cyrus-sasl2-saslauthd from ports..."
+			cd /usr/ports/security/cyrus-sasl2-saslauthd
+			make install
+			cd $previousdir
 			logger_info "Installing dependencies using command: "
 			logger_info " for \$i in $deps; do $install; done"	
 			if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
@@ -889,22 +905,6 @@ install_deps_the_hard_way () {
 				logger_warn "some packages may not have installed successfully."
 				logger_warn "You may wish to check $log for details."
 			fi
-			# Install Apache with suexec_docroot set to /home
-			logger_info "Installing Apache using ports..."
-			previousdir=`pwd`
-			for i in $portsenv; do
-				export $i
-			done
-			cd /usr/ports/www/apache2
-			make $apacheopts install
-			#logger_info "Installing mod_fcgid using ports..."
-			#cd /usr/ports/www/mod_fcgid
-			#make install
-			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
-			logger_info "Installing cyrus-sasl2-saslauthd using ports..."
-			cd /usr/ports/security/cyrus-sasl2-saslauthd
-			make install
-			cd $previousdir
 			return 0
 		;;
 		*)
