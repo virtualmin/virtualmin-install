@@ -119,7 +119,7 @@ runner () {
 		sleep 1
 		echo "$msg failed.  Error (if any): $?"
 		echo
-		echo "Displaying the last 15 lines of the install.log to help troubleshoot this problem:"
+		echo "Displaying the last 15 lines of $log to help troubleshoot this problem:"
 		tail -15 $log
 		return 1
 	fi
@@ -165,7 +165,6 @@ remove_virtualmin_release () {
 
 detect_ip () {
 	primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
-	# XXX syntax is probably wrong for this test 
 	if [ $primaryaddr ]; then
 		logger_info "Primary address detected as $primaryaddr"
 		address=$primaryaddr
@@ -262,7 +261,7 @@ uninstall () {
 		;;
 	esac
 	remove_virtualmin_release
-	echo "Done.  There's probably quite a bit of related packages and such left behind..."
+	echo "Done.  There's probably quite a bit of related packages and such left behind"
 	echo "but all of the Virtualmin-specific packages have been removed."
 	exit 0
 }
@@ -285,13 +284,14 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  Please read the Virtualmin and Early Adopter FAQs before proceeding if
  your system is not a freshly installed and supported OS.
 
- This script is not intended to update your system.  It should only be
+ This script is not intended to update your system!  It should only be
  used to install Virtualmin Professional, on a supported OS.  If you have
  previously installed Virtualmin via this script or the GPL version of 
  this script, upgrades and updates should be handled within Virtualmin
- itself.
+ itself.  Once Virtualmin is installed, you never need to run this script
+ again.
 
- The systems currently supported by our install.sh are:
+ The systems currently supported by install.sh are:
 EOF
 echo "$supported"
 cat <<EOF
@@ -704,8 +704,8 @@ install_virtualmin_release () {
 			logger_info " Attempting to trick this automatic installation script into running"
 			logger_info " is almost certainly a really bad idea.  Platform support requires"
 			logger_info " numerous custom binary executables.  Those packages will almost "
-			logger_info " certainly fail to run, or worse, on any platform other than the one"
-			logger_info " they were built for."
+			logger_info " certainly fail to run on any platform other than the one they were"
+			logger_info " built for."
 			exit 1
 		;;
 	esac
@@ -724,10 +724,7 @@ install_with_apt () {
 		fatal "Installation failed: $?"
 	fi
 
-	logger_info "If you are not regularly updating your system nightly using apt-get"
-	logger_info "we strongly recommend you update now, using the following commands:"
-	logger_info "apt-get update"
-	logger_info "apt-get upgrade"
+	return 0
 }
 
 install_with_yum () {
@@ -740,10 +737,6 @@ install_with_yum () {
 		fatal "Installation failed: $?"
 	fi
 
-	logger_info "If you are not regularly updating your system nightly using yum or up2date"
-	logger_info "we strongly recommend you update now, using the following commands:"
-	logger_info "Fedora/CentOS: yum update"
-	logger_info "RHEL: up2date -u"
 	return 0
 }
 
@@ -759,8 +752,6 @@ install_with_yast () {
 		fatal "Installation failed: $?"
 	fi
 
-	logger_info "If you are not regularly updating your system nightly using yum or up2date"
-	logger_info "we strongly recommend you update now, using yast."
 	return 0
 }
 
@@ -787,10 +778,6 @@ install_with_urpmi () {
 		fatal "Installation failed: $?"
 	fi
 
-	logger_info "If you are not regularly updating your system nightly using urpmi"
- 	logger_info "we strongly recommend you update now, using the following commands:"
-	logger_info "urpmi.update -a"
-	logger_info "urpmi --auto-select"
 	return 0
 }
 
