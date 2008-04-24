@@ -641,7 +641,7 @@ install_virtualmin_release () {
 			install="pkg_add -rIF"
 			install_updates="echo Skipping checking for updates..."
 			portsenv="BATCH=YES DISABLE_VULNERABILITIES=YES"
-			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home"
+			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=42"
 		;;
 		gentoo)
 			package_type="ebuild"
@@ -900,6 +900,7 @@ install_deps_the_hard_way () {
 
 			logger_info "Installing Subversion using ports..."
 			export WITH_MOD_DAV_SVN=yes
+			export WITH_APACHE2_APR=yes
 			cd /usr/ports/www/subversion
 			make install
 
