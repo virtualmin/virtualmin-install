@@ -887,6 +887,12 @@ install_deps_the_hard_way () {
 			logger_info "Installing Apache from ports..."
 			cd /usr/ports/www/apache22
 			make $apacheopts install
+			# Load accept filter into kernel...no idea why, but Apache issues
+			# warnings without it.
+			if ! grep 'accf_http_load=”YES”' /boot/loader.conf; then
+				echo 'accf_http_load=”YES”' >> /boot/loader.conf
+				kldload accf_http
+			fi
 
 			logger_info "Installing mod_fcgid using ports..."
 			cd /usr/ports/www/mod_fcgid
