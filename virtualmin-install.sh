@@ -84,7 +84,7 @@ ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-sim
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl python mailman ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
+pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -622,17 +622,19 @@ install_virtualmin_release () {
 			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
 		;;
 		freebsd)
-			if [[ ! -d /usr/ports && ! -d /usr/ports/www/apache20 ]]; then
-				logger_info " You don't have the ports system installed.  Installation cannot  "
-				logger_info " complete without the ports system.  Would you like to fetch "
-				logger_info " ports now using portsnap?  (This may take a long time.)"
-				logger_info " (y/n)"
-				if ! yesno; then 
-					logger_info " Exiting.  Please install the ports system using portsnap, and"
-					logger_info " run this script again."
-					exit
+			if [ ! -d /usr/ports ]; then
+				if [ ! -d /usr/ports/www/apache20 ]; then
+					logger_info " You don't have the ports system installed.  Installation cannot  "
+					logger_info " complete without the ports system.  Would you like to fetch "
+					logger_info " ports now using portsnap?  (This may take a long time.)"
+					logger_info " (y/n)"
+					if ! yesno; then 
+						logger_info " Exiting.  Please install the ports system using portsnap, and"
+						logger_info " run this script again."
+						exit
+					fi
+					portsnap fetch; portsnap extract
 				fi
-				portsnap fetch; portsnap extract
 			fi
 			package_type="tar"
 			deps=$pkgdeps
@@ -641,7 +643,7 @@ install_virtualmin_release () {
 			install="pkg_add -rIF"
 			install_updates="echo Skipping checking for updates..."
 			portsenv="BATCH=YES DISABLE_VULNERABILITIES=YES"
-			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=42"
+			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
 		;;
 		gentoo)
 			package_type="ebuild"
@@ -792,7 +794,7 @@ install_with_tar () {
 	fi
 	rm webmin-current.tar.gz
 	cd webmin-[0-9]*
-	config_dir=/etc/webmin
+	webmin_config_dir=config_dir=/usr/local/etc/webmin
 	var_dir=/var/webmin
 	autoos=3
 	port=10000
@@ -817,7 +819,7 @@ install_with_tar () {
   fi
   rm usermin-current.tar.gz
   cd usermin-[0-9]*
-  config_dir=/etc/usermin
+  config_dir=/usr/local/etc/usermin
   var_dir=/var/usermin
   autoos=3
   port=20000
@@ -850,13 +852,17 @@ install_with_tar () {
 	done
 
 	# Configure Webmin to use updates.txt
-	echo Configuring Webmin to use Virtualmin updates service
-	echo "upsource=http://software.virtualmin.com/wbm/updates.txt http://www.webmin.com/updates/updates.txt" >>/etc/webmin/webmin/config
-	echo "upthird=1" >>/etc/webmin/webmin/config
-	echo "upuser=$SERIAL" >>/etc/webmin/webmin/config
-	echo "uppass=$KEY" >>/etc/webmin/webmin/config
-	echo "upshow=1" >>/etc/webmin/webmin/config
+	logger_info "Configuring Webmin to use Virtualmin updates service..."
+	echo "upsource=http://software.virtualmin.com/wbm/updates.txt http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
+	echo "upthird=1" >>$webmin_config_dir/webmin/config
+	echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
+	echo "uppass=$KEY" >>$webmin_config_dir/webmin/config
+	echo "upshow=1" >>$webmin_config_dir/webmin/config
 
+	# Configure Webmin to know where apache22 lives
+	logger_info "Configuring Webmin Apache module..."
+	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
+	
 	# Virtualmin configuration
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
 	logger_info `perl virtualmin-base-standalone.pl`
