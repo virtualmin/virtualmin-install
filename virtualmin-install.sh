@@ -867,6 +867,10 @@ install_with_tar () {
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
 	logger_info `perl virtualmin-base-standalone.pl`
 
+	# Add environment settings so that API scripts work
+	echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
+	echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
+
 	return 0
 }
 install_deps_the_hard_way () {
