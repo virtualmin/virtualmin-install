@@ -845,7 +845,7 @@ install_with_tar () {
 		if [ "$?" != "0" ]; then
 			logger_info "Download of Webmin module from $modpath failed"
 		fi
-		/usr/local/webmin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin > $log
+		/usr/local/webmin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
 		if [ "$?" != "0" ]; then
 			logger_info "Installation of Webmin module from $modpath failed"
 		fi
@@ -866,7 +866,7 @@ install_with_tar () {
 	
 	# Virtualmin configuration
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
-	logger_info `perl virtualmin-base-standalone.pl install`
+	perl virtualmin-base-standalone.pl install>>$log
 
 	# Add environment settings so that API scripts work
 	if grep -qv WEBMIN_CONFIG /etc/profile; then 
@@ -904,7 +904,7 @@ install_deps_the_hard_way () {
 			logger_info "Installing Subversion using ports..."
 			export WITH_MOD_DAV_SVN=yes
 			export WITH_APACHE2_APR=yes
-			cd /usr/ports/www/subversion
+			cd /usr/ports/devel/subversion
 			make install
 
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
@@ -914,22 +914,24 @@ install_deps_the_hard_way () {
 
 			logger_info "Installing postfix from ports..."
 			export WITH_SASL2=yes
-			cd /usr/ports/mail/postfix24
+			cd /usr/ports/mail/postfix23
 			make install
 
 			cd $previousdir
 			logger_info "Installing dependencies using command: "
-			logger_info " for i in $deps; do \"$install\" \$i; done"	
-			if runner "...in progress, please wait..." "for i in $deps do \"$install\" $i; done"
-			then success
-			else
+			logger_info " for i in $deps; do $install \$i; done"	
+			for i in $deps; do $install "$i">>$log; done
+			if [ "$?" != "0" ]; then
 				logger_warn "Something went wrong during installation: $?"
 				logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
 				logger_warn "so we're going to proceed as if nothing bad happened."
 				logger_warn "This may lead to problems later in the process, and"
 				logger_warn "some packages may not have installed successfully."
 				logger_warn "You may wish to check $log for details."
+			else
+				success
 			fi
+			
 			return 0
 		;;
 		*)
