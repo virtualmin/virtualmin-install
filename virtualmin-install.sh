@@ -878,6 +878,7 @@ install_with_tar () {
 
 	return 0
 }
+
 install_deps_the_hard_way () {
 	case $os_type in
 		freebsd)
@@ -918,8 +919,8 @@ install_deps_the_hard_way () {
 
 			cd $previousdir
 			logger_info "Installing dependencies using command: "
-			logger_info " for \$i in $deps; do $install; done"	
-			if runner "...in progress, please wait..." "for $i in $deps; do $install; done"
+			logger_info " for \$i in $deps; do $install \$i; done"	
+			if runner "...in progress, please wait..." "for $i in $deps; do $install $i; done"
 			then success
 			else
 				logger_warn "Something went wrong during installation: $?"
