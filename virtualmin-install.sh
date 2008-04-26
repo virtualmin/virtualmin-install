@@ -868,8 +868,12 @@ install_with_tar () {
 	logger_info `perl virtualmin-base-standalone.pl`
 
 	# Add environment settings so that API scripts work
-	echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
-	echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
+	if grep -v WEBMIN_CONFIG /etc/profile; then 
+		echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
+	fi
+	if grep -v WEBMIN_CONFIG /etc/csh.cshrc; then
+		echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
+	fi
 
 	return 0
 }
