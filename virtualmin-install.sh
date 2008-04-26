@@ -794,7 +794,8 @@ install_with_tar () {
 	fi
 	rm webmin-current.tar.gz
 	cd webmin-[0-9]*
-	webmin_config_dir=config_dir=/usr/local/etc/webmin
+	config_dir=/usr/local/etc/webmin
+	webmin_config_dir=$config_dir
 	var_dir=/var/webmin
 	autoos=3
 	port=10000
@@ -844,7 +845,7 @@ install_with_tar () {
 		if [ "$?" != "0" ]; then
 			logger_info "Download of Webmin module from $modpath failed"
 		fi
-		/usr/local/webmin/install-module.pl $tempdir/$modfile > $log
+		/usr/local/webmin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin > $log
 		if [ "$?" != "0" ]; then
 			logger_info "Installation of Webmin module from $modpath failed"
 		fi
@@ -865,13 +866,13 @@ install_with_tar () {
 	
 	# Virtualmin configuration
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
-	logger_info `perl virtualmin-base-standalone.pl`
+	logger_info `perl virtualmin-base-standalone.pl install`
 
 	# Add environment settings so that API scripts work
-	if grep -v WEBMIN_CONFIG /etc/profile; then 
+	if grep -qv WEBMIN_CONFIG /etc/profile; then 
 		echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
 	fi
-	if grep -v WEBMIN_CONFIG /etc/csh.cshrc; then
+	if grep -qv WEBMIN_CONFIG /etc/csh.cshrc; then
 		echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
 	fi
 
@@ -890,14 +891,14 @@ install_deps_the_hard_way () {
 			make $apacheopts install
 			# Load accept filter into kernel...no idea why, but Apache issues
 			# warnings without it.
-			if ! grep 'accf_http_load=”YES”' /boot/loader.conf; then
-				echo 'accf_http_load=”YES”' >> /boot/loader.conf
+			if ! grep -qv 'accf_http_load=”YES”' /boot/loader.conf; then
+				echo 'accf_http_load=”YES”' >>/boot/loader.conf
 				kldload accf_http
 			fi
 
 			logger_info "Installing mod_fcgid using ports..."
 			cd /usr/ports/www/mod_fcgid
-			make $APACHE_VERSION=22 install
+			make APACHE_VERSION=22 install
 
 			logger_info "Installing Subversion using ports..."
 			export WITH_MOD_DAV_SVN=yes
