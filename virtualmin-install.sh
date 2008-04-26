@@ -785,6 +785,8 @@ install_with_urpmi () {
 
 install_with_tar () {
 	logger_info "Installing Webmin..."
+	# Try to make Webmin not disown Apache on install
+	ln -s /usr/local/etc/apache22 /usr/local/etc/apache
 	# Install Webmin
 	if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/webmin-current.tar.gz; then
 		fatal "Retrieving Webmin from software.virtualmin.com failed."
