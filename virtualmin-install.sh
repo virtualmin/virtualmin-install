@@ -656,9 +656,10 @@ install_virtualmin_release () {
 			fi
 			package_type="tar"
 			deps=$pkgdeps
-			# Options: remote, skip scripts, don't fatal 
-			# if already installed
-			install="pkg_add -rIF"
+			# Holy crap!  FreeBSD pkg_add cannot run non-interactively...it leaves
+			# packages in a completely unusable state.  FreeBSD users will just have
+			# to answer a lot of questions during installation.
+			install="pkg_add -r"
 			install_updates="echo Skipping checking for updates..."
 		;;
 		gentoo)
@@ -881,6 +882,8 @@ install_with_tar () {
 	# Configure Webmin to know where apache22 lives
 	logger_info "Configuring Webmin Apache module..."
 	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
+	# Tell Webmin about a great wrongness in the force
+	sed -i -e "s/pid_file=.*/pid_file=\/var\/run\/httpd.pid/" $webmin_config_dir/apache/config
 	
 	# Virtualmin configuration
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
@@ -952,6 +955,23 @@ install_deps_the_hard_way () {
 				success
 			fi
 			
+			# FreeBSD packages aren't very package-like
+			logger_info "Copying default my.cnf and initializing database..."
+			cp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
+			logger_info `/usr/local/etc/rc.d/mysql-server start`
+			
+			# Dovecot won't start with our default config without an SSL cert
+			mkdir /etc/ssl/certs/; mkdir /etc/ssl/private
+			openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
+			openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
+
+			# SpamAssassin needs a config file
+			cp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
+			
+			# Clam needs fresh database
+			logger_info "Initializing the clamav database.  This may take a long time..."
+			freshclam
+
 			return 0
 		;;
 		*)
