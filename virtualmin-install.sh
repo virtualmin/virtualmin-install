@@ -84,7 +84,7 @@ ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-sim
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql51-server mysql51-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
+pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -200,9 +200,9 @@ set_hostname () {
 				shortname=`echo $line | cut -d"." -f1`
 				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
 			else
-			logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
-			echo -e "$address\t$line\t$shortname" >> /etc/hosts
-		fi
+				logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
+				echo -e "$address\t$line\t$shortname" >> /etc/hosts
+			fi
 		i=1
 	fi
 	done
@@ -450,6 +450,24 @@ logger_debug "install.sh version: $VER"
 logger_info "Checking for fully qualified hostname..."
 name=`hostname -f`
 if ! is_fully_qualified $name; then set_hostname
+fi
+
+# FreeBSD returns a FQDN without having it set in /etc/hosts...but
+# Apache doesn't use it unless it's in hosts
+if ! grep $name /etc/hosts; then
+	. /etc/rc.conf
+	primaryiface=`echo $network_interfaces | cut -d" " -f1`
+	address=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`
+	logger_info "Detected IP $address for $primaryiface..."
+	if grep $address /etc/hosts; then
+		logger_info "Entry for IP $address exists in /etc/hosts."
+		logger_info "Updating with new hostname."
+		shortname=`echo $name | cut -d"." -f1`
+		sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
+	else
+		logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
+		echo -e "$address\t$name\t$shortname" >> /etc/hosts
+	fi	
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
@@ -856,7 +874,7 @@ install_with_tar () {
 
 	# Configure Webmin to use updates.txt
 	logger_info "Configuring Webmin to use Virtualmin updates service..."
-	echo "upsource=http://software.virtualmin.com/wbm/updates.txt http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
+	echo "upsource=http://software.virtualmin.com/wbm/updates.txt	http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
 	echo "upthird=1" >>$webmin_config_dir/webmin/config
 	echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
 	echo "uppass=$KEY" >>$webmin_config_dir/webmin/config
