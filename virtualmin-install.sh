@@ -814,6 +814,9 @@ install_with_urpmi () {
 }
 
 install_with_tar () {
+	# XXX This is FreeBSD specific at the moment.  Needs to be smarter for other BSDs
+	# or merging the solaris standalone installer into this script.  It'll probably
+	# be rewritten in perl by then anyway.
 	logger_info "Installing Webmin..."
 	# Try to make Webmin not disown Apache on install
 	ln -s /usr/local/etc/apache22 /usr/local/etc/apache
@@ -910,6 +913,19 @@ install_with_tar () {
 		echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
 	fi
 
+	# Dovecot won't start with our default config without an SSL cert
+	testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
+	openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
+	openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
+
+	# Tons of syntax errors in the default Apache configuration files.
+	# Seriously?  Syntax errors?
+	rm /usr/local/etc/apache22/extra/httpd-vhosts.conf
+	echo "NameVirtualHost $address:80" > /usr/local/etc/apache22/extra/httpd-vhosts.conf
+
+	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
+	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
+
 	return 0
 }
 
@@ -973,11 +989,6 @@ install_deps_the_hard_way () {
 			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
 			logger_info `/usr/local/etc/rc.d/mysql-server start`
 			
-			# Dovecot won't start with our default config without an SSL cert
-			testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
-			openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
-			openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
-
 			# SpamAssassin needs a config file
 			cp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
 			
