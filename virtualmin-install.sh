@@ -900,6 +900,7 @@ install_with_tar () {
 	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
 	# Tell Webmin about a great wrongness in the force
 	sed -i -e "s/pid_file=.*/pid_file=\/var\/run\/httpd.pid/" $webmin_config_dir/apache/config
+	sed -i -e "s/httpd_dir=.*/httpd_dir=\/usr\/local/" $webmin_config_dir/apache/config
 	
 	# Virtualmin configuration
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
