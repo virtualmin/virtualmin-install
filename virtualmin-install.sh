@@ -102,6 +102,19 @@ yesno () {
 	done
 }
 
+# mkdir if it doesn't exist
+testmkdir () {
+	if [ ! -d $1 ]; then
+		mkdir -p $1
+	fi
+}
+# Copy a file if the destination doesn't exist
+testcp () {
+	if [ ! -e $2 ]; then
+		cp $1 $2
+	fi
+}
+	
 # Perform an action, log it, and run the spinner throughout
 runner () {
 	msg=$1
@@ -957,11 +970,11 @@ install_deps_the_hard_way () {
 			
 			# FreeBSD packages aren't very package-like
 			logger_info "Copying default my.cnf and initializing database..."
-			cp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
+			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
 			logger_info `/usr/local/etc/rc.d/mysql-server start`
 			
 			# Dovecot won't start with our default config without an SSL cert
-			mkdir /etc/ssl/certs/; mkdir /etc/ssl/private
+			testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
 			openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
 			openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
 
@@ -971,6 +984,17 @@ install_deps_the_hard_way () {
 			# Clam needs fresh database
 			logger_info "Initializing the clamav database.  This may take a long time..."
 			freshclam
+
+			# awstats
+			testmkdir /usr/local/etc/awstats
+			testcp /usr/local/www/awstats/cgi-bin/awstats.model.conf /usr/local/etc/awstats/
+
+			# www user needs a shell to run mailman commands
+			chpass -s /bin/sh www
+
+			# Virtualmin can't guess the interface on FreeBSD (and neither can this
+			# script, but it pretends)
+			sed -i -e "s/iface=.*/iface=$primaryiface/"
 
 			return 0
 		;;
