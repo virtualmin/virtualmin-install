@@ -923,9 +923,12 @@ install_with_tar () {
 	# Seriously?  Syntax errors?
 	rm /usr/local/etc/apache22/extra/httpd-vhosts.conf
 	echo "NameVirtualHost $address:80" > /usr/local/etc/apache22/extra/httpd-vhosts.conf
-
 	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
+
+	# Virtualmin can't guess the interface on FreeBSD (and neither can this
+	# script, but it pretends)
+	sed -i -e "s/iface=.*/iface=$primaryiface/"
 
 	return 0
 }
@@ -1003,10 +1006,6 @@ install_deps_the_hard_way () {
 
 			# www user needs a shell to run mailman commands
 			chpass -s /bin/sh www
-
-			# Virtualmin can't guess the interface on FreeBSD (and neither can this
-			# script, but it pretends)
-			sed -i -e "s/iface=.*/iface=$primaryiface/"
 
 			return 0
 		;;
