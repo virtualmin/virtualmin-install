@@ -899,10 +899,18 @@ install_with_tar () {
 	logger_info "Configuring Webmin Apache module..."
 	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
 	# Tell Webmin about a great wrongness in the force
-	sed -i -e "s/pid_file=.*/pid_file=\/var\/run\/httpd.pid/" $webmin_config_dir/apache/config
+	if grep pid_file $webmin_config_dir/apache/config; then
+		sed -i -e "s/pid_file=.*/pid_file=\/var\/run\/httpd.pid/" $webmin_config_dir/apache/config
+	else
+		echo "pid_file=/var/run/httpd.pid" >> $webmin_config_dir/apache/config
+	fi
 	sed -i -e "s/httpd_dir=.*/httpd_dir=\/usr\/local/" $webmin_config_dir/apache/config
 	
+	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
+	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
+
 	# Virtualmin configuration
+	WEBMIN_CONFIG=/usr/local/etc/webmin
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
 	perl virtualmin-base-standalone.pl install>>$log
 
@@ -928,7 +936,7 @@ install_with_tar () {
 
 	# Virtualmin can't guess the interface on FreeBSD (and neither can this
 	# script, but it pretends)
-	sed -i -e "s/iface=.*/iface=$primaryiface/"
+	sed -i -e "s/iface=.*/iface=$primaryiface/" $webmin_config_dir/virtual-server/config
 
 	return 0
 }
@@ -991,6 +999,7 @@ install_deps_the_hard_way () {
 			# FreeBSD packages aren't very package-like
 			logger_info "Copying default my.cnf and initializing database..."
 			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
+			testmkdir /var/db/mysql
 			logger_info `/usr/local/etc/rc.d/mysql-server start`
 			
 			# SpamAssassin needs a config file
