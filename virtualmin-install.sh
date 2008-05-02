@@ -910,7 +910,7 @@ install_with_tar () {
 	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
 
 	# Virtualmin configuration
-	WEBMIN_CONFIG=/usr/local/etc/webmin
+	export WEBMIN_CONFIG=/usr/local/etc/webmin
 	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
 	perl virtualmin-base-standalone.pl install>>$log
 
