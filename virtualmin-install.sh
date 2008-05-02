@@ -929,8 +929,12 @@ install_with_tar () {
 
 	# Tons of syntax errors in the default Apache configuration files.
 	# Seriously?  Syntax errors?
-	rm /usr/local/etc/apache22/extra/httpd-vhosts.conf
-	echo "NameVirtualHost $address:80" > /usr/local/etc/apache22/extra/httpd-vhosts.conf
+	vhostsconf=/usr/local/etc/apache22/extra/httpd-vhosts.conf
+	sed -i -e "s/NameVirtualHost \*:80/NameVirtualHost $address:80/" $vhostsconf
+	sed -i -e "s/VirtualHost \*:80/VirtualHost $address:80/" $vhostsconf
+	sed -i -e "s#CustomLog \"/var/log/dummy-host.example.com-access_log common\"#CustomLog \"/var/log/dummy-host.example.com-access_log\" common#" $vhostsconf
+	sed -i -e "s#CustomLog \"/var/log/dummy-host2.example.com-access_log common\"#CustomLog \"/var/log/dummy-host2.example.com-access_log\" common#" $vhostsconf
+
 	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
 
@@ -1003,7 +1007,7 @@ install_deps_the_hard_way () {
 			logger_info `/usr/local/etc/rc.d/mysql-server start`
 			
 			# SpamAssassin needs a config file
-			cp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
+			testcp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
 			
 			# Clam needs fresh database
 			logger_info "Initializing the clamav database.  This may take a long time..."
