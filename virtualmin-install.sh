@@ -119,8 +119,8 @@ setconfig () {
 	sc_config=$2
 	sc_value=$1
 	sc_directive=`echo $sc_value | cut -d'=' -f1`
-	if grep $sc_directive $2; then
-		sed -i -e "s/$sc_directive.*/$sc_value/" $sc_config
+	if grep -q $sc_directive $2; then
+		sed -i -e "s#$sc_directive.*#$sc_value#" $sc_config
 	else
 		echo $1 >> $2
 	fi
