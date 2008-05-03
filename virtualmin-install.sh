@@ -916,10 +916,10 @@ install_with_tar () {
 		echo "pid_file=/var/run/httpd.pid" >> $webmin_config_dir/apache/config
 	fi
 	sed -i -e "s/httpd_dir=.*/httpd_dir=\/usr\/local/" $webmin_config_dir/apache/config
-	setconfig "stop_cmd=/usr/local/etc/apache22 stop" $webmin_config_dir/apache/config
-	setconfig "start_cmd=/usr/local/etc/apache22 start" $webmin_config_dir/apache/config
-	setconfig "graceful_cmd=/usr/local/etc/apache22 reload" $webmin_config_dir/apache/config
-	setconfig "apply_cmd=/usr/local/etc/apache22 restart" $webmin_config_dir/apache/config
+	setconfig "stop_cmd=/usr/local/etc/rc.d/apache22 stop" $webmin_config_dir/apache/config
+	setconfig "start_cmd=/usr/local/etc/rc.d/apache22 start" $webmin_config_dir/apache/config
+	setconfig "graceful_cmd=/usr/local/etc/rc.d/apache22 reload" $webmin_config_dir/apache/config
+	setconfig "apply_cmd=/usr/local/etc/rc.d/apache22 restart" $webmin_config_dir/apache/config
 	
 	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
 	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
