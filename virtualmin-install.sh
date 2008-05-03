@@ -114,6 +114,17 @@ testcp () {
 		cp $1 $2
 	fi
 }
+# Set a Webmin directive or add it if it doesn't exist
+setconfig () {
+	sc_config=$2
+	sc_value=$1
+	sc_directive=`echo $sc_value | cut -d'=' -f1`
+	if grep $sc_directive $2; then
+		sed -i -e "s/$sc_directive.*/$sc_value/" $sc_config
+	else
+		echo $1 >> $2
+	fi
+}
 	
 # Perform an action, log it, and run the spinner throughout
 runner () {
@@ -905,6 +916,10 @@ install_with_tar () {
 		echo "pid_file=/var/run/httpd.pid" >> $webmin_config_dir/apache/config
 	fi
 	sed -i -e "s/httpd_dir=.*/httpd_dir=\/usr\/local/" $webmin_config_dir/apache/config
+	setconfig "stop_cmd=/usr/local/etc/apache22 stop" $webmin_config_dir/apache/config
+	setconfig "start_cmd=/usr/local/etc/apache22 start" $webmin_config_dir/apache/config
+	setconfig "graceful_cmd=/usr/local/etc/apache22 reload" $webmin_config_dir/apache/config
+	setconfig "apply_cmd=/usr/local/etc/apache22 restart" $webmin_config_dir/apache/config
 	
 	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
 	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
