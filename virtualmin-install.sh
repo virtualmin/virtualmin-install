@@ -84,7 +84,7 @@ ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-sim
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql83-server postgresql83-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
+pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -949,6 +949,9 @@ install_with_tar () {
 	sed -i -e "s/VirtualHost \*:80/VirtualHost $address:80/" $vhostsconf
 	sed -i -e "s#CustomLog \"/var/log/dummy-host.example.com-access_log common\"#CustomLog \"/var/log/dummy-host.example.com-access_log\" common#" $vhostsconf
 	sed -i -e "s#CustomLog \"/var/log/dummy-host2.example.com-access_log common\"#CustomLog \"/var/log/dummy-host2.example.com-access_log\" common#" $vhostsconf
+	# mod_dav loaded twice.  No idea why, but luckily, they have slightly
+	# different spacing, so we can strip out just one of 'em.
+	sed -i -e "s#LoadModule dav_module         libexec/apache22/mod_dav.so##" /usr/local/etc/apache22/httpd.conf
 
 	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
@@ -970,7 +973,7 @@ install_deps_the_hard_way () {
 
 			previousdir=`pwd`
 			logger_info "Installing Apache from ports..."
-			apacheopts="WITH_AUTH_MODULES=yes WITH_DAV_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
+			apacheopts="WITH_AUTH_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
 			cd /usr/ports/www/apache22
 			make $apacheopts install
 			# Load accept filter into kernel...no idea why, but Apache issues
