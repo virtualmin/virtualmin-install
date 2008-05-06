@@ -920,6 +920,10 @@ install_with_tar () {
 	setconfig "graceful_cmd=/usr/local/etc/rc.d/apache22 reload" $webmin_config_dir/apache/config
 	setconfig "apply_cmd=/usr/local/etc/rc.d/apache22 restart" $webmin_config_dir/apache/config
 	
+	# Configure Webmin to know how to stop and start MySQL
+	setconfig "start_cmd=/usr/local/etc/rc.d/mysql-server start" $webmin_config_dir/mysql/config
+	setconfig "stop_cmd=/usr/local/etc/rc.d/mysql-server stop" $webmin_config_dir/mysql/config
+
 	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
 	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
 
@@ -1039,7 +1043,7 @@ install_deps_the_hard_way () {
 
 			# awstats
 			testmkdir /usr/local/etc/awstats
-			testcp /usr/local/www/awstats/cgi-bin/awstats.model.conf /usr/local/etc/awstats/
+			testcp /usr/local/www/awstats/cgi-bin/awstats.model.conf /usr/local/etc/awstats/awstats.model.conf
 
 			# www user needs a shell to run mailman commands
 			chpass -s /bin/sh www
