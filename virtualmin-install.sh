@@ -758,9 +758,7 @@ install_with_apt () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 
-	if runner "$install $virtualminmeta"; then
-		logger_info "Installation of $virtualminmeta completed."
-	else
+	if ! runner "$install $virtualminmeta"; then
 		fatal "Installation failed: $?"
 	fi
 
@@ -771,9 +769,7 @@ install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "yum -y -d 2 install $virtualminmeta"
 
-	if runner "yum -y -d 2 install $virtualminmeta"; then
-		logger_info "Installation of $virtualminmeta completed."
-	else
+	if ! runner "yum -y -d 2 install $virtualminmeta"; then
 		fatal "Installation failed: $?"
 	fi
 
@@ -956,7 +952,8 @@ install_with_tar () {
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
 
 	# PostgreSQL needs to be initialized
-	/usr/local/etc/rc.d/postgresql initdb
+	logger_info "Initializing postgresql database..."
+	runner "/usr/local/etc/rc.d/postgresql initdb"
 
 	# Webmin <=1.411 doesn't know the right paths
 	setconfig "stop_cmd=/usr/local/etc/rc.d/postgresql stop" $webmin_config_dir/postgresql/config
@@ -1055,11 +1052,10 @@ install_deps_the_hard_way () {
 		;;
 		*)
 			logger_info "Installing dependencies using command: $install $deps"
-			if runner "$install $deps"
-			then return 0
-			else
+			if ! runner "$install $deps"
 				fatal "Something went wrong during installation: $?"
 			fi
+			return 0
 		;;
 	esac
 }
@@ -1114,9 +1110,7 @@ install_virtualmin
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
 logger_info "Checking for updates to Virtualmin-related packages..."
-if runner "$install_updates"; then
-	success
-else
+if ! runner "$install_updates"; then
 	logger_info "There may have been a problem updating some packages."
 fi
 
