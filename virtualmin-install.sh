@@ -959,7 +959,10 @@ install_with_tar () {
 	/usr/local/etc/rc.d/postgresql initdb
 
 	# Webmin <=1.411 doesn't know the right paths
-	sed -i -e "s#/usr/local/etc/rc.d/010.pgsql.sh#/usr/local/etc/rc.d/postgresql.sh#" $webmin_config_dir/postgresql/config
+	setconfig "stop_cmd=/usr/local/etc/rc.d/postgresql stop" $webmin_config_dir/postgresql/config
+	setconfig "start_cmd=/usr/local/etc/rc.d/postgresql start" $webmin_config_dir/postgresql/config
+	setconfig "setup_cmd=/usr/local/etc/rc.d/postgresql initdb" $webmin_config_dir/postgresql/config
+
 
 	# Virtualmin configuration
 	export WEBMIN_CONFIG=/usr/local/etc/webmin
