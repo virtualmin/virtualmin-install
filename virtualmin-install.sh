@@ -128,8 +128,8 @@ setconfig () {
 	
 # Perform an action, log it, and run the spinner throughout
 runner () {
-	msg=$1
-	cmd=$2
+	cmd=$1
+	echo "...in progress, please wait..."
 	touch busy
 	logger_info "$msg"
 	$srcdir/spinner busy &
@@ -696,7 +696,14 @@ install_virtualmin_release () {
 			package_type="deb"
 			if [ $os_type = "ubuntu" ]; then
 				deps=$ubudeps
-				repo="virtualmin-dapper"
+				case $os_version in
+					6.06*)
+						repo="virtualmin-dapper"
+					;;
+					8.04*)
+						repo="virtualmin-hardy"
+					;;
+				esac
 			else
 				deps=$debdeps
 				case $os_version in
@@ -737,18 +744,9 @@ install_virtualmin_release () {
 		;;
 		*)
 			logger_info " Your OS is not currently supported by this installer."
-			logger_info " You may be able to run Virtualmin Professional on your system, anyway,"
+			logger_info " You can probably run Virtualmin Professional on your system, anyway,"
 			logger_info " but you'll have to install it using the manual installation process."
-			logger_info " Refer to Chapter 2 of the Virtualmin Administrator's Guide for more"
-			logger_info " information.  You may also wish to open a customer support issue so"
-			logger_info " that we can guide you through the process--depending on your needs"
-			logger_info " and environment, it can be rather complex."
 			logger_info ""
-			logger_info " Attempting to trick this automatic installation script into running"
-			logger_info " is almost certainly a really bad idea.  Platform support requires"
-			logger_info " numerous custom binary executables.  Those packages will almost "
-			logger_info " certainly fail to run on any platform other than the one they were"
-			logger_info " built for."
 			exit 1
 		;;
 	esac
@@ -761,7 +759,7 @@ install_with_apt () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 
-	if runner "...in progress, please wait..." "$install $virtualminmeta"; then
+	if runner "$install $virtualminmeta"; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -774,7 +772,7 @@ install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "yum -y -d 2 install $virtualminmeta"
 
-	if runner "...in progress, please wait..." "yum -y -d 2 install $virtualminmeta"; then
+	if runner "yum -y -d 2 install $virtualminmeta"; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -852,7 +850,8 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=virtual-server-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	runner "Installing Webmin, please wait..." "./setup.sh /usr/local/webmin"
+	logger_info "Installing Webmin..."
+	runner "./setup.sh /usr/local/webmin"
 	cd $tempdir
 	rm -rf webmin-[0-9]*
 
@@ -877,7 +876,8 @@ install_with_tar () {
   perl=/usr/bin/perl
   theme=virtual-server-theme
   export config_dir var_dir autoos port login crypt ssl atboot perl theme
-  runner "Installing Usermin, please wait..." "./setup.sh /usr/local/usermin"
+	logger_info "Installing Usermin..."
+  runner "./setup.sh /usr/local/usermin"
   cd $tempdir
   rm -rf usermin-[0-9]*
 
@@ -941,6 +941,13 @@ install_with_tar () {
 	testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
 	openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
 	openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
+	# Start dovecot once to prime it...for some reason Webmin fails to start
+	# it during virtualmin-base-standalone, even though starting it manually
+	# immediately after works without error.  And, it always starts every time
+	# after.  Weird.
+	/usr/local/etc/rc.d/dovecot start >> $log
+	sleep 1
+	/usr/local/etc/rc.d/dovecot stop >> $log
 
 	# Tons of syntax errors in the default Apache configuration files.
 	# Seriously?  Syntax errors?
@@ -953,8 +960,14 @@ install_with_tar () {
 	# different spacing, so we can strip out just one of 'em.
 	sed -i -e "s#LoadModule dav_module         libexec/apache22/mod_dav.so##" /usr/local/etc/apache22/httpd.conf
 
+	# Dummy SSL cert, if none exists
 	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
+
+	# PostgreSQL needs to be initialized
+	/usr/local/etc/rc.d/postgresql initdb
+	# Webmin <=1.411 doesn't know the right paths
+	sed -i -e "s#/usr/local/etc/rc.d/010.pgsql.sh#/usr/local/etc/rc.d/postgresql.sh#" $webmin_config_dir/postgresql/config
 
 	# Virtualmin can't guess the interface on FreeBSD (and neither can this
 	# script, but it pretends)
@@ -1042,7 +1055,7 @@ install_deps_the_hard_way () {
 		;;
 		*)
 			logger_info "Installing dependencies using command: $install $deps"
-			if runner "...in progress, please wait..." "$install $deps"
+			if runner "$install $deps"
 			then return 0
 			else
 				fatal "Something went wrong during installation: $?"
@@ -1101,7 +1114,7 @@ install_virtualmin
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
 logger_info "Checking for updates to Virtualmin-related packages..."
-if runner "...in progress, please wait..." "$install_updates"; then
+if runner "$install_updates"; then
 	success
 else
 	logger_info "There may have been a problem updating some packages."
