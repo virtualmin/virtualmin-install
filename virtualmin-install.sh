@@ -131,17 +131,16 @@ runner () {
 	cmd=$1
 	echo "...in progress, please wait..."
 	touch busy
-	logger_info "$msg"
 	$srcdir/spinner busy &
 	if $cmd >> $log; then
 		rm busy
 		sleep 1
-		success "$msg"
+		success "$cmd succeeded."
 		return 0
 	else
 		rm busy
 		sleep 1
-		echo "$msg failed.  Error (if any): $?"
+		echo "$cmd failed.  Error (if any): $?"
 		echo
 		echo "Displaying the last 15 lines of $log to help troubleshoot this problem:"
 		tail -15 $log
@@ -924,11 +923,6 @@ install_with_tar () {
 	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
 	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
 
-	# Virtualmin configuration
-	export WEBMIN_CONFIG=/usr/local/etc/webmin
-	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
-	perl virtualmin-base-standalone.pl install>>$log
-
 	# Add environment settings so that API scripts work
 	if grep -qv WEBMIN_CONFIG /etc/profile; then 
 		echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
@@ -941,13 +935,6 @@ install_with_tar () {
 	testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
 	openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
 	openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
-	# Start dovecot once to prime it...for some reason Webmin fails to start
-	# it during virtualmin-base-standalone, even though starting it manually
-	# immediately after works without error.  And, it always starts every time
-	# after.  Weird.
-	/usr/local/etc/rc.d/dovecot start >> $log
-	sleep 1
-	/usr/local/etc/rc.d/dovecot stop >> $log
 
 	# Tons of syntax errors in the default Apache configuration files.
 	# Seriously?  Syntax errors?
@@ -966,8 +953,14 @@ install_with_tar () {
 
 	# PostgreSQL needs to be initialized
 	/usr/local/etc/rc.d/postgresql initdb
+
 	# Webmin <=1.411 doesn't know the right paths
 	sed -i -e "s#/usr/local/etc/rc.d/010.pgsql.sh#/usr/local/etc/rc.d/postgresql.sh#" $webmin_config_dir/postgresql/config
+
+	# Virtualmin configuration
+	export WEBMIN_CONFIG=/usr/local/etc/webmin
+	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
+	perl virtualmin-base-standalone.pl install>>$log
 
 	# Virtualmin can't guess the interface on FreeBSD (and neither can this
 	# script, but it pretends)
