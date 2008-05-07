@@ -1052,7 +1052,7 @@ install_deps_the_hard_way () {
 		;;
 		*)
 			logger_info "Installing dependencies using command: $install $deps"
-			if ! runner "$install $deps"
+			if ! runner "$install $deps"; then
 				fatal "Something went wrong during installation: $?"
 			fi
 			return 0
