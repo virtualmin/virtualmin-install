@@ -135,7 +135,7 @@ runner () {
 	if $cmd >> $log; then
 		rm busy
 		sleep 1
-		success "$cmd succeeded."
+		success "$cmd:"
 		return 0
 	else
 		rm busy
@@ -936,6 +936,10 @@ install_with_tar () {
 	openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
 	openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
 
+	# It's possible to get here without address being defined
+	. /etc/rc.conf
+	primaryiface=${primaryiface:=`echo $network_interfaces | cut -d" " -f1`}
+	address=${address:=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`}
 	# Tons of syntax errors in the default Apache configuration files.
 	# Seriously?  Syntax errors?
 	vhostsconf=/usr/local/etc/apache22/extra/httpd-vhosts.conf
