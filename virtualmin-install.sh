@@ -224,7 +224,7 @@ set_hostname () {
 				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
 			else
 				logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
-				echo -e "$address\t$line\t$shortname" >> /etc/hosts
+				printf "$address\t$line\t$shortname\n" >> /etc/hosts
 			fi
 		i=1
 	fi
@@ -477,20 +477,22 @@ fi
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
-if ! grep $name /etc/hosts; then
+if [ "$os_type" = "freebsd" ]; then
 	. /etc/rc.conf
 	primaryiface=`echo $network_interfaces | cut -d" " -f1`
 	address=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`
-	logger_info "Detected IP $address for $primaryiface..."
-	if grep $address /etc/hosts; then
-		logger_info "Entry for IP $address exists in /etc/hosts."
-		logger_info "Updating with new hostname."
-		shortname=`echo $name | cut -d"." -f1`
-		sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
-	else
-		logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
-		echo -e "$address\t$name\t$shortname" >> /etc/hosts
-	fi	
+	if ! grep $name /etc/hosts; then
+		logger_info "Detected IP $address for $primaryiface..."
+		if grep $address /etc/hosts; then
+			logger_info "Entry for IP $address exists in /etc/hosts."
+			logger_info "Updating with new hostname."
+			shortname=`echo $name | cut -d"." -f1`
+			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
+		else
+			logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
+			printf "$address\t$name\t$shortname\n" >> /etc/hosts
+		fi	
+	fi
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
