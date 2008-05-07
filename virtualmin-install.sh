@@ -475,26 +475,6 @@ name=`hostname -f`
 if ! is_fully_qualified $name; then set_hostname
 fi
 
-# FreeBSD returns a FQDN without having it set in /etc/hosts...but
-# Apache doesn't use it unless it's in hosts
-if [ "$os_type" = "freebsd" ]; then
-	. /etc/rc.conf
-	primaryiface=`echo $network_interfaces | cut -d" " -f1`
-	address=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`
-	if ! grep $name /etc/hosts; then
-		logger_info "Detected IP $address for $primaryiface..."
-		if grep $address /etc/hosts; then
-			logger_info "Entry for IP $address exists in /etc/hosts."
-			logger_info "Updating with new hostname."
-			shortname=`echo $name | cut -d"." -f1`
-			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
-		else
-			logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
-			printf "$address\t$name\t$shortname\n" >> /etc/hosts
-		fi	
-	fi
-fi
-
 # Insert the serial number and password into /etc/virtualmin-license
 logger_info "Installing serial number and license key into /etc/virtualmin-license"
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
@@ -524,6 +504,26 @@ if [ "$os_type" = "" ]; then
 fi
 logger_info "Operating system name:    $real_os_type"
 logger_info "Operating system version: $real_os_version"
+
+# FreeBSD returns a FQDN without having it set in /etc/hosts...but
+# Apache doesn't use it unless it's in hosts
+if [ "$os_type" = "freebsd" ]; then
+	. /etc/rc.conf
+	primaryiface=`echo $network_interfaces | cut -d" " -f1`
+	address=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`
+	if ! grep $name /etc/hosts; then
+		logger_info "Detected IP $address for $primaryiface..."
+		if grep $address /etc/hosts; then
+			logger_info "Entry for IP $address exists in /etc/hosts."
+			logger_info "Updating with new hostname."
+			shortname=`echo $name | cut -d"." -f1`
+			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
+		else
+			logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
+			printf "$address\t$name\t$shortname\n" >> /etc/hosts
+		fi	
+	fi
+fi
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
@@ -949,6 +949,8 @@ install_with_tar () {
 	sed -i -e "s/VirtualHost \*:80/VirtualHost $address:80/" $vhostsconf
 	sed -i -e "s#CustomLog \"/var/log/dummy-host.example.com-access_log common\"#CustomLog \"/var/log/dummy-host.example.com-access_log\" common#" $vhostsconf
 	sed -i -e "s#CustomLog \"/var/log/dummy-host2.example.com-access_log common\"#CustomLog \"/var/log/dummy-host2.example.com-access_log\" common#" $vhostsconf
+	sed -i -e "s#/usr/local/docs/dummy-host.example.com#/usr/local/www/apache22/data#" $vhostsconf
+	sed -i -e "s#/usr/local/docs/dummy-host2.example.com#/usr/local/www/apache22/data#" $vhostsconf
 	# mod_dav loaded twice.  No idea why, but luckily, they have slightly
 	# different spacing, so we can strip out just one of 'em.
 	sed -i -e "s#LoadModule dav_module         libexec/apache22/mod_dav.so##" /usr/local/etc/apache22/httpd.conf
