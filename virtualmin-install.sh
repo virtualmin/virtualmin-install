@@ -15,13 +15,13 @@
 # See here: http://www.virtualmin.com/support/documentation/virtualmin-admin-guide/ch02.html#id2654070
 
 # Currently supported systems:
-prosupported=" Fedora Core 3-6 on i386 and x86_64
+prosupported=" Fedora Core 5-8 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Debian 3.1 and 4.0 on i386 and amd64
  Ubuntu 6.06 LTS on i386 and amd64
  FreeBSD 7-RELEASE on i386 and amd64"
-gplsupported=" CentOS 5 on i386 and x86_64
+gplsupported=" CentOS 4 and 5 on i386 and x86_64
  Debian 4.0 on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -79,7 +79,7 @@ urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_da
 # Debian
 debdeps="postfix postfix-tls postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
+ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota"
 # pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
