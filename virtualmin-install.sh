@@ -22,7 +22,8 @@ prosupported=" Fedora Core 5-8 on i386 and x86_64
  Ubuntu 6.06 LTS on i386 and amd64
  FreeBSD 7-RELEASE on i386 and amd64"
 gplsupported=" CentOS 4 and 5 on i386 and x86_64
- Debian 4.0 on i386 and amd64"
+ Debian 4.0 on i386 and amd64
+ Ubuntu 8.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
 
@@ -49,6 +50,9 @@ esac
 SERIAL=ZEZZZZZE
 KEY=sdfru8eu38jjdf
 VER=EA5.0
+echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
+echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
+
 arch=`uname -m`
 if [ "$arch" = "i686" ]; then
 	arch=i386
