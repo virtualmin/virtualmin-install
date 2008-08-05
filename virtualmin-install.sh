@@ -576,11 +576,9 @@ install_virtualmin_release () {
 				# CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
 			fi
-			if [ -r /usr/share/rhn/RPM-GPG-KEY ]; then
-				rpm --import /usr/share/rhn/RPM-GPG-KEY
-			fi
-			if [ -r /etc/pki/rpm-gpg/RPM-GPG-KEY-* ]; then
-				rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-*
+			keyfiles=`ls -d /usr/share/rhn/RPM-GPG-KEY /etc/pki/rpm-gpg/RPM-GPG-KEY-* 2>/dev/null`
+			if [ "$keyfiles" != "" ]; then
+				rpm --import $keyfiles
 			fi
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
