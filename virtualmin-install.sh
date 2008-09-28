@@ -47,8 +47,8 @@ case $1 in
 	;;
 esac
 
-SERIAL=ZEZZZZZE
-KEY=sdfru8eu38jjdf
+SERIAL=5556348
+KEY=ZJEOVNCMRB
 VER=EA5.0
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
@@ -165,7 +165,7 @@ fatal () {
 	remove_virtualmin_release
 	if [ -x $tempdir ]; then
 		logger_fatal "Removing temporary directory and files."
-		rm -rf /tmp/.virtualmin*
+		rm -rf $tempdir 
 	fi
 	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
 	logger_fatal "in $log"
@@ -188,8 +188,8 @@ remove_virtualmin_release () {
 			rpm -e virtualmin-release
       	;;
 		"debian" | "ubuntu" )
-			grep -v "virtualmin" /etc/apt/sources.list > /tmp/sources.list
-			mv /tmp/sources.list /etc/apt/sources.list 
+			grep -v "virtualmin" /etc/apt/sources.list > $tempdir/sources.list
+			mv $tempdir/sources.list /etc/apt/sources.list 
 		;;
 	esac
 }
@@ -427,10 +427,13 @@ if [ "$?" != "0" ]; then
 fi
 
 # Find temp directory
+if [ "$TMPDIR" = "" ]; then
+	TMPDIR=/tmp
+fi
 if [ "$tempdir" = "" ]; then
-	tempdir=/tmp/.virtualmin-$$
-	if [ -e "/tmp/.virtualmin*" ]; then
-		rm -rf /tmp/.virtualmin*
+	tempdir=$TMPDIR/.virtualmin-$$
+	if [ -e "$tempdir" ]; then
+		rm -rf $tempdir
 	fi
 	mkdir $tempdir
 fi
@@ -576,10 +579,12 @@ install_virtualmin_release () {
 				# CentOS doesn't always have up2date?
 				install="/usr/bin/yum -y -d 2 install"
 			fi
-			keyfiles=`ls -d /usr/share/rhn/RPM-GPG-KEY /etc/pki/rpm-gpg/RPM-GPG-KEY-* 2>/dev/null`
-			if [ "$keyfiles" != "" ]; then
-				rpm --import $keyfiles
+			if [ -r "/usr/share/rhn/RPM-GPG-KEY" ]; then
+				rpm --import /usr/share/rhn/RPM-GPG-KEY
 			fi
+			for i in /etc/pki/rpm-gpg/RPM-GPG-KEY-*; do
+				rpm --import $i
+			done
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
 				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm
