@@ -97,6 +97,9 @@ pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openss
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
 yesno () {
+	if [ "$VIRTUALMIN_NONINTERACTIVE" != "" ]; then
+		return 1
+	fi
 	while read line; do
 		case $line in
 			y|Y|Yes|YES|yes|yES|yEs|YeS|yeS) return 0
