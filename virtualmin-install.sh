@@ -208,6 +208,10 @@ detect_ip () {
 		echo "Please enter the name of your primary network interface: "
 		read primaryinterface
 		primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+		if [ "$primaryaddr" = "" ]; then
+			# Try again with FreeBSD format
+			primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet' | awk '{ print $2 }'`
+		fi
 		if [ $primaryaddr ]; then
 			logger_info "Primary address detected as $primaryaddr"
 			address=$primaryaddr
