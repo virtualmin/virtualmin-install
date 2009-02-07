@@ -49,7 +49,7 @@ esac
 
 SERIAL=5556348
 KEY=ZJEOVNCMRB
-VER=EA5.0
+VER=1.0.1
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -313,13 +313,13 @@ cat <<EOF
 
 Welcome to the Virtualmin $PRODUCT installer, version $VER
 
- WARNING: This is an Early Adopter release.
+ WARNING:
 
  The installation is quite stable and functional when run on a freshly
  installed supported Operating System, but upgrades from existing .wbm-
  based systems, or systems that already have Apache VirtualHost 
  directives or mail users, will very likely run into numerous problems.
- Please read the Virtualmin and Early Adopter FAQs before proceeding if
+ Please read the Virtualmin Administrators Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
@@ -1073,6 +1073,12 @@ install_deps_the_hard_way () {
 
 			# www user needs a shell to run mailman commands
 			chpass -s /bin/sh www
+
+			# procmail-wrapper download and install
+			logger_info "Installing procmail-wrapper."
+			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper
+			mv procmail-wrapper /usr/local/bin
+			chmod 6755 /usr/local/bin/procmail-wrapper
 
 			return 0
 		;;
