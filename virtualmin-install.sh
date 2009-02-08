@@ -1077,8 +1077,8 @@ install_deps_the_hard_way () {
 			# procmail-wrapper download and install
 			logger_info "Installing procmail-wrapper."
 			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper
-			mv procmail-wrapper /usr/local/bin
-			chmod 6755 /usr/local/bin/procmail-wrapper
+			mv procmail-wrapper /usr/bin
+			chmod 6755 /usr/bin/procmail-wrapper
 
 			return 0
 		;;
