@@ -92,7 +92,7 @@ ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-sim
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd"
+pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
