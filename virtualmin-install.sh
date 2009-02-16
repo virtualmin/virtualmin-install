@@ -910,6 +910,9 @@ install_with_tar () {
 		if [ "$?" != "0" ]; then
 			logger_info "Installation of Webmin module from $modpath failed"
 		fi
+		if [ -r $tempdir/virtual-server-theme-*.wbt.gz ]; then
+			/usr/local/usermin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
+		fi
 		rm -f $tempdir/$modfile
 	done
 
