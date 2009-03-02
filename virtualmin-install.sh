@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2007 Virtualmin, Inc.
+# Copyright 2005-2009 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -12,17 +12,17 @@
 # are not complete, if the OS isn't listed.  Don't even bother trying it.
 #
 # A manual install might work for you though.
-# See here: http://www.virtualmin.com/support/documentation/virtualmin-admin-guide/ch02.html#id2654070
+# See here: http://www.virtualmin.com/documentation/id,manual_virtualmin_installation/
 
 # Currently supported systems:
-prosupported=" Fedora Core 5-8 on i386 and x86_64
+prosupported=" Fedora Core 5-9 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
- Debian 3.1 and 4.0 on i386 and amd64
- Ubuntu 6.06 LTS on i386 and amd64
- FreeBSD 7-RELEASE on i386 and amd64"
+ Debian 4.0 and 5.0 on i386 and amd64
+ Ubuntu 6.06LTS and 8.04LTS on i386 and amd64
+ FreeBSD 7.0 and 7.1 on i386 and amd64"
 gplsupported=" CentOS 4 and 5 on i386 and x86_64
- Debian 4.0 on i386 and amd64
+ Debian 4.0 and 5.0 on i386 and amd64
  Ubuntu 8.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -49,7 +49,7 @@ esac
 
 SERIAL=5556348
 KEY=ZJEOVNCMRB
-VER=1.0.1
+VER=1.0.2
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -61,12 +61,12 @@ if [ "$SERIAL" = "GPL" ]; then
 	LOGIN=""
 	PRODUCT="GPL"
 	supported=$gplsupported
-  repopath="gpl/"
+	repopath="gpl/"
 else
 	LOGIN="$SERIAL:$KEY@"
 	PRODUCT="Professional"
 	supported=$prosupported
-  repopath=""
+	repopath=""
 fi
 
 # Virtualmin-provided packages
@@ -76,7 +76,7 @@ deps=
 rhdeps="bind bind-utils caching-nameserver httpd postfix bind spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-domxl php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay"
 # SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
-# SUSE rug installer systems (OpenSUSE 10.1)
+# SUSE rug installer systems (OpenSUSE 10.1+)
 rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot perl-XML-Simple perl-Crypt-SSLeay"
@@ -92,7 +92,7 @@ ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-sim
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty"
+pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
 # Gentoo
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
@@ -383,6 +383,12 @@ if [ "$mode" = "minimal" ]; then
 	virtualminmeta=$vmpackages
 fi
 
+# Check whether /tmp is mounted noexec (everything will fail, if so)
+TMPNOEXEC=`grep /tmp /etc/mtab | grep noexec`
+if [ "$TMPNOEXEC" != "" ]; then
+	fatal "/tmp directory is mounted noexec.  Installation cannot continue."
+fi
+
 # Check for wget or curl or fetch
 printf "Checking for HTTP client..."
 if [ -x "/usr/bin/curl" ]; then
@@ -484,6 +490,7 @@ logger_info "Started installation log in $log"
 
 # Print out some details that we gather before logging existed
 logger_debug "Install mode: $mode"
+logger_debug "Product: Virtualmin $PRODUCT"
 logger_debug "Virtualmin Meta-Package list: $virtualminmeta"
 logger_debug "install.sh version: $VER"
 
@@ -717,20 +724,23 @@ install_virtualmin_release () {
 				deps=$ubudeps
 				case $os_version in
 					6.06*)
-						repo="virtualmin-dapper"
+						repos="virtualmin-dapper"
 					;;
 					8.04*)
-						repo="virtualmin-hardy"
+						repos="virtualmin-hardy"
 					;;
 				esac
 			else
 				deps=$debdeps
 				case $os_version in
 					3.1)
-						repo="virtualmin-sarge"
+						repos="virtualmin-sarge"
 					;;
 					4.0)
-						repo="virtualmin-etch"
+						repos="virtualmin-etch"
+					;;
+					5.0)
+						repos="virtualmin-lenny virtualmin-universal"
 					;;
 				esac
 			fi
@@ -749,7 +759,9 @@ install_virtualmin_release () {
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
-			echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
+			for repo in $repos; do
+				echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
+			done
 			# Install our keys
 			logger_info "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
