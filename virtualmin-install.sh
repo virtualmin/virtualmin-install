@@ -386,7 +386,8 @@ fi
 # Check whether /tmp is mounted noexec (everything will fail, if so)
 TMPNOEXEC=`grep /tmp /etc/mtab | grep noexec`
 if [ "$TMPNOEXEC" != "" ]; then
-	fatal "/tmp directory is mounted noexec.  Installation cannot continue."
+	echo "/tmp directory is mounted noexec.  Installation cannot continue."
+	exit 1
 fi
 
 # Check for wget or curl or fetch
