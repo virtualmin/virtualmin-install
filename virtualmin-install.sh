@@ -225,7 +225,7 @@ detect_ip () {
 set_hostname () {
 	i=0
 	while [ $i -eq 0 ]; do
-		printf "Please enter a fully qualified hostname (for example, virtualmin.com): "
+		printf "Please enter a fully qualified hostname (for example, example.com): "
 		read line
 		if ! is_fully_qualified $line; then
 			logger_info "Hostname $line is not fully qualified."
@@ -858,7 +858,7 @@ install_with_tar () {
 	# Try to make Webmin not disown Apache on install
 	ln -s /usr/local/etc/apache22 /usr/local/etc/apache
 	# Install Webmin
-	if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/webmin-current.tar.gz; then
+	if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/webmin-current.tar.gz; then
 		fatal "Retrieving Webmin from software.virtualmin.com failed."
 	fi
 	if ! gunzip -c webmin-current.tar.gz | tar xf -; then
@@ -885,7 +885,7 @@ install_with_tar () {
 
   # Install Usermin
   logger_info "Installing Usermin..."
-  if ! download http://$SERIAL:$KEY@software.virtualmin.com/wbm/usermin-current.tar.gz; then
+  if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/usermin-current.tar.gz; then
     fatal "Retrieving Usermin from software.virtualmin.com failed."
   fi
   if ! gunzip -c usermin-current.tar.gz | tar xf -; then
@@ -912,10 +912,10 @@ install_with_tar () {
 	# Install Virtulmin-specific modules and themes, as defined in updates.txt
 	logger_info "Installing Virtualmin modules and themes..."
 	cd $tempdir
-	$download http://$SERIAL:$KEY@software.virtualmin.com/wbm/updates.txt
+	$download http://${LOGIN}software.virtualmin.com/${repopath}wbm/updates.txt
 	for modpath in `cut -f 3 updates.txt`; do
 		modfile=`basename $modpath`
-		$download http://$SERIAL:$KEY@software.virtualmin.com/$modpath
+		$download http://${LOGIN}software.virtualmin.com/$modpath
 		if [ "$?" != "0" ]; then
 			logger_info "Download of Webmin module from $modpath failed"
 		fi
@@ -931,10 +931,12 @@ install_with_tar () {
 
 	# Configure Webmin to use updates.txt
 	logger_info "Configuring Webmin to use Virtualmin updates service..."
-	echo "upsource=http://software.virtualmin.com/wbm/updates.txt	http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
+	echo "upsource=http://software.virtualmin.com/${repopath}wbm/updates.txt	http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
+	if [ -n "$LOGIN" ]; then
+		echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
+		echo "uppass=$KEY" >>$webmin_config_dir/webmin/config
+	fi
 	echo "upthird=1" >>$webmin_config_dir/webmin/config
-	echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
-	echo "uppass=$KEY" >>$webmin_config_dir/webmin/config
 	echo "upshow=1" >>$webmin_config_dir/webmin/config
 
 	# Configure Webmin to know where apache22 lives
@@ -1010,6 +1012,8 @@ install_with_tar () {
 
 	# Virtualmin can't guess the interface on FreeBSD (and neither can this
 	# script, but it pretends)
+	logger_info "Detecting network interface on FreeBSD is unreliable.  Be sure to check the"
+	logger_info "interface in module configuration before creating any virtual servers."
 	sed -i -e "s/iface=.*/iface=$primaryiface/" $webmin_config_dir/virtual-server/config
 
 	return 0
