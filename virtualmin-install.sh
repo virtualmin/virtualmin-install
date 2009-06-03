@@ -323,11 +323,10 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
- used to install Virtualmin Professional, on a supported OS.  If you have
- previously installed Virtualmin via this script or the GPL version of 
- this script, upgrades and updates should be handled within Virtualmin
- itself.  Once Virtualmin is installed, you never need to run this script
- again.
+ used to install Virtualmin, on a supported OS.  If you have previously
+ previously installed Virtualmin via this script, upgrades and updates 
+ should be handled within Virtualmin itself.  Once Virtualmin is 
+ installed, you never need to run this script again.
 
  The systems currently supported by install.sh are:
 EOF
