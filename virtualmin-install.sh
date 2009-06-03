@@ -324,9 +324,9 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
 
  This script is not intended to update your system!  It should only be
  used to install Virtualmin, on a supported OS.  If you have previously
- previously installed Virtualmin via this script, upgrades and updates 
- should be handled within Virtualmin itself.  Once Virtualmin is 
- installed, you never need to run this script again.
+ installed Virtualmin via this script, upgrades and updates should be 
+ handled within Virtualmin itself.  Once Virtualmin is installed, you 
+ never need to run this script again.
 
  The systems currently supported by install.sh are:
 EOF
