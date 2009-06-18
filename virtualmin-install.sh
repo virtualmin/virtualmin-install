@@ -389,6 +389,13 @@ if [ "$TMPNOEXEC" != "" ]; then
 	exit 1
 fi
 
+# Check for localhost in /etc/hosts
+grep localhost /etc/hosts >/dev/null
+if [ "$?" != 0 ]; then
+	echo "There is no localhost entry in /etc/hosts. Installation cannot continue."
+	exit 1
+fi
+
 # Check for wget or curl or fetch
 printf "Checking for HTTP client..."
 if [ -x "/usr/bin/curl" ]; then
