@@ -26,22 +26,27 @@ gplsupported=" CentOS 4 and 5 on i386 and x86_64
  Ubuntu 8.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
+skipyesno=
 
 LANG=
 export LANG
 
 case $1 in
 	--help|-h)
-		echo "Usage: `basename $0` [--uninstall|-u|--help|-h]"
+		echo "Usage: `basename $0` [--uninstall|-u|--help|-h|--force|-f]"
 		echo "  If called without arguments, installs Virtualmin Professional."
 		echo
 		echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on production systems)"
 		echo "  --help|-h: This message"
+		echo "  --force|-f: Skip confirmation message"
 		echo
 		exit 0
 	;;
 	--uninstall|-u)
 		mode="uninstall"
+	;;
+	--force|-f)
+		skipyesno=1
 	;;
 	*)
 	;;
@@ -340,8 +345,10 @@ cat <<EOF
  
 EOF
 	printf " Continue? (y/n) "
-	if ! yesno
-	then exit
+	if [ "$skipyesno" != 1 ]; then
+		if ! yesno
+		then exit
+		fi
 	fi
 
 get_mode () {
