@@ -15,7 +15,7 @@
 # See here: http://www.virtualmin.com/documentation/id,manual_virtualmin_installation/
 
 # Currently supported systems:
-prosupported=" Fedora Core 5-9 on i386 and x86_64
+prosupported=" Fedora Core 7-11 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Debian 4.0 and 5.0 on i386 and amd64
@@ -94,13 +94,13 @@ rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail per
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot perl-XML-Simple perl-Crypt-SSLeay"
 # Debian
-debdeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota libapache2-mod-perl2"
+debdeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip"
 uname -m | grep 64 >/dev/null
 if [ "$?" != 0 ]; then
 	debdeps="$debdeps postfix-tls"
 fi
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota libapache2-mod-perl2"
+ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota"
 # pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
@@ -342,9 +342,9 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
 
  This script is not intended to update your system!  It should only be
  used to install Virtualmin, on a supported OS.  If you have previously
- installed Virtualmin via this script, upgrades and updates should be 
- handled within Virtualmin itself.  Once Virtualmin is installed, you 
- never need to run this script again.
+ installed Virtualmin via this script or the GPL version of this script,
+ upgrades and updates should be handled within Virtualmin itself. Once
+ Virtualmin is installed, you never need to run this script again.
 
  The systems currently supported by install.sh are:
 EOF
