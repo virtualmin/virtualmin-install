@@ -26,31 +26,39 @@ gplsupported=" CentOS 4 and 5 on i386 and x86_64
  Ubuntu 8.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
-skipyesno=
+skipyesno=0
 
 LANG=
 export LANG
 
-case $1 in
-	--help|-h)
-		echo "Usage: `basename $0` [--uninstall|-u|--help|-h|--force|-f]"
-		echo "  If called without arguments, installs Virtualmin Professional."
-		echo
-		echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on production systems)"
-		echo "  --help|-h: This message"
-		echo "  --force|-f: Skip confirmation message"
-		echo
-		exit 0
-	;;
-	--uninstall|-u)
-		mode="uninstall"
-	;;
-	--force|-f)
-		skipyesno=1
-	;;
-	*)
-	;;
-esac
+while [ "$1" != "" ]; do
+	case $1 in
+		--help|-h)
+			echo "Usage: `basename $0` [--uninstall|-u|--help|-h|--force|-f|--hostname]"
+			echo "  If called without arguments, installs Virtualmin Professional."
+			echo
+			echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on production systems)"
+			echo "  --help|-h: This message"
+			echo "  --force|-f: Skip confirmation message"
+			echo "  --hostname|-host: Set fully qualified hostname"
+			echo
+			exit 0
+		;;
+		--uninstall|-u)
+			mode="uninstall"
+		;;
+		--force|-f|--yes|-y)
+			skipyesno=1
+		;;
+		--hostname|--host)
+			shift
+			forcehostname=$1
+		;;
+		*)
+		;;
+	esac
+	shift
+done
 
 SERIAL=5556348
 KEY=ZJEOVNCMRB
@@ -230,8 +238,13 @@ detect_ip () {
 set_hostname () {
 	i=0
 	while [ $i -eq 0 ]; do
-		printf "Please enter a fully qualified hostname (for example, example.com): "
-		read line
+		if [ "$forcehostname" = "" ]; then
+			printf "Please enter a fully qualified hostname (for example, example.com): "
+			read line
+		else
+			logger_info "Setting hostname to $forcehostname"
+			line=$forcehostname
+		fi
 		if ! is_fully_qualified $line; then
 			logger_info "Hostname $line is not fully qualified."
 		else
@@ -512,6 +525,7 @@ logger_debug "install.sh version: $VER"
 logger_info "Checking for fully qualified hostname..."
 name=`hostname -f`
 if ! is_fully_qualified $name; then set_hostname
+elif [ "$forcehostname" != "" ]; then set_hostname
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
