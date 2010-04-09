@@ -1215,4 +1215,13 @@ case $os_type in
 	;;
 esac
 
+# Run sa-update if installed, to ensure spamassassin rules are recent
+which sa-update >/dev/null 2>&1
+if [ "$?" = 0 ]; then
+  logger_info "Updating SpamAssassin rules..."
+  if ! runner sa-update; then
+	logger_info "Rule updates failed"
+  fi
+fi
+
 exit 0
