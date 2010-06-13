@@ -15,15 +15,15 @@
 # See here: http://www.virtualmin.com/documentation/id,manual_virtualmin_installation/
 
 # Currently supported systems:
-prosupported=" Fedora Core 7-11 on i386 and x86_64
+prosupported=" Fedora Core 10-11 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
  OpenSUSE 10.0 on i586 and x86_64
  Debian 4.0 and 5.0 on i386 and amd64
- Ubuntu 6.06LTS and 8.04LTS on i386 and amd64
+ Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
  FreeBSD 7.0 and 7.1 on i386 and amd64"
 gplsupported=" CentOS 4 and 5 on i386 and x86_64
  Debian 4.0 and 5.0 on i386 and amd64
- Ubuntu 8.04 LTS on i386 and amd64"
+ Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -756,6 +756,9 @@ install_virtualmin_release () {
 					;;
 					8.04*)
 						repos="virtualmin-hardy"
+					;;
+					10.04*)
+						repos="virtualmin-lucid virtualmin-universal"
 					;;
 				esac
 			else
