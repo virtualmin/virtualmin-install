@@ -770,7 +770,7 @@ install_virtualmin_release () {
 					4.0)
 						repos="virtualmin-etch"
 					;;
-					5.0)
+					5.0*)
 						repos="virtualmin-lenny virtualmin-universal"
 					;;
 				esac
