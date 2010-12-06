@@ -1222,9 +1222,8 @@ esac
 which sa-update >/dev/null 2>&1
 if [ "$?" = 0 ]; then
   logger_info "Updating SpamAssassin rules..."
-  if ! runner sa-update; then
-	logger_info "Rule updates failed"
-  fi
+  sa-update
+  logger_info "Rule updates done"
 fi
 
 exit 0
