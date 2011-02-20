@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2009 Virtualmin, Inc.
+# Copyright 2005-2011 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -8,21 +8,20 @@
 # WARNING: Anything not listed in the currently supported systems list is not
 # going to work, despite the fact that you might see code that detects your
 # OS and acts on it.  If it isn't in the list, the code is not complete and
-# will not work.  More importantly, the packages that this script installs
-# are not complete, if the OS isn't listed.  Don't even bother trying it.
+# will not work.  More importantly, the repos that this script uses do not
+# exist, if the OS isn't listed.  Don't even bother trying it.
 #
 # A manual install might work for you though.
-# See here: http://www.virtualmin.com/documentation/id,manual_virtualmin_installation/
+# See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
 prosupported=" Fedora Core 10-11 on i386 and x86_64
  CentOS and RHEL 3-5 on i386 and x86_64
- OpenSUSE 10.0 on i586 and x86_64
  Debian 4.0 and 5.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
  FreeBSD 7.0 and 7.1 on i386 and amd64"
 gplsupported=" CentOS 4 and 5 on i386 and x86_64
- Debian 4.0 and 5.0 on i386 and amd64
+ Debian 4.0, 5.0 and 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -62,7 +61,7 @@ done
 
 SERIAL=5556348
 KEY=ZJEOVNCMRB
-VER=1.0.4
+VER=1.0.5
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -94,7 +93,7 @@ rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail per
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot perl-XML-Simple perl-Crypt-SSLeay"
 # Debian
-debdeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev"
+debdeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-data clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libgd2-xpm libapache2-mod-php5 php5-mysql"
 uname -m | grep 64 >/dev/null
 if [ "$?" != 0 ]; then
 	debdeps="$debdeps postfix-tls"
@@ -782,8 +781,8 @@ install_virtualmin_release () {
 			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
 			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
-			install_updates="$install $deps"
 			export DEBIAN_FRONTEND=noninteractive
+			install_updates="$install $deps"
 			logger_info "Cleaning up apt headers and packages, so we can start fresh..."
 			logger_info `apt-get clean`
 			# Get the noninteractive apt-get configuration file (this is 
@@ -800,7 +799,7 @@ install_virtualmin_release () {
 			logger_info `apt-key add RPM-GPG-KEY-virtualmin`
 			logger_info `apt-key add RPM-GPG-KEY-webmin`
 			logger_info `apt-get update`
-			logger_info "Removing Debian standard Webmin package, if they exist (because they're broken)..."
+			logger_info "Removing Debian standard Webmin package, if they exist..."
 			logger_info "Removing Debian apache packages..."
 			logger_debug `apt-get -y --purge remove webmin-core apache apache2`
 		;;
@@ -822,6 +821,8 @@ install_with_apt () {
 	logger_info "$install $virtualminmeta"
 
 	if ! runner "$install $virtualminmeta"; then
+		logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
+		logger_warn "http://www.virtualmin.com/os-support"
 		fatal "Installation failed: $?"
 	fi
 
