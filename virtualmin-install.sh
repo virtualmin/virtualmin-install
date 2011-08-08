@@ -300,13 +300,13 @@ uninstall () {
 	case $package_type in
 		rpm)
 			rpm -e --nodeps virtualmin-base
-			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn
+			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
 			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme
 			rpm -e --nodeps webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
-			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn
+			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
 			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme
 			dpkg --purge webmin usermin webmin-*
 			apt-get clean
