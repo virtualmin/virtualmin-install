@@ -99,7 +99,7 @@ if [ "$?" != 0 ]; then
 	debdeps="$debdeps postfix-tls"
 fi
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota"
+ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota php5 php5-cgi php5-mysql"
 # pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
