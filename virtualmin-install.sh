@@ -59,8 +59,8 @@ while [ "$1" != "" ]; do
 	shift
 done
 
-SERIAL=5556348
-KEY=ZJEOVNCMRB
+SERIAL=@SERIAL@
+KEY=@KEY@
 VER=1.0.5
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
