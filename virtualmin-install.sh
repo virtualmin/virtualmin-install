@@ -17,12 +17,15 @@
 # Currently supported systems:
 prosupported=" Fedora Core 10-11 on i386 and x86_64
  CentOS and RHEL 3-6 on i386 and x86_64
+ Scientific Linux 6 on i386 and x86_64
  Debian 4.0, 5.0 and 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
- FreeBSD 7.0 and 7.1 on i386 and amd64"
-gplsupported=" CentOS 4-6 on i386 and x86_64
+ FreeBSD 7 and 8 on i386 and amd64"
+gplsupported=" CentOS and RHEL 4-6 on i386 and x86_64
+ Scientific Linux 6 on i386 and x86_64
  Debian 4.0, 5.0 and 6.0 on i386 and amd64
- Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64"
+ Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
+ FreeBSD 7.0 and 8 on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -61,7 +64,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.0.5
+VER=1.0.6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -297,13 +300,13 @@ uninstall () {
 		rpm)
 			rpm -e --nodeps virtualmin-base
 			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
-			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme
+			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme wbt-virtual-server-mobile
 			rpm -e --nodeps webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
 			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
-			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme
+			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme wbt-virtual-server-mobile
 			dpkg --purge webmin usermin webmin-*
 			apt-get clean
 		;;
