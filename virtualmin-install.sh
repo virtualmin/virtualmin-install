@@ -15,15 +15,14 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
-prosupported=" Fedora Core 10-11 on i386 and x86_64
- CentOS and RHEL 3-6 on i386 and x86_64
+prosupported=" CentOS and RHEL 4-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
- Debian 4.0, 5.0 and 6.0 on i386 and amd64
+ Debian 5.0 and 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
  FreeBSD 7 and 8 on i386 and amd64"
 gplsupported=" CentOS and RHEL 4-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
- Debian 4.0, 5.0 and 6.0 on i386 and amd64
+ Debian 5.0 and 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
  FreeBSD 7.0 and 8 on i386 and amd64"
 
