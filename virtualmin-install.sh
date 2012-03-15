@@ -236,7 +236,7 @@ set_hostname () {
 	i=0
 	while [ $i -eq 0 ]; do
 		if [ "$forcehostname" = "" ]; then
-			printf "Please enter a fully qualified hostname (for example, example.com): "
+			printf "Please enter a fully qualified hostname (for example, host.example.com): "
 			read line
 		else
 			logger_info "Setting hostname to $forcehostname"
@@ -331,17 +331,18 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  WARNING:
 
  The installation is quite stable and functional when run on a freshly
- installed supported Operating System, but upgrades from existing .wbm-
- based systems, or systems that already have Apache VirtualHost 
- directives or mail users, will very likely run into numerous problems.
+ installed supported Operating System.
+
+ If you have existing websites, email users, or if you manually installed
+ Virtualmin via a Webmin 'wbm' module, you are likely to run into problems.
  Please read the Virtualmin Administrators Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
- used to install Virtualmin, on a supported OS.  If you have previously
- installed Virtualmin via this script or the GPL version of this script,
- upgrades and updates should be handled within Virtualmin itself. Once
- Virtualmin is installed, you never need to run this script again.
+ used to perform your initial Virtualmin installation.  If you have previously
+ run the Virtualmin installer, you can perform upgrades and updates from within
+ Virtualmin itself, or using your system's package manager. Once Virtualmin is
+ installed, you never need to run this script again.
 
  The systems currently supported by install.sh are:
 EOF
