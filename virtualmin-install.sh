@@ -580,7 +580,7 @@ install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	logger_info "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
-		fedora)
+		fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
 				logger_info "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
