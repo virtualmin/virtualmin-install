@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2011 Virtualmin, Inc.
+# Copyright 2005-2012 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -19,11 +19,13 @@ prosupported=" CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
  Debian 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
+ Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7 and 8 on i386 and amd64"
 gplsupported=" CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
  Debian 6.0 on i386 and amd64
  Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
+ Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7.0 and 8 on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -63,7 +65,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.0.6
+VER=1.0.8
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -187,7 +189,7 @@ fatal () {
 
 remove_virtualmin_release () {
 	case $os_type in
-		"fedora" | "centos" |	"rhel"	)	rpm -e virtualmin-release
+		"fedora" | "centos" |	"rhel" | "amazon"	)	rpm -e virtualmin-release
 		;;
 		"suse"	)
 			vmsrcs=`y2pmsh source -s | grep "virtualmin" | grep "^[[:digit:]]" | cut -d ":" -f 1`
@@ -1216,7 +1218,7 @@ disable_selinux () {
 
 # Changes that are specific to OS
 case $os_type in
-	"fedora" | "centos" | "rhel"  )
+	"fedora" | "centos" | "rhel" | "amazon" )
 		disable_selinux
 	;;
 esac
