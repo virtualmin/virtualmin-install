@@ -760,6 +760,9 @@ install_virtualmin_release () {
 					10.04*)
 						repos="virtualmin-lucid virtualmin-universal"
 					;;
+					12.04*)
+						repos="virtualmin-precise virtualmin-universal"
+					;;
 				esac
 			else
 				deps=$debdeps
