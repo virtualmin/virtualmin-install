@@ -18,7 +18,7 @@
 prosupported=" CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
  Debian 6.0 on i386 and amd64
- Ubuntu 8.04 LTS and 10.04 LTS on i386 and amd64
+ Ubuntu 8.04 LTS, 10.04 LTS, and 12.04 LTS on i386 and amd64
  Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7 and 8 on i386 and amd64"
 gplsupported=" CentOS and RHEL 5-6 on i386 and x86_64
