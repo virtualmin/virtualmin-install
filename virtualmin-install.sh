@@ -65,7 +65,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.0.8
+VER=1.0.9
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
