@@ -99,7 +99,7 @@ urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_da
 # Debian
 debdeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libgd2-xpm libapache2-mod-php5 php5-mysql"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-#ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota php5 php5-cgi php5-mysql"
+ubudeps_hardy="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota php5 php5-cgi php5-mysql"
 ubudeps="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libgd2-xpm libapache2-mod-php5 php5-mysql"
 # pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
@@ -757,6 +757,7 @@ install_virtualmin_release () {
 					;;
 					8.04*)
 						repos="virtualmin-hardy"
+                                                deps=$ubudeps_hardy
 					;;
 					10.04*)
 						repos="virtualmin-lucid virtualmin-universal"
