@@ -307,8 +307,8 @@ uninstall () {
 		;;
 		deb)
 			dpkg --purge virtualmin-base
-			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
-			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme wbt-virtual-server-mobile
+			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-security-updates webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init
+			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme webmin-virtual-server-mobile
 			dpkg --purge webmin usermin webmin-*
 			apt-get clean
 		;;
