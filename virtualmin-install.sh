@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2012 Virtualmin, Inc.
+# Copyright 2005-2013 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -65,7 +65,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.0.9
+VER=1.1.0
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
