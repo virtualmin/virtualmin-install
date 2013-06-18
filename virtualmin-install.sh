@@ -781,7 +781,7 @@ install_virtualmin_release () {
 					6.0*)
 						repos="virtualmin-squeeze virtualmin-universal"
 					;;
-					7.0*)
+					7*)
 						repos="virtualmin-wheezy virtualmin-universal"
 					;;
 				esac
