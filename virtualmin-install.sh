@@ -841,6 +841,9 @@ install_with_apt () {
 		fatal "Installation failed: $?"
 	fi
 
+        # Make sure the time is set properly
+        /usr/sbin/ntpdate-debian
+
 	return 0
 }
 
