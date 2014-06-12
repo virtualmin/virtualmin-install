@@ -211,7 +211,8 @@ remove_virtualmin_release () {
 }
 
 detect_ip () {
-	primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+	#primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+        primaryaddr=`/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1`
 	if [ $primaryaddr ]; then
 		logger_info "Primary address detected as $primaryaddr"
 		address=$primaryaddr
@@ -220,7 +221,8 @@ detect_ip () {
 		logger_info "Unable to determine IP address of primary interface."
 		echo "Please enter the name of your primary network interface: "
 		read primaryinterface
-		primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+		#primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
+                primaryaddr=`/sbin/ip -f inet -o -d addr show dev $primaryinterface | head -1 | awk '{print $4}' | cut -d"/" -f1`
 		if [ "$primaryaddr" = "" ]; then
 			# Try again with FreeBSD format
 			primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet' | awk '{ print $2 }'`
