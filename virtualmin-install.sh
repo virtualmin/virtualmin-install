@@ -65,7 +65,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.1.0
+VER=1.1.1
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -846,6 +846,11 @@ install_with_apt () {
 	logger_info "Installing Virtualmin modules:"
 	logger_info "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd webmin-virtualmin-mailman"
 
+        if ! runner "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd webmin-virtualmin-mailman"; then
+                logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
+                logger_warn "http://www.virtualmin.com/os-support"
+                fatal "Installation failed: $?"
+        fi
 
         # Make sure the time is set properly
         /usr/sbin/ntpdate-debian
