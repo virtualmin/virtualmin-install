@@ -862,9 +862,9 @@ install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "yum clean all"
 	yum clean all
-	logger_info "yum -y -d 2 install $virtualminmeta clamav-server-sysvinit"
+	logger_info "yum -y -d 2 install $virtualminmeta"
 
-	if ! runner "yum -y -d 2 install $virtualminmeta clamav-server-sysvinit"; then
+	if ! runner "yum -y -d 2 install $virtualminmeta"; then
 		fatal "Installation failed: $?"
 	fi
 
