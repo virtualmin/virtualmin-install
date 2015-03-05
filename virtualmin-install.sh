@@ -30,6 +30,25 @@ gplsupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
  Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7.0 and 8 on i386 and amd64"
 
+# Make sure Perl is installed
+echo Checking for Perl
+perl=`which perl 2>/dev/null`
+if [ "$perl" = "" ]; then
+        if [ -x /usr/bin/perl ]; then
+                perl=/usr/bin/perl
+                elif [ -x /usr/local/bin/perl ]; then
+                perl=/usr/local/bin/perl
+                elif [ -x /opt/csw/bin/perl ]; then
+                perl=/opt/csw/bin/perl
+        fi
+fi
+if [ "$perl" = "" ]; then
+        echo Perl was not found on your system - Virtualmin requires it to run
+        exit 2
+fi
+echo found Perl at $perl
+echo ""
+
 log=/root/virtualmin-install.log
 skipyesno=0
 
@@ -91,7 +110,7 @@ fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="perl bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate"
+rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate"
 # SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
 yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # SUSE rug installer systems (OpenSUSE 10.1+)
@@ -844,6 +863,19 @@ install_with_apt () {
 		logger_warn "http://www.virtualmin.com/os-support"
 		fatal "Installation failed: $?"
 	fi
+
+        # Disable some things by default
+        update-rc.d mailman disable
+        service mailman stop
+        update-rc.d postgresql-8.3 disable
+        service postgresql-8.3 stop
+        update-rc.d postgresql-8.4 disable
+        service postgresql-8.4 stop
+        update-rc.d spamassassin disable
+        service spamassassin stop
+        update-rc.d clamav-daemon disable
+        service clamav-daemon stop
+
 
 	logger_info "Installing Virtualmin modules:"
 	logger_info "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd webmin-virtualmin-mailman"
