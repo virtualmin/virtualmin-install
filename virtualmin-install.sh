@@ -18,14 +18,14 @@
 prosupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
  CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
- Debian 6.0 and 7.0 on i386 and amd64
+ Debian 6, 7, and 8 on i386 and amd64
  Ubuntu 10.04 LTS, 12.04, and 14.04 LTS on i386 and amd64
  Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7 and 8 on i386 and amd64"
 gplsupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
  CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
- Debian 6.0 and 7.0 on i386 and amd64
+ Debian 6, 7, and 8 on i386 and amd64
  Ubuntu 10.04 LTS, 12.04 LTS, and 14.04 LTS on i386 and amd64
  Amazon Linux 2012.03 on i386 and x86_64
  FreeBSD 7.0 and 8 on i386 and amd64"
@@ -86,7 +86,7 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.1.1
+VER=1.1.2
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -118,7 +118,7 @@ rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail per
 # Mandrake/Mandriva
 urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot perl-XML-Simple perl-Crypt-SSLeay"
 # Debian
-debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libgd2-xpm libapache2-mod-php5 php5-mysql"
+debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps_hardy="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota php5 php5-cgi php5-mysql"
 ubudeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
@@ -809,6 +809,9 @@ install_virtualmin_release () {
 					;;
 					7*)
 						repos="virtualmin-wheezy virtualmin-universal"
+					;;
+					8*)
+						repos="virtualmin-jessie virtualmin-universal"
 					;;
 				esac
 			fi
