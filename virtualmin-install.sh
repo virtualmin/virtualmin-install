@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2013 Virtualmin, Inc.
+# Copyright 2005-2016 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -32,7 +32,7 @@ gplsupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
 
 # Make sure Perl is installed
 echo Checking for Perl
-perl=`which perl 2>/dev/null`
+perl=$(which perl 2>/dev/null)
 if [ "$perl" = "" ]; then
         if [ -x /usr/bin/perl ]; then
                 perl=/usr/bin/perl
@@ -58,7 +58,7 @@ export LANG
 while [ "$1" != "" ]; do
 	case $1 in
 		--help|-h)
-			echo "Usage: `basename $0` [--uninstall|-u|--help|-h|--force|-f|--hostname]"
+		  echo "Usage: $(basename $0) [--uninstall|-u|--help|-h|--force|-f|--hostname]"
 			echo "  If called without arguments, installs Virtualmin Professional."
 			echo
 			echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on production systems)"
@@ -86,11 +86,11 @@ done
 
 SERIAL=@SERIAL@
 KEY=@KEY@
-VER=1.1.2
+VER=5.0.1
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
-arch=`uname -m`
+arch=$(uname -m)
 if [ "$arch" = "i686" ]; then
 	arch=i386
 fi
@@ -111,12 +111,8 @@ vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtual
 deps=
 # Red Hat-based systems 
 rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https"
-# SUSE yast installer systems (SUSE 9.3 and OpenSUSE 10.0)
-yastdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_perl apache2-mod_python apache2-mod_php4 apache2-mod_ruby apache2-worker apache2-prefork clamav awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php4 php4-domxml php4-gd php4-imap php4-mysql php4-mbstring php4-pgsql php4-pear php4-session"
 # SUSE rug installer systems (OpenSUSE 10.1+)
 rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
-# Mandrake/Mandriva
-urpmideps="apache2 apache2-common apache2-manual apache2-metuxmpm apache2-mod_dav apache2-mod_ldap apache2-mod_perl apache2-mod_php apache2-mod_proxy apache2-mod_suexec apache2-mod_ssl apache2-modules apache2-peruser apache2-worker clamav clamav-db clamd bind bind-utils caching-nameserver cyrus-sasl postfix postfix-ldap postgresql postgresql-contrib postgresql-docs postgresql-pl postgresql-plperl postgresql-server proftpd proftpd-anonymous quota perl-Net_SSLeay perl-DBI perl-DBD-Pg perl-DBD-mysql spamassassin perl-Mail-SpamAssassin mailman subversion subversion-server MySQL MySQL-common MySQL-client openssl ruby usermin webmin webalizer awstats dovecot perl-XML-Simple perl-Crypt-SSLeay"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -149,25 +145,25 @@ yesno () {
 
 # mkdir if it doesn't exist
 testmkdir () {
-	if [ ! -d $1 ]; then
-		mkdir -p $1
+	if [ ! -d "$1" ]; then
+		mkdir -p "$1"
 	fi
 }
 # Copy a file if the destination doesn't exist
 testcp () {
-	if [ ! -e $2 ]; then
-		cp $1 $2
+	if [ ! -e "$2" ]; then
+		cp "$1" "$2"
 	fi
 }
 # Set a Webmin directive or add it if it doesn't exist
 setconfig () {
-	sc_config=$2
-	sc_value=$1
-	sc_directive=`echo $sc_value | cut -d'=' -f1`
-	if grep -q $sc_directive $2; then
-		sed -i -e "s#$sc_directive.*#$sc_value#" $sc_config
+	sc_config="$2"
+	sc_value="$1"
+	sc_directive=$(echo "$sc_value" | cut -d'=' -f1)
+	if grep -q "$sc_directive $2"; then
+		sed -i -e "s#$sc_directive.*#$sc_value#" "$sc_config"
 	else
-		echo $1 >> $2
+		echo "$1" >> "$2"
 	fi
 }
 	
@@ -176,7 +172,7 @@ runner () {
 	cmd=$1
 	echo "...in progress, please wait..."
 	touch busy
-	$srcdir/spinner busy &
+	"$srcdir"/spinner busy &
 	if $cmd >> $log; then
 		rm busy
 		sleep 1
@@ -200,9 +196,9 @@ fatal () {
 	logger_fatal "Attempting to remove virtualmin repository configuration, so the installation can be "
 	logger_fatal "re-attempted after any problems have been resolved."
 	remove_virtualmin_release
-	if [ -x $tempdir ]; then
+	if [ -x "$tempdir" ]; then
 		logger_fatal "Removing temporary directory and files."
-		rm -rf $tempdir 
+		rm -rf "$tempdir"
 	fi
 	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
 	logger_fatal "in $log"
@@ -210,31 +206,24 @@ fatal () {
 }
 
 remove_virtualmin_release () {
-	case $os_type in
+	case "$os_type" in
 		"fedora" | "centos" |	"rhel" | "amazon"	)	rpm -e virtualmin-release
 		;;
 		"suse"	)
-			vmsrcs=`y2pmsh source -s | grep "virtualmin" | grep "^[[:digit:]]" | cut -d ":" -f 1`
-			y2pmsh source -R $vmsrcs
+		  vmsrcs=$(y2pmsh source -s | grep "virtualmin" | grep "^[[:digit:]]" | cut -d ":" -f 1)
+			y2pmsh source -R "$vmsrcs"
 		;;
-		"mandriva" )
-			rpm --import http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin
-			rpm --import http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin
-			urpmi.removemedia virtualmin
-			urpmi.removemedia virtualmin-universal
-			rpm -e virtualmin-release
-      	;;
 		"debian" | "ubuntu" )
-			grep -v "virtualmin" /etc/apt/sources.list > $tempdir/sources.list
-			mv $tempdir/sources.list /etc/apt/sources.list 
+			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
+			mv "$tempdir"/sources.list /etc/apt/sources.list 
 		;;
 	esac
 }
 
 detect_ip () {
 	#primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
-        primaryaddr=`/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1`
-	if [ $primaryaddr ]; then
+	primaryaddr=$(/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1)
+	if [ "$primaryaddr" ]; then
 		logger_info "Primary address detected as $primaryaddr"
 		address=$primaryaddr
 		return 0
@@ -243,12 +232,12 @@ detect_ip () {
 		echo "Please enter the name of your primary network interface: "
 		read primaryinterface
 		#primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
-                primaryaddr=`/sbin/ip -f inet -o -d addr show dev $primaryinterface | head -1 | awk '{print $4}' | cut -d"/" -f1`
+		primaryaddr=$(/sbin/ip -f inet -o -d addr show dev "$primaryinterface" | head -1 | awk '{print $4}' | cut -d"/" -f1)
 		if [ "$primaryaddr" = "" ]; then
 			# Try again with FreeBSD format
-			primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet' | awk '{ print $2 }'`
+			primaryaddr=$(/sbin/ifconfig "$primaryinterface"|grep 'inet' | awk '{ print $2 }')
 		fi
-		if [ $primaryaddr ]; then
+		if [ "$primaryaddr" ]; then
 			logger_info "Primary address detected as $primaryaddr"
 			address=$primaryaddr
 		else
@@ -268,19 +257,20 @@ set_hostname () {
 			logger_info "Setting hostname to $forcehostname"
 			line=$forcehostname
 		fi
-		if ! is_fully_qualified $line; then
+		if ! is_fully_qualified "$line"; then
 			logger_info "Hostname $line is not fully qualified."
 		else
-			hostname $line
+			hostname "$line"
 			detect_ip
-			if grep $address /etc/hosts; then
+			if grep "$address" /etc/hosts; then
 				logger_info "Entry for IP $address exists in /etc/hosts."
 				logger_info "Updating with new hostname."
-				shortname=`echo $line | cut -d"." -f1`
+				shortname=$(echo "$line" | cut -d"." -f1)
 				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
 			else
 				logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
-				printf "$address\t$line\t$shortname\n" >> /etc/hosts
+				printf "%s\t%s\t%s\n" \
+				  "$address" "$line" "$shortname" >> /etc/hosts
 			fi
 		i=1
 	fi
@@ -427,7 +417,7 @@ if [ "$mode" = "minimal" ]; then
 fi
 
 # Check whether /tmp is mounted noexec (everything will fail, if so)
-TMPNOEXEC=`grep /tmp /etc/mtab | grep noexec`
+TMPNOEXEC=$(grep /tmp /etc/mtab | grep noexec)
 if [ "$TMPNOEXEC" != "" ]; then
 	echo "/tmp directory is mounted noexec.  Installation cannot continue."
 	exit 1
@@ -453,12 +443,12 @@ else
 	echo "and try again."
 	exit 1
 fi
-printf "found $download\n"
+printf "found %s\n" "$download"
 
 # download()
 # Use $download to download the provided filename or exit with an error.
 download() {
-	if $download $1
+	if "$download" "$1"
 	then
 		success "Download of $1"
    	return $?
@@ -477,7 +467,7 @@ else
 	echo "Perl was not found on your system: Please install perl and try again"
 	exit 1
 fi
-printf "found $perl\n"
+printf "found %s\n" "$perl"
 
 # Only root can run this
 id | grep "uid=0(" >/dev/null
@@ -547,8 +537,8 @@ logger_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
 logger_info "Checking for fully qualified hostname..."
-name=`hostname -f`
-if ! is_fully_qualified $name; then set_hostname
+name=$(hostname -f)
+if ! is_fully_qualified "$name"; then set_hostname
 elif [ "$forcehostname" != "" ]; then set_hostname
 fi
 
@@ -579,25 +569,26 @@ if [ "$os_type" = "" ]; then
 	. $tempdir/$$.os
 	rm -f $tempdir/$$.os
 fi
-logger_info "Operating system name:    $real_os_type"
+logger_info "Operating system name:    $real_os_type" 
 logger_info "Operating system version: $real_os_version"
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
 if [ "$os_type" = "freebsd" ]; then
 	. /etc/rc.conf
-	primaryiface=`echo $network_interfaces | cut -d" " -f1`
-	address=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`
-	if ! grep $name /etc/hosts; then
+	primaryiface=$(echo "$network_interfaces" | cut -d" " -f1)
+	address=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)
+	if ! grep "$name" /etc/hosts; then
 		logger_info "Detected IP $address for $primaryiface..."
-		if grep $address /etc/hosts; then
+		if grep "$address" /etc/hosts; then
 			logger_info "Entry for IP $address exists in /etc/hosts."
 			logger_info "Updating with new hostname."
-			shortname=`echo $name | cut -d"." -f1`
+			shortname=$(echo "$name" | cut -d"." -f1)
 			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
 		else
 			logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
-			printf "$address\t$name\t$shortname\n" >> /etc/hosts
+			printf "%s\t%s\t%s\n" \
+			  "$address" "$name" "$shortname" >> /etc/hosts
 		fi	
 	fi
 fi
@@ -617,7 +608,7 @@ install_virtualmin_release () {
 			deps=$rhdeps
 			install="/usr/bin/yum -y -d 2 install"
 			install_updates="$install $deps"
-			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
@@ -649,17 +640,17 @@ install_virtualmin_release () {
 				rpm --import /usr/share/rhn/RPM-GPG-KEY
 			fi
 			for i in /etc/pki/rpm-gpg/RPM-GPG-KEY-*; do
-				rpm --import $i
+				rpm --import "$i"
 			done
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
-				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm
+				download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm"
 				logger_info "yum not found, installing yum from software.virtualmin.com..."
 				if rpm -U yum-latest.noarch.rpm; then success
 				else fatal "Installation of yum failed: $?"
 				fi
 			fi
-			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
+			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
@@ -674,20 +665,6 @@ install_virtualmin_release () {
 			else cputype="x86_64"
 			fi
 			case $os_version in
-				9.3|10.0)
-					deps=$yastdeps
-					install="/sbin/yast -i"
-					install_updates="$install $deps"
-					if ! yast -i y2pmsh; then
-						fatal "Failed to install y2pmsh package.  Cannot continue."
-					fi
-					if ! y2pmsh source -a http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype; then
-						fatal "Unable to add yast2 installation source."
-					fi
-					if ! y2pmsh source -a http://${LOGIN}software.virtualmin.com/${repopath}universal; then
-					fatal "Unable to add yast2 installation source: $?"
-					fi
-				;;
 				10.1|10.2)
 					deps=$rugdeps
 					install="/usr/bin/rug in -y"
@@ -699,7 +676,7 @@ install_virtualmin_release () {
 							fatal "ZMD failed to start, installation cannot continue without functioning package management."
 						fi
 					fi
-					if ! rug sa --type=YUM http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin; then
+					if ! rug sa --type=YUM "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin"; then
 						fatal "Unable to add rug installation source: $?"
 					fi
 					if ! rug sa --type=YUM http://${LOGIN}software.virtualmin.com/${repopath}universal virtualmin-universal; then
@@ -707,39 +684,6 @@ install_virtualmin_release () {
 					fi
 				;;
 			esac
-		;;
-		mandriva)
-			# No release for mandriva either...
-			package_type="rpm"
-			deps=$urpmideps
-			install="/usr/sbin/urpmi"
-			install_updates="$install $deps"
-			logger_info "Updating urpmi repository data..."
-			if urpmi.update -a; then success
-			else fatal "urpmi.update failed with $?.  This installation script requires a functional urpmi"
-			fi
-			# Mandriva uses i586 for x86 binary RPMs instead of i386--uname is also utterly broken
-			if [[ "$arch" = "i386" || "$arch" = "unknown" ]]
-			then cputype="i586"
-			else cputype="x86_64"
-			fi
-			logger_info "Adding virtualmin-universal repository..."
-			if urpmi.addmedia virtualmin-universal http://${LOGIN}software.virtualmin.com/${repopath}universal; then
-			success "Adding repository"
-			else fatal "Failed to add urpmi source for virtualmin-universal.  Cannot continue."
-			fi
-			logger_info "Adding virtualmin Mandriva $os_version repository..."
-			if urpmi.addmedia virtualmin http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype; then
-				success
-			else fatal "Failed to add urpmi source for virtualmin.  Cannot continue."
-			fi
-			# Install some keys
-			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype/virtualmin-release-latest.noarch.rpm"
-			if rpm -Uvh virtualmin-release-latest.noarch.rpm; then success
-			else fatal "Failed to install virtualmin-release package."
-			fi
-			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-webmin
-			rpm --import /etc/RPM-GPG-KEYS/RPM-GPG-KEY-virtualmin
 		;;
 		freebsd)
 			if [ ! -d /usr/ports ]; then
@@ -772,7 +716,7 @@ install_virtualmin_release () {
  		;;
 		debian | ubuntu)
 			package_type="deb"
-			if [ $os_type = "ubuntu" ]; then
+			if [ "$os_type" = "ubuntu" ]; then
 				deps=$ubudeps
 				case $os_version in
 					6.06*)
@@ -825,7 +769,7 @@ install_virtualmin_release () {
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
 			logger_info "Cleaning up apt headers and packages, so we can start fresh..."
-			logger_info `apt-get clean`
+			logger_info $(apt-get clean)
 			# Get the noninteractive apt-get configuration file (this is 
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
@@ -837,12 +781,12 @@ install_virtualmin_release () {
 			logger_info "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			logger_info `apt-key add RPM-GPG-KEY-virtualmin`
-			logger_info `apt-key add RPM-GPG-KEY-webmin`
-			logger_info `apt-get update`
+			logger_info $(apt-key add RPM-GPG-KEY-virtualmin)
+			logger_info $(apt-key add RPM-GPG-KEY-webmin)
+			logger_info $(apt-get update)
 			logger_info "Removing Debian standard Webmin package, if they exist..."
 			logger_info "Removing Debian apache packages..."
-			logger_debug `apt-get -y --purge remove webmin-core apache apache2`
+			logger_debug $(apt-get -y --purge remove webmin-core apache apache2)
 		;;
 		*)
 			logger_info " Your OS is not currently supported by this installer."
@@ -908,26 +852,11 @@ install_with_yum () {
 	return 0
 }
 
-install_with_yast () {
-	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "$install $virtualminmeta"
-	sources=`y2pmsh source -s | grep "^[[:digit:]]" | cut -d ":" -f 1`
-
-	if $install $virtualminmeta; then
-		logger_info "Installation completed."
-		logger_debug "$install returned: $?"
-	else
-		fatal "Installation failed: $?"
-	fi
-
-	return 0
-}
-
 install_with_rug () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
 
-	if $install $virtualminmeta; then
+	if "$install $virtualminmeta"; then
 		logger_info "Installation completed."
 		logger_debug "$install returned: $?"
 	else
@@ -940,7 +869,7 @@ install_with_urpmi () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "urpmi $virtualminmeta"
 
-	if urpmi $virtualminmeta; then
+	if urpmi "$virtualminmeta"; then
 		logger_info "Installation of $virtualminmeta completed."
 	else
 		fatal "Installation failed: $?"
@@ -1012,20 +941,20 @@ install_with_tar () {
 	logger_info "Installing Virtualmin modules and themes..."
 	cd $tempdir
 	$download http://${LOGIN}software.virtualmin.com/${repopath}wbm/updates.txt
-	for modpath in `cut -f 3 updates.txt`; do
-		modfile=`basename $modpath`
-		$download http://${LOGIN}software.virtualmin.com/$modpath
+	for modpath in $(cut -f 3 updates.txt); do
+	  modfile=$(basename "$modpath")
+		$download "http://${LOGIN}software.virtualmin.com/$modpath"
 		if [ "$?" != "0" ]; then
 			logger_info "Download of Webmin module from $modpath failed"
 		fi
-		/usr/local/webmin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
+		/usr/local/webmin/install-module.pl "$tempdir/$modfile" /usr/local/etc/webmin >> $log
 		if [ "$?" != "0" ]; then
 			logger_info "Installation of Webmin module from $modpath failed"
 		fi
 		if [ -r $tempdir/virtual-server-theme-*.wbt.gz ]; then
 			/usr/local/usermin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
 		fi
-		rm -f $tempdir/$modfile
+		rm -f "$tempdir/$modfile"
 	done
 
 	# Configure Webmin to use updates.txt
@@ -1075,8 +1004,8 @@ install_with_tar () {
 
 	# It's possible to get here without address being defined
 	. /etc/rc.conf
-	primaryiface=${primaryiface:=`echo $network_interfaces | cut -d" " -f1`}
-	address=${address:=`/sbin/ifconfig $primaryiface | grep "inet " | cut -d" " -f2`}
+	primaryiface=${primaryiface:=$(echo "$network_interfaces" | cut -d" " -f1)}
+	address=${address:=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)}
 	# Tons of syntax errors in the default Apache configuration files.
 	# Seriously?  Syntax errors?
 	vhostsconf=/usr/local/etc/apache22/extra/httpd-vhosts.conf
@@ -1126,11 +1055,11 @@ install_deps_the_hard_way () {
 				export $i
 			done
 
-			previousdir=`pwd`
+			previousdir=$(pwd)
 			logger_info "Installing Apache from ports..."
 			apacheopts="WITH_AUTH_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
 			cd /usr/ports/www/apache22
-			make $apacheopts install
+			make "$apacheopts" install
 			# Load accept filter into kernel...no idea why, but Apache issues
 			# warnings without it.
 			if ! grep -qv 'accf_http_load=”YES”' /boot/loader.conf; then
@@ -1158,7 +1087,7 @@ install_deps_the_hard_way () {
 			cd /usr/ports/mail/postfix23
 			make install
 
-			cd $previousdir
+			cd "$previousdir"
 			logger_info "Installing dependencies using command: "
 			logger_info " for i in $deps; do $install \$i; done"	
 			for i in $deps; do $install "$i">>$log; done
@@ -1177,7 +1106,7 @@ install_deps_the_hard_way () {
 			logger_info "Copying default my.cnf and initializing database..."
 			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
 			testmkdir /var/db/mysql
-			logger_info `/usr/local/etc/rc.d/mysql-server start`
+			logger_info $(/usr/local/etc/rc.d/mysql-server start)
 			
 			# SpamAssassin needs a config file
 			testcp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
@@ -1195,7 +1124,7 @@ install_deps_the_hard_way () {
 
 			# procmail-wrapper download and install
 			logger_info "Installing procmail-wrapper."
-			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper
+			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper"
 			mv procmail-wrapper /usr/bin
 			chmod 6755 /usr/bin/procmail-wrapper
 			if [ ! -e /usr/bin/procmail ]; then
@@ -1220,16 +1149,10 @@ install_virtualmin () {
 			case $os_type in
 				suse)
 					case $os_version in
-						9.3|10.0)
-							install_with_yast
-						;;
 						10.1|10.2)
 							install_with_rug
 						;;
 					esac
-				;;
-				mandr*)
-					install_with_urpmi
 				;;
 				*)
 					install_with_yum
@@ -1253,7 +1176,7 @@ install_virtualmin () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 # We have to use $install to pre-install all deps, because some systems don't
-# cooperate with our repositories (that's RHEL and SUSE 10.1, so far).
+# cooperate with our repositories (that's SUSE, so far).
 if [ "$mode" = "full" ]; then
 	install_deps_the_hard_way
 	success
@@ -1272,8 +1195,8 @@ fi
 disable_selinux () {
 	seconfigfiles="/etc/selinux/config /etc/sysconfig/selinux"
 	for i in $seconfigfiles; do
-		if [ -e $i ]; then
-			sed -i "s/SELINUX=.*/SELINUX=disabled/" $i
+		if [ -e "$i" ]; then
+			sed -i "s/SELINUX=.*/SELINUX=disabled/" "$i"
 		fi
 	done
 }
