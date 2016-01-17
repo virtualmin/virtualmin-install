@@ -19,16 +19,12 @@ prosupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
  CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
  Debian 6, 7, and 8 on i386 and amd64
- Ubuntu 10.04 LTS, 12.04, and 14.04 LTS on i386 and amd64
- Amazon Linux 2012.03 on i386 and x86_64
- FreeBSD 7 and 8 on i386 and amd64"
+ Ubuntu 10.04 LTS, 12.04, and 14.04 LTS on i386 and amd64"
 gplsupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
  CentOS and RHEL 5-6 on i386 and x86_64
  Scientific Linux 6 on i386 and x86_64
  Debian 6, 7, and 8 on i386 and amd64
- Ubuntu 10.04 LTS, 12.04 LTS, and 14.04 LTS on i386 and amd64
- Amazon Linux 2012.03 on i386 and x86_64
- FreeBSD 7.0 and 8 on i386 and amd64"
+ Ubuntu 10.04 LTS, 12.04 LTS, and 14.04 LTS on i386 and amd64"
 
 # Make sure Perl is installed
 echo Checking for Perl

@@ -1,0 +1,10 @@
+#!/bin/sh
+
+sp='/-\|'
+printf ' '
+while [ -e $1 ]; do
+    printf '\b%.1s' "$sp"
+    sleep 1
+    sp=${sp#?}${sp%???}
+done
+printf '\033[1D'
