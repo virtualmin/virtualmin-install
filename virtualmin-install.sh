@@ -821,9 +821,9 @@ install_with_apt () {
 
 
 	logger_info "Installing Virtualmin modules:"
-	logger_info "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd webmin-virtualmin-mailman"
+	logger_info "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
 
-        if ! runner "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd webmin-virtualmin-mailman"; then
+        if ! runner "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
                 logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
                 logger_warn "http://www.virtualmin.com/os-support"
                 fatal "Installation failed: $?"
