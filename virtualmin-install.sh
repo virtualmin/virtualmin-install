@@ -615,10 +615,15 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$rhdeps
 
-			if [ -x /usr/bin/dnf ] then
+			install="/usr/bin/yum -y -d 2 install"
+
+			if [ ! -x /usr/bin/dnf ]; then
+				logger_info "Installing dnf package manager. Its fully compatible with yum but doing things faster and smarter"
+				$install dnf
+			fi
+
+			if [ -x /usr/bin/dnf ]; then
 				install="/usr/bin/dnf -y -d 2 install"
-			elif [ -x /usr/bin/yum ] then
-				install="/usr/bin/yum -y -d 2 install"
 			fi
 
 			install_updates="$install $deps"
