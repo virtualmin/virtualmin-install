@@ -617,8 +617,28 @@ install_virtualmin_release () {
 			install="/usr/bin/yum -y -d 2 install"
 			install_updates="$install $deps"
 			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-			if rpm -U virtualmin-release-latest.noarch.rpm; then success
-			else fatal "Installation of virtualmin-release failed: $?"
+			if rpm -U virtualmin-release-latest.noarch.rpm; then
+				success
+			else
+				logger_fatal "Installation of virtualmin-release failed: $?"
+
+				if [ $os_type = fedora ]; then
+					# i hope someday there will be latest directory for fedora too
+					fallback_os_version=20
+				elif [ $os_type = amazon ]; then
+					fallback_os_version=latest
+				fi
+
+				logger_warn "Falling back to $os_type $fallback_os_version package, ok? (y/n)"
+				if ! yesno; then
+					fatal "Your distribution is yet not supported"
+				fi
+
+				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$fallback_os_version/$arch/virtualmin-release-latest.noarch.rpm
+				if rpm -U virtualmin-release-latest.noarch.rpm; then success
+				else
+					fatal "Installation of virtualmin-release failed: $?"
+				fi
 			fi
 			;;
 		rhel)
