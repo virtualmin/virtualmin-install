@@ -614,7 +614,13 @@ install_virtualmin_release () {
 			fi
 			package_type="rpm"
 			deps=$rhdeps
-			install="/usr/bin/yum -y -d 2 install"
+
+			if [ -x /usr/bin/dnf ] then
+				install="/usr/bin/dnf -y -d 2 install"
+			elif [ -x /usr/bin/yum ] then
+				install="/usr/bin/yum -y -d 2 install"
+			fi
+
 			install_updates="$install $deps"
 			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
 			if rpm -U virtualmin-release-latest.noarch.rpm; then
