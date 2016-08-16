@@ -949,8 +949,6 @@ install_with_apt () {
 
 install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "yum clean all"
-	yum clean all
 	logger_info "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
 
 	if ! runner "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
@@ -962,8 +960,6 @@ install_with_yum () {
 
 install_with_dnf () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "dnf clean all"
-	dnf clean all
 	logger_info "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
 
 	if ! runner "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
