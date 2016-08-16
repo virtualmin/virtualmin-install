@@ -659,8 +659,8 @@ install_virtualmin_release () {
 				if [ ! -z "$fallback_os_version" ]; then
 					logger_warn "Hot patching repofile, using $fallback_os_version links"
 
-					echo "cp /etc/yum.repos.d/virtualmin.repo /etc/yum.repos.d/virtualmin.repo.bak"
-					echo "sed -e s/\$releasever/$fallback_os_version/ /etc/yum.repos.d/virtualmin.repo.bak > /etc/yum.repos.d/virtualmin.repo"
+					logger_info "cp /etc/yum.repos.d/virtualmin.repo /etc/yum.repos.d/virtualmin.repo.bak"
+					logger_info "sed -e s/\$releasever/$fallback_os_version/ /etc/yum.repos.d/virtualmin.repo.bak > /etc/yum.repos.d/virtualmin.repo"
 
 					cp /etc/yum.repos.d/virtualmin.repo /etc/yum.repos.d/virtualmin.repo.bak
 					sed -e s/\$releasever/$fallback_os_version/ /etc/yum.repos.d/virtualmin.repo.bak > /etc/yum.repos.d/virtualmin.repo
