@@ -954,6 +954,19 @@ install_with_yum () {
 	return 0
 }
 
+install_with_dnf () {
+	logger_info "Installing Virtualmin and all related packages now using the command:"
+	logger_info "dnf clean all"
+	dnf clean all
+	logger_info "dnf -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
+
+	if ! runner "dnf -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
+		fatal "Installation failed: $?"
+	fi
+
+	return 0
+}
+
 install_with_yast () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "$install $virtualminmeta"
@@ -1276,6 +1289,9 @@ install_virtualmin () {
 				;;
 				mandr*)
 					install_with_urpmi
+				;;
+				fedora)
+					install_with_dnf
 				;;
 				*)
 					install_with_yum
