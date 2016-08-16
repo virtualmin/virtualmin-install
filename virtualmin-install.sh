@@ -629,10 +629,10 @@ install_virtualmin_release () {
 
 			install_updates="$install $deps"
 			download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm
-			if rpm -U virtualmin-release-latest.noarch.rpm; then
-				success
-			else
-				logger_fatal "Installation of virtualmin-release failed: $?"
+
+			# Nasty hack bringing fresh fedora support
+
+			if ! rpm -i --test virtualmin-release-latest.noarch.rpm 2> /dev/null; then
 
 				if [ $os_type = fedora ]; then
 					# i hope someday there will be latest directory for fedora too
@@ -641,16 +641,24 @@ install_virtualmin_release () {
 					fallback_os_version=latest
 				fi
 
+				logger_warn "Your distribution not yet supported"
 				logger_warn "Falling back to $os_type $fallback_os_version package, ok? (y/n)"
+
 				if ! yesno; then
 					fatal "Your distribution is yet not supported"
 				fi
 
 				download http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$fallback_os_version/$arch/virtualmin-release-latest.noarch.rpm
-				if rpm -U virtualmin-release-latest.noarch.rpm; then success
-				else
-					fatal "Installation of virtualmin-release failed: $?"
-				fi
+			fi
+
+			if ! rpm -i --test virtualmin-release-latest.noarch.rpm 2> /dev/null; then
+				fatal "Unable to download virtualmin-release-latest.noarch.rpm"
+			fi
+
+			if $install -q virtualmin-release-latest.noarch.rpm; then
+				success
+			else
+				fatal "Installation of virtualmin-release failed: $?"
 			fi
 			;;
 		rhel)
