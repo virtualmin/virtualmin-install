@@ -612,6 +612,7 @@ install_virtualmin_release () {
 				else logger_info "  setenforce 0 failed: $?"
 				fi
 			fi
+
 			package_type="rpm"
 			deps=$rhdeps
 
@@ -950,9 +951,9 @@ install_with_yum () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "yum clean all"
 	yum clean all
-	logger_info "yum -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
+	logger_info "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
 
-	if ! runner "yum -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
+	if ! runner "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
 		fatal "Installation failed: $?"
 	fi
 
@@ -963,9 +964,9 @@ install_with_dnf () {
 	logger_info "Installing Virtualmin and all related packages now using the command:"
 	logger_info "dnf clean all"
 	dnf clean all
-	logger_info "dnf -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
+	logger_info "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"
 
-	if ! runner "dnf -y -d 2 install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
+	if ! runner "$install $virtualminmeta clamav-server-systemd clamav-scanner-systemd"; then
 		fatal "Installation failed: $?"
 	fi
 
