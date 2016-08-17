@@ -658,12 +658,22 @@ install_virtualmin_release () {
 			if $install -q virtualmin-release-latest.noarch.rpm; then
 				if [ ! -z "$fallback_os_version" ]; then
 					logger_warn "Hot patching repofile, using $fallback_os_version links"
+					logger_warn "Origin version stored in virtualmin.repo.back"
+					logger_warn "If last step of script didn't succeed, alter it manually"
 
 					logger_info "cp /etc/yum.repos.d/virtualmin.repo /etc/yum.repos.d/virtualmin.repo.bak"
 					logger_info "sed -e s/\$releasever/$fallback_os_version/ /etc/yum.repos.d/virtualmin.repo.bak > /etc/yum.repos.d/virtualmin.repo"
 
+					# Backing up repo file
 					cp /etc/yum.repos.d/virtualmin.repo /etc/yum.repos.d/virtualmin.repo.bak
-					sed -e s/\$releasever/$fallback_os_version/ /etc/yum.repos.d/virtualmin.repo.bak > /etc/yum.repos.d/virtualmin.repo
+
+					# Replasing $releasever variable with exact value
+					# Fixing missing/wrong key for webmin repository
+
+					cat /etc/yum.repos.d/virtualmin.repo.bak																																	\
+						| sed -e s/\$releasever/$fallback_os_version/																														\
+						| sed -e "0,/RPM-GPG-KEY-virtualmin/! s/RPM-GPG-KEY-virtualmin/RPM-GPG-KEY-webmin/"											\
+						 > /etc/yum.repos.d/virtualmin.repo
 				fi
 
 				success
