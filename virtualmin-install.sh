@@ -642,7 +642,7 @@ install_virtualmin_release () {
 				fi
 
 				logger_warn "Your distribution not yet supported"
-				logger_warn "Falling back to $os_type $fallback_os_version package, ok? (y/n)"
+				echo -n "Falling back to $os_type $fallback_os_version package, ok? (y/n)"
 
 				if ! yesno; then
 					fatal "Your distribution is yet not supported"
