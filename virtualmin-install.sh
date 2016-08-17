@@ -655,7 +655,7 @@ install_virtualmin_release () {
 				fatal "Unable to download virtualmin-release-latest.noarch.rpm"
 			fi
 
-			if $install -q virtualmin-release-latest.noarch.rpm; then
+			if runner "$install virtualmin-release-latest.noarch.rpm"; then
 				if [ ! -z "$fallback_os_version" ]; then
 					logger_warn "Hot patching repofile, using $fallback_os_version links"
 					logger_warn "Origin version stored in virtualmin.repo.back"
