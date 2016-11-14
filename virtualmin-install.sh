@@ -310,13 +310,13 @@ uninstall () {
 	case $package_type in
 		rpm)
 			rpm -e --nodeps virtualmin-base
-			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-security-updates wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
+			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
 			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme wbt-virtual-server-mobile
 			rpm -e --nodeps webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
-			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-security-updates webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init
+			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init
 			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme webmin-virtual-server-mobile
 			dpkg --purge webmin usermin
 			apt-get clean
@@ -821,9 +821,9 @@ install_with_apt () {
 
 
 	logger_info "Installing Virtualmin modules:"
-	logger_info "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
+	logger_info "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
 
-        if ! runner "$install webmin-security-updates webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
+        if ! runner "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
                 logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
                 logger_warn "http://www.virtualmin.com/os-support"
                 fatal "Installation failed: $?"
