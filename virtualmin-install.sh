@@ -422,13 +422,6 @@ if [ "$mode" = "minimal" ]; then
 	virtualminmeta=$vmpackages
 fi
 
-# Check whether /tmp is mounted noexec (everything will fail, if so)
-TMPNOEXEC=$(grep /tmp /etc/mtab | grep noexec)
-if [ "$TMPNOEXEC" != "" ]; then
-	echo "/tmp directory is mounted noexec.  Installation cannot continue."
-	exit 1
-fi
-
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
@@ -491,6 +484,16 @@ fi
 if [ "$TMPDIR" = "" ]; then
 	TMPDIR=/tmp
 fi
+
+# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
+# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
+# is mounted noexec, this won't catch it.
+TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
+if [ "$TMPNOEXEC" != "" ]; then
+	echo "$TMPDIR directory is mounted noexec. Installation cannot continue."
+	exit 1
+fi
+
 if [ "$tempdir" = "" ]; then
 	tempdir=$TMPDIR/.virtualmin-$$
 	if [ -e "$tempdir" ]; then
