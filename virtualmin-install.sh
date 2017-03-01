@@ -15,33 +15,45 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
-prosupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
- CentOS and RHEL 5-6 on i386 and x86_64
- Scientific Linux 6 on i386 and x86_64
- Debian 6, 7, and 8 on i386 and amd64
- Ubuntu 10.04 LTS, 12.04, and 14.04 LTS on i386 and amd64"
-gplsupported=" CentOS/RHEL/Scientific Linux 7 on x86_64
- CentOS and RHEL 5-6 on i386 and x86_64
- Scientific Linux 6 on i386 and x86_64
- Debian 6, 7, and 8 on i386 and amd64
- Ubuntu 10.04 LTS, 12.04 LTS, and 14.04 LTS on i386 and amd64"
+prosupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
+ Debian 6, 7, and 8, on i386 and amd64
+ Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
+gplsupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
+ Debian 6, 7, and 8, on i386 and amd64
+ Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
 # Make sure Perl is installed
 echo Checking for Perl
-perl=$(which perl 2>/dev/null)
-if [ "$perl" = "" ]; then
-        if [ -x /usr/bin/perl ]; then
-                perl=/usr/bin/perl
+# loop until we've got a Perl or until we can't try any more
+while true; do
+	perl=$(which perl 2>/dev/null)
+	if [ "$perl" = "" ]; then
+        	if [ -x /usr/bin/perl ]; then
+                	perl=/usr/bin/perl
+			break
                 elif [ -x /usr/local/bin/perl ]; then
-                perl=/usr/local/bin/perl
+                	perl=/usr/local/bin/perl
+			break
                 elif [ -x /opt/csw/bin/perl ]; then
-                perl=/opt/csw/bin/perl
-        fi
-fi
-if [ "$perl" = "" ]; then
-        echo Perl was not found on your system - Virtualmin requires it to run
-        exit 2
-fi
+                	perl=/opt/csw/bin/perl
+			break
+		elif [ $perl_attempted = 1 ] ; then
+			echo Perl could not be installed - Installation cannot continue 
+			exit 2
+		fi
+	fi
+	# couldn't find Perl, so we need to try to install it
+       	echo Perl was not found on your system - Virtualmin requires it to run
+	echo Attempting to install it now.
+	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
+		yum -y install perl
+	elif [ -x /usr/bin/apt-get ]; then
+		apt-get update; apt-get -q -y install perl
+	fi
+	perl_attempted = 1
+	# Loop. Next loop should either break or exit.
+done
+
 echo found Perl at $perl
 echo ""
 
