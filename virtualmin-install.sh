@@ -306,6 +306,19 @@ success () {
 	logger_info "$1 Succeeded."
 }
 
+# Function to find out if Virtualmin is already installed, so we can get
+# rid of some of the warning message. Nobody reads it, and frequently
+# folks run the install script on a production system; either to attempt
+# to upgrade, or to "fix" something. That's never the right thing.
+is_installed () {
+	if [ -f /etc/virtualmin-license ]; then
+		# looks like it's been installed before
+		return 1
+	fi
+	# XXX Probably not installed? Maybe we should remove license on uninstall, too.
+	return 0
+}
+
 # This function performs a rough uninstallation of Virtualmin
 # It is neither complete, nor correct, but it almost certainly won't break
 # anything.  It is primarily useful for cleaning up a botched install, so you
@@ -355,16 +368,14 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  The installation is quite stable and functional when run on a freshly
  installed supported Operating System.
 
- If you have existing websites, email users, or if you manually installed
- Virtualmin via a Webmin 'wbm' module, you are likely to run into problems.
  Please read the Virtualmin Administrators Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
  used to perform your initial Virtualmin installation.  If you have previously
  run the Virtualmin installer, you can perform upgrades and updates from within
- Virtualmin itself, or using your system's package manager. Once Virtualmin is
- installed, you never need to run this script again.
+ Virtualmin itself, or using your system package manager. Once Virtualmin is
+ installed, you should never run this script again.
 
  The systems currently supported by install.sh are:
 EOF
@@ -377,12 +388,27 @@ cat <<EOF
    http://www.virtualmin.com/os-support
  
 EOF
-	printf " Continue? (y/n) "
-	if [ "$skipyesno" != 1 ]; then
-		if ! yesno
-		then exit
-		fi
+printf " Continue? (y/n) "
+if [ "$skipyesno" != 1 ]; then
+	if ! yesno; then 
+		exit
 	fi
+fi
+
+# Double check if installed, just in case above error ignored.
+if is_installed; then
+	echo Virtualmin may already be installed. This can happen if an installation failed,
+	echo and can be ignored in that case.
+	echo
+	echo But, if Virtualmin is already successfully installed you should not run this script
+	echo again. Updates and upgrade can be performed from within Virtualmin.
+	echo
+	printf " Really Continue? (y/n) "
+	# XXX: Should this respect skipyesno?
+	if ! yesno; then
+		exit
+	fi
+fi
 
 get_mode () {
 cat <<EOF
