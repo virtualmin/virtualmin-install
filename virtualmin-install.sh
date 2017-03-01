@@ -23,7 +23,7 @@ gplsupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
  Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
 # Make sure Perl is installed
-echo Checking for Perl
+printf "Checking for Perl..."
 # loop until we've got a Perl or until we can't try any more
 while true; do
 	perl=$(which perl 2>/dev/null)
@@ -54,7 +54,7 @@ while true; do
 	# Loop. Next loop should either break or exit.
 done
 
-echo found Perl at $perl
+printf "found Perl at $perl"
 echo ""
 
 log=/root/virtualmin-install.log
@@ -69,7 +69,7 @@ while [ "$1" != "" ]; do
 		  echo "Usage: $(basename $0) [--uninstall|-u|--help|-h|--force|-f|--hostname]"
 			echo "  If called without arguments, installs Virtualmin Professional."
 			echo
-			echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on production systems)"
+			echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on a production system)"
 			echo "  --help|-h: This message"
 			echo "  --force|-f: Skip confirmation message"
 			echo "  --hostname|-host: Set fully qualified hostname"
@@ -94,7 +94,7 @@ done
 
 SERIAL=GPL
 KEY=GPL
-VER=5.0.1
+VER=6.0.0
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -118,9 +118,7 @@ fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server rh-postgresql rh-postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https"
-# SUSE rug installer systems (OpenSUSE 10.1+)
-rugdeps="webmin usermin postfix bind perl-spamassassin spamassassin procmail perl-DBI perl-DBD-Pg perl-DBD-mysql quota openssl mailman subversion ruby mysql mysql-Max mysql-administrator mysql-client mysql-shared postgresql postgresql-pl postgresql-libs postgresql-server webalizer apache2 apache2-devel apache2-mod_fcgid apache2-mod_perl apache2-mod_python apache2-mod_php5 apache2-mod_ruby apache2-worker apache2-prefork clamav clamav-db awstats dovecot cyrus-sasl cyrus-sasl-gssapi proftpd php5 php5-domxml php5-gd php5-imap php5-mysql php5-mbstring php5-pgsql php5-pear php5-session"
+rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -373,10 +371,10 @@ EOF
 echo "$supported"
 cat <<EOF
 
- If your OS is not listed above, this script will fail.  More details
- about the systems supported by the script can be found here:
+ If your OS/version is not listed above, this script will fail. More 
+ details about the systems supported by the script can be found here:
 
-   http://www.virtualmin.com/os-support.html
+   http://www.virtualmin.com/os-support
  
 EOF
 	printf " Continue? (y/n) "
@@ -440,17 +438,30 @@ fi
 
 # Check for wget or curl or fetch
 printf "Checking for HTTP client..."
-if [ -x "/usr/bin/curl" ]; then
-	download="/usr/bin/curl -s -O "
-elif [ -x "/usr/bin/wget" ]; then
-	download="/usr/bin/wget -nv"
-elif [ -x "/usr/bin/fetch" ]; then
-	download="/usr/bin/fetch"
-else
-	echo "No web download program available: Please install curl, wget, or fetch"
-	echo "and try again."
-	exit 1
-fi
+while true; do
+	if [ -x "/usr/bin/curl" ]; then
+		download="/usr/bin/curl -s -O "
+		break
+	elif [ -x "/usr/bin/wget" ]; then
+		download="/usr/bin/wget -nv"
+		break
+	elif [ -x "/usr/bin/fetch" ]; then
+		download="/usr/bin/fetch"
+		break
+	elif [ $curl_attempted = 1 ]; then
+		echo "Could not install curl. Cannot continue."
+		exit 1
+	fi
+
+	# Made it hear without finding a downloader, so try to install one
+	curl_attempted = 1
+	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
+		yum -y install curl
+	elif [ -x /usr/bin/apt-get ]; then
+		apt-get update; apt-get -y -q install curl
+	fi
+done
+
 printf "found %s\n" "$download"
 
 # download()
@@ -464,18 +475,6 @@ download() {
 		fatal "Failed to download $1."
 	fi
 }
-
-# Checking for perl
-printf "Checking for perl..."
-if [ -x "/usr/bin/perl" ]; then
-	perl="/usr/bin/perl"
-elif [ -x "/usr/local/bin/perl" ]; then
-	perl="/usr/local/bin/perl"
-else
-	echo "Perl was not found on your system: Please install perl and try again"
-	exit 1
-fi
-printf "found %s\n" "$perl"
 
 # Only root can run this
 id | grep "uid=0(" >/dev/null
