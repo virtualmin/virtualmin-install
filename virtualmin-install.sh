@@ -118,12 +118,11 @@ fi
 vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
 deps=
 # Red Hat-based systems 
-rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https"
+rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https jailkit"
 # Debian
-debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
+debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-ubudeps_hardy="postfix postfix-pcre webmin usermin ruby libapache2-mod-ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip quota php5 php5-cgi php5-mysql"
-ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql"
+ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
@@ -755,35 +754,18 @@ install_virtualmin_release () {
 			if [ "$os_type" = "ubuntu" ]; then
 				deps=$ubudeps
 				case $os_version in
-					6.06*)
-						repos="virtualmin-dapper"
-					;;
-					8.04*)
-						repos="virtualmin-hardy"
-                                                deps=$ubudeps_hardy
-					;;
-					10.04*)
-						repos="virtualmin-lucid virtualmin-universal"
-					;;
 					12.04*)
 						repos="virtualmin-precise virtualmin-universal"
 					;;
 					14.04*)
 						repos="virtualmin-trusty virtualmin-universal"
 					;;
+					16.04*)
+						repos="virtualmin-xenial virtualmin-univseral"
 				esac
 			else
 				deps=$debdeps
 				case $os_version in
-					3.1)
-						repos="virtualmin-sarge"
-					;;
-					4.0)
-						repos="virtualmin-etch"
-					;;
-					5.0*)
-						repos="virtualmin-lenny virtualmin-universal"
-					;;
 					6.0*)
 						repos="virtualmin-squeeze virtualmin-universal"
 					;;
@@ -882,32 +864,6 @@ install_with_yum () {
 	logger_info "yum -y -d 2 install $virtualminmeta"
 
 	if ! runner "yum -y -d 2 install $virtualminmeta"; then
-		fatal "Installation failed: $?"
-	fi
-
-	return 0
-}
-
-install_with_rug () {
-	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "$install $virtualminmeta"
-
-	if "$install $virtualminmeta"; then
-		logger_info "Installation completed."
-		logger_debug "$install returned: $?"
-	else
-		fatal "Installation failed: $?"
-	fi
-	return 0
-}
-
-install_with_urpmi () {
-	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "urpmi $virtualminmeta"
-
-	if urpmi "$virtualminmeta"; then
-		logger_info "Installation of $virtualminmeta completed."
-	else
 		fatal "Installation failed: $?"
 	fi
 
@@ -1182,18 +1138,7 @@ install_deps_the_hard_way () {
 install_virtualmin () {
 	case $package_type in
 		rpm)
-			case $os_type in
-				suse)
-					case $os_version in
-						10.1|10.2)
-							install_with_rug
-						;;
-					esac
-				;;
-				*)
-					install_with_yum
-				;;
-			esac
+			install_with_yum
 		;;
 		deb)
 			install_with_apt
