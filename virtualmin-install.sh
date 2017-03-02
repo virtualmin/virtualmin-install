@@ -743,12 +743,6 @@ install_virtualmin_release () {
 			install="pkg_add -r"
 			install_updates="echo Skipping checking for updates..."
 		;;
-		gentoo)
-			package_type="ebuild"
-			deps=$portagedeps
-			install="/usr/bin/emerge"
- 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$arch/virtualmin-release-latest.tar.gz"
- 		;;
 		debian | ubuntu)
 			package_type="deb"
 			if [ "$os_type" = "ubuntu" ]; then
@@ -1142,9 +1136,6 @@ install_virtualmin () {
 		;;
 		deb)
 			install_with_apt
-		;;
-		ebuild)
-			install_with_emerge
 		;;
 		*)
 			install_with_tar
