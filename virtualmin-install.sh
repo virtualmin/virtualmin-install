@@ -22,6 +22,18 @@ gplsupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
  Debian 6, 7, and 8, on i386 and amd64
  Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
+# Some colors and formatting constants
+# used in run_ok function.
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
+YELLOW=$(tput setaf 3)
+REDBG=$(tput setab 1)
+GREENBG=$(tput setab 2)
+YELLOWBG=$(tput setab 3)
+NORMAL=$(tput sgr0)
+CHECK="\u2714"
+BALLOT_X="\u2618"
+
 # Make sure Perl is installed
 printf "Checking for Perl..."
 # loop until we've got a Perl or until we can't try any more
@@ -115,10 +127,11 @@ else
 fi
 
 # Virtualmin-provided packages
-vmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server ust-virtual-server-theme wbt-virtual-server-theme"
+rhvmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbm-jailkit"
+debvmpackages="usermin webmin webmin-virtualmin-awstats webmin-virtualmin-dav webmin-virtualmin-htpasswd webmin-virtualmin-svn webmin-virtualmin-git webmin-jailkit"
 deps=
 # Red Hat-based systems 
-rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https jailkit"
+rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https clamav clamav-server clamav-server-systemd clamav-scanner-systemd jailkit"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -194,13 +207,27 @@ runner () {
 	fi
 }
 
+# Perform an action, log it, and print a colorful checkmark or X if failed
+run_ok () {
+	cmd=$1
+	msg=$2
+	COL=$(( 80-${MSG}+${#GREEN}+${#NORMAL} ))
+
+	printf "%s%${COL}s" "$msg"
+	if $cmd >> $log; then
+    		env printf "$GREENBG[  $CHECK  ]$NORMAL\n"
+		return 0
+	else
+		env printf "$REDBG[  $BALLOT_X  ]$NORMAL\n"
+		return 1
+	fi
+}
+
 fatal () {
 	echo
 	logger_fatal "Fatal Error Occurred: $1"
-	logger_fatal "Cannot continue installation."
-	logger_fatal "Attempting to remove virtualmin repository configuration, so the installation can be "
-	logger_fatal "re-attempted after any problems have been resolved."
-	remove_virtualmin_release
+	echo -e "${RED}Cannot continue installation.${NORMAL}"
+	run_ok "remove_virtualmin_release" "Removing software repo configuration, so installation can be re-attempted."
 	if [ -x "$tempdir" ]; then
 		logger_fatal "Removing temporary directory and files."
 		rm -rf "$tempdir"
@@ -213,10 +240,6 @@ fatal () {
 remove_virtualmin_release () {
 	case "$os_type" in
 		"fedora" | "centos" |	"rhel" | "amazon"	)	rpm -e virtualmin-release
-		;;
-		"suse"	)
-		  vmsrcs=$(y2pmsh source -s | grep "virtualmin" | grep "^[[:digit:]]" | cut -d ":" -f 1)
-			y2pmsh source -R "$vmsrcs"
 		;;
 		"debian" | "ubuntu" )
 			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
@@ -332,13 +355,13 @@ uninstall () {
 	case $package_type in
 		rpm)
 			rpm -e --nodeps virtualmin-base
-			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init
+			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
 			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme wbt-virtual-server-mobile
 			rpm -e --nodeps webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
-			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init
+			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit
 			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme webmin-virtual-server-mobile
 			dpkg --purge webmin usermin
 			apt-get clean
@@ -360,9 +383,9 @@ fi
 
 cat <<EOF
 
-Welcome to the Virtualmin $PRODUCT installer, version $VER
+Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER{$NORMAL}
 
- WARNING:
+                      ${RED}WARNING${NORMAL}
 
  The installation is quite stable and functional when run on a freshly
  installed supported Operating System.
@@ -371,10 +394,10 @@ Welcome to the Virtualmin $PRODUCT installer, version $VER
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
- used to perform your initial Virtualmin installation.  If you have previously
- run the Virtualmin installer, you can perform upgrades and updates from within
- Virtualmin itself, or using your system package manager. Once Virtualmin is
- installed, you should never run this script again.
+ used to perform your initial Virtualmin installation.  Updates and 
+ upgrasdes can be performed from within Virtualmin or via the system
+ package manager. License changes can be performed with the
+ "virtualmin change-license" command.
 
  The systems currently supported by install.sh are:
 EOF
@@ -396,12 +419,16 @@ fi
 
 # Double check if installed, just in case above error ignored.
 if is_installed; then
-	echo Virtualmin may already be installed. This can happen if an installation failed,
-	echo and can be ignored in that case.
-	echo
-	echo But, if Virtualmin is already successfully installed you should not run this script
-	echo again. Updates and upgrade can be performed from within Virtualmin.
-	echo
+cat <<EOF
+ Virtualmin may already be installed. This can happen if an installation failed,
+ and can be ignored in that case.
+ But, if Virtualmin is already successfully installed you should not run this script
+ again. Updates and upgrade can be performed from within Virtualmin.
+
+ To change license details, use the 'virtualmin change-license' command. Changing 
+ the license does not require reinstallation.
+
+EOF
 	printf " Really Continue? (y/n) "
 	# XXX: Should this respect skipyesno?
 	if ! yesno; then
@@ -443,15 +470,19 @@ mode=full
 virtualminmeta="virtualmin-base"
 # If minimal, we don't install any extra packages, or perform any configuration
 if [ "$mode" = "minimal" ]; then
-	rhdeps=yastdeps=debdeps=ubudeps=portagedeps=pkgdeps=""
-	virtualminmeta=$vmpackages
+	rhdeps=debdeps=ubudeps=pkgdeps=""
+	virtualminmeta=$rhvmpackages
 fi
 
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
-	echo "There is no localhost entry in /etc/hosts. Installation cannot continue."
-	exit 1
+	echo "There is no localhost entry in /etc/hosts. This is required, so one will be added."
+	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
+	if [ $? -ne 0 ]; then
+		logger_info "Failed to configure a localhost entry in /etc/hosts."
+		logger_info "This may cause problems, but we'll try to continue."
+	fi
 fi
 
 # Check for wget or curl or fetch
@@ -471,12 +502,12 @@ while true; do
 		exit 1
 	fi
 
-	# Made it hear without finding a downloader, so try to install one
+	# Made it here without finding a downloader, so try to install one
 	curl_attempted = 1
 	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
-		yum -y install curl
+		run_ok "yum -y install curl" "Installing curl"
 	elif [ -x /usr/bin/apt-get ]; then
-		apt-get update; apt-get -y -q install curl
+		run_ok "apt-get update; apt-get -y -q install curl" "Installing curl"
 	fi
 done
 
@@ -485,12 +516,18 @@ printf "found %s\n" "$download"
 # download()
 # Use $download to download the provided filename or exit with an error.
 download() {
-	if "$download" "$1"
-	then
-		success "Download of $1"
-   	return $?
+	run_ok "$download $i" "Downloading $1"
+	#if "$download" "$1"
+	#then
+	#	success "Download of $1"
+   	#return $?
+	#else
+	#	fatal "Failed to download $1."
+	#fi
+	if [ $? -ne 0 ]; then
+		fatal "Failed to download $1. Cannot continue. Check your network connection and DNS settings."
 	else
-		fatal "Failed to download $1."
+		return 0
 	fi
 }
 
@@ -499,7 +536,7 @@ id | grep "uid=0(" >/dev/null
 if [ "$?" != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
 	if [ "$?" != "0" ]; then
-		echo "Fatal Error: The Virtualmin install script must be run as root"
+		echo "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
 		twolines
 		exit 1
 	fi
@@ -515,7 +552,7 @@ fi
 # is mounted noexec, this won't catch it.
 TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
 if [ "$TMPNOEXEC" != "" ]; then
-	echo "$TMPDIR directory is mounted noexec. Installation cannot continue."
+	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
 	exit 1
 fi
 
@@ -545,9 +582,7 @@ then
 	LOG4SH_CONFIGURATION="none" . ./log4sh
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
-	echo " We're not just stopping because we don't have a logging library--this probably"
-	echo " indicates a serious problem that will prevent successful installation anyway."
-	echo " Check network connectivity, name resolution and disk space and try again."
+	echo " Check network connectivity, name resolution, and disk space and try again."
 	exit 1
 fi
 
