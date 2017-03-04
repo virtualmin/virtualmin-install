@@ -225,15 +225,15 @@ run_ok () {
 
 fatal () {
 	echo
-	logger_fatal "Fatal Error Occurred: $1"
+	log_fatal "Fatal Error Occurred: $1"
 	echo -e "${RED}Cannot continue installation.${NORMAL}"
 	run_ok "remove_virtualmin_release" "Removing software repo configuration, so installation can be re-attempted."
 	if [ -x "$tempdir" ]; then
-		logger_fatal "Removing temporary directory and files."
+		log_fatal "Removing temporary directory and files."
 		rm -rf "$tempdir"
 	fi
-	logger_fatal "If you are unsure of what went wrong, you may wish to review the log"
-	logger_fatal "in $log"
+	log_fatal "If you are unsure of what went wrong, you may wish to review the log"
+	log_fatal "in $log"
 	exit
 }
 
@@ -252,11 +252,11 @@ detect_ip () {
 	#primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
 	primaryaddr=$(/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1)
 	if [ "$primaryaddr" ]; then
-		logger_info "Primary address detected as $primaryaddr"
+		log_info "Primary address detected as $primaryaddr"
 		address=$primaryaddr
 		return 0
 	else
-		logger_info "Unable to determine IP address of primary interface."
+		log_info "Unable to determine IP address of primary interface."
 		echo "Please enter the name of your primary network interface: "
 		read primaryinterface
 		#primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
@@ -266,7 +266,7 @@ detect_ip () {
 			primaryaddr=$(/sbin/ifconfig "$primaryinterface"|grep 'inet' | awk '{ print $2 }')
 		fi
 		if [ "$primaryaddr" ]; then
-			logger_info "Primary address detected as $primaryaddr"
+			log_info "Primary address detected as $primaryaddr"
 			address=$primaryaddr
 		else
 			fatal "Unable to determine IP address of selected interface.  Cannot continue."
@@ -282,21 +282,21 @@ set_hostname () {
 			printf "Please enter a fully qualified hostname (for example, host.example.com): "
 			read line
 		else
-			logger_info "Setting hostname to $forcehostname"
+			log_info "Setting hostname to $forcehostname"
 			line=$forcehostname
 		fi
 		if ! is_fully_qualified "$line"; then
-			logger_info "Hostname $line is not fully qualified."
+			log_info "Hostname $line is not fully qualified."
 		else
 			hostname "$line"
 			detect_ip
 			if grep "$address" /etc/hosts; then
-				logger_info "Entry for IP $address exists in /etc/hosts."
-				logger_info "Updating with new hostname."
+				log_info "Entry for IP $address exists in /etc/hosts."
+				log_info "Updating with new hostname."
 				shortname=$(echo "$line" | cut -d"." -f1)
 				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
 			else
-				logger_info "Adding new entry for hostname $line on $address to /etc/hosts."
+				log_info "Adding new entry for hostname $line on $address to /etc/hosts."
 				printf "%s\t%s\t%s\n" \
 				  "$address" "$line" "$shortname" >> /etc/hosts
 			fi
@@ -308,24 +308,24 @@ set_hostname () {
 is_fully_qualified () {
 	case $1 in
 		localhost.localdomain)
-			logger_info "Hostname cannot be localhost.localdomain."
+			log_info "Hostname cannot be localhost.localdomain."
 			return 1
 		;;
 		*.localdomain)
-			logger_info "Hostname cannot be *.localdomain."
+			log_info "Hostname cannot be *.localdomain."
 			return 1
 		;;
 		*.*)
-			logger_info "Hostname OK: fully qualified as $1"
+			log_info "Hostname OK: fully qualified as $1"
 			return 0
 		;;
 	esac
-	logger_info "Hostname $name is not fully qualified."
+	log_info "Hostname $name is not fully qualified."
 	return 1
 }
 
 success () {
-	logger_info "$1 Succeeded."
+	log_info "$1 Succeeded."
 }
 
 # Function to find out if Virtualmin is already installed, so we can get
@@ -480,8 +480,8 @@ if [ "$?" != 0 ]; then
 	echo "There is no localhost entry in /etc/hosts. This is required, so one will be added."
 	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
 	if [ $? -ne 0 ]; then
-		logger_info "Failed to configure a localhost entry in /etc/hosts."
-		logger_info "This may cause problems, but we'll try to continue."
+		log_info "Failed to configure a localhost entry in /etc/hosts."
+		log_info "This may cause problems, but we'll try to continue."
 	fi
 fi
 
@@ -573,56 +573,51 @@ cd $srcdir
 $download http://software.virtualmin.com/lib/spinner
 chmod +x spinner
 
-# Setup log4sh so we can start keeping a proper log while also feeding output
+# Setup slog so we can start keeping a proper log while also feeding output
 # to the console.
-echo "Loading log4sh logging library..."
-if $download http://software.virtualmin.com/lib/log4sh
-then 
-	# source log4sh (disabling properties file warning)
-	LOG4SH_CONFIGURATION="none" . ./log4sh
+echo "Loading slog logging library..."
+if $download http://software.virtualmin.com/lib/slog.sh
+	# source and configure slog
+	. ./slog
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
 	echo " Check network connectivity, name resolution, and disk space and try again."
 	exit 1
 fi
 
-# Setup log4sh properties
-# Console output
-logger_setLevel INFO
-# Debug log
-logger_addAppender virtualmin
-appender_setAppenderType virtualmin FileAppender
-appender_setAppenderFile virtualmin $log
-appender_setLevel virtualmin ALL
-appender_setLayout virtualmin PatternLayout
-appender_setPattern virtualmin '%p - %d - %m%n'
+# Log file
+LOG_PATH=$log
+# Console output level
+LOG_LEVEL_STDOUT="INFO"
+# Log file output level
+LOG_LEVEL_LOG="DEBUG"
 
-logger_info "Started installation log in $log"
+log_info "Started installation log in $log"
 
 # Print out some details that we gather before logging existed
-logger_debug "Install mode: $mode"
-logger_debug "Product: Virtualmin $PRODUCT"
-logger_debug "Virtualmin Meta-Package list: $virtualminmeta"
-logger_debug "install.sh version: $VER"
+log_debug "Install mode: $mode"
+log_debug "Product: Virtualmin $PRODUCT"
+log_debug "Virtualmin Meta-Package list: $virtualminmeta"
+log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
-logger_info "Checking for fully qualified hostname..."
+log_info "Checking for fully qualified hostname..."
 name=$(hostname -f)
 if ! is_fully_qualified "$name"; then set_hostname
 elif [ "$forcehostname" != "" ]; then set_hostname
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
-logger_info "Installing serial number and license key into /etc/virtualmin-license"
+log_info "Installing serial number and license key into /etc/virtualmin-license"
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
 echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
 chmod 700 /etc/virtualmin-license
 
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
-logger_info "Loading OS selection library..."
+log_info "Loading OS selection library..."
 download http://software.virtualmin.com/lib/oschooser.pl
-logger_info "Loading OS list..."
+log_info "Loading OS list..."
 download http://software.virtualmin.com/lib/os_list.txt
 
 cd ..
@@ -639,8 +634,8 @@ if [ "$os_type" = "" ]; then
 	. $tempdir/$$.os
 	rm -f $tempdir/$$.os
 fi
-logger_info "Operating system name:    $real_os_type" 
-logger_info "Operating system version: $real_os_version"
+log_info "Operating system name:    $real_os_type" 
+log_info "Operating system version: $real_os_version"
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
@@ -649,14 +644,14 @@ if [ "$os_type" = "freebsd" ]; then
 	primaryiface=$(echo "$network_interfaces" | cut -d" " -f1)
 	address=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)
 	if ! grep "$name" /etc/hosts; then
-		logger_info "Detected IP $address for $primaryiface..."
+		log_info "Detected IP $address for $primaryiface..."
 		if grep "$address" /etc/hosts; then
-			logger_info "Entry for IP $address exists in /etc/hosts."
-			logger_info "Updating with new hostname."
+			log_info "Entry for IP $address exists in /etc/hosts."
+			log_info "Updating with new hostname."
 			shortname=$(echo "$name" | cut -d"." -f1)
 			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
 		else
-			logger_info "Adding new entry for hostname $name on $address to /etc/hosts."
+			log_info "Adding new entry for hostname $name on $address to /etc/hosts."
 			printf "%s\t%s\t%s\n" \
 			  "$address" "$name" "$shortname" >> /etc/hosts
 		fi	
@@ -665,13 +660,13 @@ fi
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	logger_info "Configuring package manager for $real_os_type $real_os_version..."
+	log_info "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
 		fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
-				logger_info "Disabling SELinux during installation..."
-				if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
-				else logger_info "  setenforce 0 failed: $?"
+				log_info "Disabling SELinux during installation..."
+				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
+				else log_info "  setenforce 0 failed: $?"
 				fi 
 			fi
 			package_type="rpm"
@@ -685,9 +680,9 @@ install_virtualmin_release () {
 			;;
 		rhel)
 			if [ -x /usr/sbin/setenforce ]; then
-				logger_info "Disabling SELinux during installation..."
-				if /usr/sbin/setenforce 0; then logger_debug " setenforce 0 succeeded"
-				else logger_info "  setenforce 0 failed: $?"
+				log_info "Disabling SELinux during installation..."
+				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
+				else log_info "  setenforce 0 failed: $?"
 				fi
 			fi
 			package_type="rpm"
@@ -715,7 +710,7 @@ install_virtualmin_release () {
 			if [ ! -x /usr/bin/yum ]; then
 				# Install yum, which makes installing and upgrading our packages easier
 				download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm"
-				logger_info "yum not found, installing yum from software.virtualmin.com..."
+				log_info "yum not found, installing yum from software.virtualmin.com..."
 				if rpm -U yum-latest.noarch.rpm; then success
 				else fatal "Installation of yum failed: $?"
 				fi
@@ -740,7 +735,7 @@ install_virtualmin_release () {
 					install="/usr/bin/rug in -y"
 					install_updates="$install $deps"
 					if ! rug ping; then
-						logger_info "The ZENworks Management daemon is not running.  Attempting to start."
+						log_info "The ZENworks Management daemon is not running.  Attempting to start."
 						/usr/sbin/rczmd start
 						if ! rug ping; then
 							fatal "ZMD failed to start, installation cannot continue without functioning package management."
@@ -758,13 +753,13 @@ install_virtualmin_release () {
 		freebsd)
 			if [ ! -d /usr/ports ]; then
 				if [ ! -d /usr/ports/www/apache20 ]; then
-					logger_info " You don't have the ports system installed.  Installation cannot  "
-					logger_info " complete without the ports system.  Would you like to fetch "
-					logger_info " ports now using portsnap?  (This may take a long time.)"
-					logger_info " (y/n)"
+					log_info " You don't have the ports system installed.  Installation cannot  "
+					log_info " complete without the ports system.  Would you like to fetch "
+					log_info " ports now using portsnap?  (This may take a long time.)"
+					log_info " (y/n)"
 					if ! yesno; then 
-						logger_info " Exiting.  Please install the ports system using portsnap, and"
-						logger_info " run this script again."
+						log_info " Exiting.  Please install the ports system using portsnap, and"
+						log_info " run this script again."
 						exit
 					fi
 					portsnap fetch; portsnap extract
@@ -807,16 +802,16 @@ install_virtualmin_release () {
 				esac
 			fi
 			# Make sure universe repos are available
-			logger_info "Enabling universe repositories, if not already available..."
+			log_info "Enabling universe repositories, if not already available..."
 			sed -ie "s/#*[ ]*deb \(.*\) universe$/deb \1 universe/" /etc/apt/sources.list
-			logger_info "Disabling cdrom repositories..."
+			log_info "Disabling cdrom repositories..."
 			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
 			apt-get update
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
-			logger_info "Cleaning up apt headers and packages, so we can start fresh..."
-			logger_info $(apt-get clean)
+			log_info "Cleaning up apt headers and packages, so we can start fresh..."
+			log_info $(apt-get clean)
 			# Get the noninteractive apt-get configuration file (this is 
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
@@ -825,21 +820,21 @@ install_virtualmin_release () {
 				echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
 			done
 			# Install our keys
-			logger_info "Installing Webmin and Virtualmin package signing keys..."
+			log_info "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			logger_info $(apt-key add RPM-GPG-KEY-virtualmin)
-			logger_info $(apt-key add RPM-GPG-KEY-webmin)
-			logger_info $(apt-get update)
-			logger_info "Removing Debian standard Webmin package, if they exist..."
-			logger_info "Removing Debian apache packages..."
-			logger_debug $(apt-get -y --purge remove webmin-core apache apache2)
+			log_info $(apt-key add RPM-GPG-KEY-virtualmin)
+			log_info $(apt-key add RPM-GPG-KEY-webmin)
+			log_info $(apt-get update)
+			log_info "Removing Debian standard Webmin package, if they exist..."
+			log_info "Removing Debian apache packages..."
+			log_debug $(apt-get -y --purge remove webmin-core apache apache2)
 		;;
 		*)
-			logger_info " Your OS is not currently supported by this installer."
-			logger_info " You can probably run Virtualmin Professional on your system, anyway,"
-			logger_info " but you'll have to install it using the manual installation process."
-			logger_info ""
+			log_info " Your OS is not currently supported by this installer."
+			log_info " You can probably run Virtualmin Professional on your system, anyway,"
+			log_info " but you'll have to install it using the manual installation process."
+			log_info ""
 			exit 1
 		;;
 	esac
@@ -849,12 +844,12 @@ install_virtualmin_release () {
 
 # Install Functions
 install_with_apt () {
-	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "$install $virtualminmeta"
+	log_info "Installing Virtualmin and all related packages now using the command:"
+	log_info "$install $virtualminmeta"
 
 	if ! runner "$install $virtualminmeta"; then
-		logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
-		logger_warn "http://www.virtualmin.com/os-support"
+		log_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
+		log_warn "http://www.virtualmin.com/os-support"
 		fatal "Installation failed: $?"
 	fi
 
@@ -871,12 +866,12 @@ install_with_apt () {
         service clamav-daemon stop
 
 
-	logger_info "Installing Virtualmin modules:"
-	logger_info "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
+	log_info "Installing Virtualmin modules:"
+	log_info "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
 
         if ! runner "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
-                logger_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
-                logger_warn "http://www.virtualmin.com/os-support"
+                log_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
+                log_warn "http://www.virtualmin.com/os-support"
                 fatal "Installation failed: $?"
         fi
 
@@ -887,10 +882,10 @@ install_with_apt () {
 }
 
 install_with_yum () {
-	logger_info "Installing Virtualmin and all related packages now using the command:"
-	logger_info "yum clean all"
+	log_info "Installing Virtualmin and all related packages now using the command:"
+	log_info "yum clean all"
 	yum clean all
-	logger_info "yum -y -d 2 install $virtualminmeta"
+	log_info "yum -y -d 2 install $virtualminmeta"
 
 	if ! runner "yum -y -d 2 install $virtualminmeta"; then
 		fatal "Installation failed: $?"
@@ -903,7 +898,7 @@ install_with_tar () {
 	# XXX This is FreeBSD specific at the moment.  Needs to be smarter for other BSDs
 	# or merging the solaris standalone installer into this script.  It'll probably
 	# be rewritten in perl by then anyway.
-	logger_info "Installing Webmin..."
+	log_info "Installing Webmin..."
 	# Try to make Webmin not disown Apache on install
 	ln -s /usr/local/etc/apache22 /usr/local/etc/apache
 	# Install Webmin
@@ -927,13 +922,13 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=virtual-server-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	logger_info "Installing Webmin..."
+	log_info "Installing Webmin..."
 	runner "./setup.sh /usr/local/webmin"
 	cd $tempdir
 	rm -rf webmin-[0-9]*
 
   # Install Usermin
-  logger_info "Installing Usermin..."
+  log_info "Installing Usermin..."
   if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/usermin-current.tar.gz; then
     fatal "Retrieving Usermin from software.virtualmin.com failed."
   fi
@@ -953,24 +948,24 @@ install_with_tar () {
   perl=/usr/bin/perl
   theme=virtual-server-theme
   export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	logger_info "Installing Usermin..."
+	log_info "Installing Usermin..."
   runner "./setup.sh /usr/local/usermin"
   cd $tempdir
   rm -rf usermin-[0-9]*
 
 	# Install Virtulmin-specific modules and themes, as defined in updates.txt
-	logger_info "Installing Virtualmin modules and themes..."
+	log_info "Installing Virtualmin modules and themes..."
 	cd $tempdir
 	$download http://${LOGIN}software.virtualmin.com/${repopath}wbm/updates.txt
 	for modpath in $(cut -f 3 updates.txt); do
 	  modfile=$(basename "$modpath")
 		$download "http://${LOGIN}software.virtualmin.com/$modpath"
 		if [ "$?" != "0" ]; then
-			logger_info "Download of Webmin module from $modpath failed"
+			log_info "Download of Webmin module from $modpath failed"
 		fi
 		/usr/local/webmin/install-module.pl "$tempdir/$modfile" /usr/local/etc/webmin >> $log
 		if [ "$?" != "0" ]; then
-			logger_info "Installation of Webmin module from $modpath failed"
+			log_info "Installation of Webmin module from $modpath failed"
 		fi
 		if [ -r $tempdir/virtual-server-theme-*.wbt.gz ]; then
 			/usr/local/usermin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
@@ -979,7 +974,7 @@ install_with_tar () {
 	done
 
 	# Configure Webmin to use updates.txt
-	logger_info "Configuring Webmin to use Virtualmin updates service..."
+	log_info "Configuring Webmin to use Virtualmin updates service..."
 	echo "upsource=http://software.virtualmin.com/${repopath}wbm/updates.txt	http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
 	if [ -n "$LOGIN" ]; then
 		echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
@@ -989,7 +984,7 @@ install_with_tar () {
 	echo "upshow=1" >>$webmin_config_dir/webmin/config
 
 	# Configure Webmin to know where apache22 lives
-	logger_info "Configuring Webmin Apache module..."
+	log_info "Configuring Webmin Apache module..."
 	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
 	# Tell Webmin about a great wrongness in the force
 	if grep pid_file $webmin_config_dir/apache/config; then
@@ -1045,7 +1040,7 @@ install_with_tar () {
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
 
 	# PostgreSQL needs to be initialized
-	logger_info "Initializing postgresql database..."
+	log_info "Initializing postgresql database..."
 	runner "/usr/local/etc/rc.d/postgresql initdb"
 
 	# Webmin <=1.411 doesn't know the right paths
@@ -1061,8 +1056,8 @@ install_with_tar () {
 
 	# Virtualmin can't guess the interface on FreeBSD (and neither can this
 	# script, but it pretends)
-	logger_info "Detecting network interface on FreeBSD is unreliable.  Be sure to check the"
-	logger_info "interface in module configuration before creating any virtual servers."
+	log_info "Detecting network interface on FreeBSD is unreliable.  Be sure to check the"
+	log_info "interface in module configuration before creating any virtual servers."
 	sed -i -e "s/iface=.*/iface=$primaryiface/" $webmin_config_dir/virtual-server/config
 
 	return 0
@@ -1077,7 +1072,7 @@ install_deps_the_hard_way () {
 			done
 
 			previousdir=$(pwd)
-			logger_info "Installing Apache from ports..."
+			log_info "Installing Apache from ports..."
 			apacheopts="WITH_AUTH_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
 			cd /usr/ports/www/apache22
 			make "$apacheopts" install
@@ -1088,52 +1083,52 @@ install_deps_the_hard_way () {
 				kldload accf_http
 			fi
 
-			logger_info "Installing mod_fcgid using ports..."
+			log_info "Installing mod_fcgid using ports..."
 			cd /usr/ports/www/mod_fcgid
 			make APACHE_VERSION=22 install
 
-			logger_info "Installing Subversion using ports..."
+			log_info "Installing Subversion using ports..."
 			export WITH_MOD_DAV_SVN=yes
 			export WITH_APACHE2_APR=yes
 			cd /usr/ports/devel/subversion
 			make install
 
 			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
-			logger_info "Installing cyrus-sasl2-saslauthd from ports..."
+			log_info "Installing cyrus-sasl2-saslauthd from ports..."
 			cd /usr/ports/security/cyrus-sasl2-saslauthd
 			make install
 
-			logger_info "Installing postfix from ports..."
+			log_info "Installing postfix from ports..."
 			export WITH_SASL2=yes
 			cd /usr/ports/mail/postfix23
 			make install
 
 			cd "$previousdir"
-			logger_info "Installing dependencies using command: "
-			logger_info " for i in $deps; do $install \$i; done"	
+			log_info "Installing dependencies using command: "
+			log_info " for i in $deps; do $install \$i; done"	
 			for i in $deps; do $install "$i">>$log; done
 			if [ "$?" != "0" ]; then
-				logger_warn "Something went wrong during installation: $?"
-				logger_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
-				logger_warn "so we're going to proceed as if nothing bad happened."
-				logger_warn "This may lead to problems later in the process, and"
-				logger_warn "some packages may not have installed successfully."
-				logger_warn "You may wish to check $log for details."
+				log_warn "Something went wrong during installation: $?"
+				log_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
+				log_warn "so we're going to proceed as if nothing bad happened."
+				log_warn "This may lead to problems later in the process, and"
+				log_warn "some packages may not have installed successfully."
+				log_warn "You may wish to check $log for details."
 			else
 				success
 			fi
 			
 			# FreeBSD packages aren't very package-like
-			logger_info "Copying default my.cnf and initializing database..."
+			log_info "Copying default my.cnf and initializing database..."
 			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
 			testmkdir /var/db/mysql
-			logger_info $(/usr/local/etc/rc.d/mysql-server start)
+			log_info $(/usr/local/etc/rc.d/mysql-server start)
 			
 			# SpamAssassin needs a config file
 			testcp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
 			
 			# Clam needs fresh database
-			logger_info "Initializing the clamav database.  This may take a long time..."
+			log_info "Initializing the clamav database.  This may take a long time..."
 			freshclam
 
 			# awstats
@@ -1144,7 +1139,7 @@ install_deps_the_hard_way () {
 			chpass -s /bin/sh www
 
 			# procmail-wrapper download and install
-			logger_info "Installing procmail-wrapper."
+			log_info "Installing procmail-wrapper."
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper"
 			mv procmail-wrapper /usr/bin
 			chmod 6755 /usr/bin/procmail-wrapper
@@ -1155,7 +1150,7 @@ install_deps_the_hard_way () {
 			return 0
 		;;
 		*)
-			logger_info "Installing dependencies using command: $install $deps"
+			log_info "Installing dependencies using command: $install $deps"
 			if ! runner "$install $deps"; then
 				fatal "Something went wrong during installation: $?"
 			fi
@@ -1193,9 +1188,9 @@ install_virtualmin
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
-logger_info "Checking for updates to Virtualmin-related packages..."
+log_info "Checking for updates to Virtualmin-related packages..."
 if ! runner "$install_updates"; then
-	logger_info "There may have been a problem updating some packages."
+	log_info "There may have been a problem updating some packages."
 fi
 
 # Functions that are used in the OS specific modifications section
@@ -1218,9 +1213,9 @@ esac
 # Run sa-update if installed, to ensure spamassassin rules are recent
 which sa-update >/dev/null 2>&1
 if [ "$?" = 0 ]; then
-  logger_info "Updating SpamAssassin rules..."
+  log_info "Updating SpamAssassin rules..."
   sa-update
-  logger_info "Rule updates done"
+  log_info "Rule updates done"
 fi
 
 exit 0
