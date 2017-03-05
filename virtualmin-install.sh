@@ -158,8 +158,11 @@ pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openss
 portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
 yesno () {
-	if [ "$VIRTUALMIN_NONINTERACTIVE" != "" ]; then
-		return 1
+	if [ "$skipyesno" -eq 1 ]; then
+		return 0
+	fi
+	if [ "$VIRTUALMIN_NONINTERACTIVE" -ne "" ]; then
+		return 0
 	fi
 	while read line; do
 		case $line in
@@ -423,10 +426,8 @@ cat <<EOF
  
 EOF
 printf " Continue? (y/n) "
-if [ "$skipyesno" != 1 ]; then
-	if ! yesno; then 
-		exit
-	fi
+if ! yesno; then 
+	exit
 fi
 
 # Double check if installed, just in case above error ignored.
@@ -443,7 +444,6 @@ cat <<EOF
 
 EOF
 	printf " Really Continue? (y/n) "
-	# XXX: Should this respect skipyesno?
 	if ! yesno; then
 		exit
 	fi
