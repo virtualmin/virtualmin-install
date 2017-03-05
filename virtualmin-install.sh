@@ -225,9 +225,13 @@ runner () {
 
 # Perform an action, log it, and print a colorful checkmark or X if failed
 run_ok () {
-	cmd=$1
-	msg=$2
-	COL=$(( 80-${MSG}+${#GREEN}+${#NORMAL} ))
+	local cmd=$1
+	local msg=$2
+	local columns=$(tput cols)
+	if [ $columns -ge 80 ]; then
+		columns=80
+	fi
+	COL=$(( ${columns}-${MSG}+${#GREEN}+${#NORMAL} ))
 
 	printf "%s%${COL}s" "$msg"
 	if $cmd >> $log; then
@@ -363,8 +367,8 @@ is_installed () {
 uninstall () {
 	# This is a crummy way to detect package manager...but going through 
 	# half the installer just to get here is even crummier.
-	if which rpm>/dev/null; then package_type=rpm
-	elif which dpkg>/dev/null; then package_type=deb
+	if type rpm>/dev/null; then package_type=rpm
+	elif type dpkg>/dev/null; then package_type=deb
 	fi
 
 	case $package_type in
@@ -1224,11 +1228,8 @@ case $os_type in
 esac
 
 # Run sa-update if installed, to ensure spamassassin rules are recent
-which sa-update >/dev/null 2>&1
-if [ "$?" = 0 ]; then
-  log_info "Updating SpamAssassin rules..."
-  sa-update
-  log_info "Rule updates done"
+if type sa-update > /dev/null; then
+  run_ok "sa-update" "Updating SpamAssassin rules with sa-update"
 fi
 
 exit 0
