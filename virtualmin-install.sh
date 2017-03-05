@@ -679,7 +679,7 @@ install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	log_info "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
-		fedora|amazon)
+		rhel|fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
 				log_info "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
@@ -688,84 +688,16 @@ install_virtualmin_release () {
 			fi
 			package_type="rpm"
 			deps=$rhdeps
-			install="/usr/bin/yum -y -d 2 install"
+			if type dnf; then
+				install="/usr/bin/dnf -y install"
+			else	
+				install="/usr/bin/yum -y install"
+			fi
 			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			if rpm -U virtualmin-release-latest.noarch.rpm; then success
 			else fatal "Installation of virtualmin-release failed: $?"
 			fi
-			;;
-		rhel)
-			if [ -x /usr/sbin/setenforce ]; then
-				log_info "Disabling SELinux during installation..."
-				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
-				else log_info "  setenforce 0 failed: $?"
-				fi
-			fi
-			package_type="rpm"
-			deps=$rhdeps
-			if [ -x /usr/bin/up2date ]; then
-				install="/usr/bin/up2date --nox"
-				echo;echo
-				echo "If you haven't run up2date before this installation, the installation"
-				echo "will fail.  Have you run up2date at least once before starting this installer?"
-				if ! yesno; then
-					echo
-					echo "Exiting.  Please run 'up2date -u' and then run install.sh again."
-					exit
-				fi
-			else
-				# CentOS doesn't always have up2date?
-				install="/usr/bin/yum -y -d 2 install"
-			fi
-			if [ -r "/usr/share/rhn/RPM-GPG-KEY" ]; then
-				rpm --import /usr/share/rhn/RPM-GPG-KEY
-			fi
-			for i in /etc/pki/rpm-gpg/RPM-GPG-KEY-*; do
-				rpm --import "$i"
-			done
-			if [ ! -x /usr/bin/yum ]; then
-				# Install yum, which makes installing and upgrading our packages easier
-				download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/yum-latest.noarch.rpm"
-				log_info "yum not found, installing yum from software.virtualmin.com..."
-				if rpm -U yum-latest.noarch.rpm; then success
-				else fatal "Installation of yum failed: $?"
-				fi
-			fi
-			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
-			if rpm -U virtualmin-release-latest.noarch.rpm; then success
-			else fatal "Installation of virtualmin-release failed: $?"
-			fi
-			install_updates="$install $deps"
-		;;
-		suse)
-			# No release for suse.  Their RPM locks when we try to import keys...
-			package_type="rpm"
-			# SUSE uses i586 for x86 binary RPMs instead of i386, but uname -i reports i386
-			if [ "$arch" = "i386" ]
-			then cputype="i586"
-			else cputype="x86_64"
-			fi
-			case $os_version in
-				10.1|10.2)
-					deps=$rugdeps
-					install="/usr/bin/rug in -y"
-					install_updates="$install $deps"
-					if ! rug ping; then
-						log_info "The ZENworks Management daemon is not running.  Attempting to start."
-						/usr/sbin/rczmd start
-						if ! rug ping; then
-							fatal "ZMD failed to start, installation cannot continue without functioning package management."
-						fi
-					fi
-					if ! rug sa --type=YUM "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$cputype virtualmin"; then
-						fatal "Unable to add rug installation source: $?"
-					fi
-					if ! rug sa --type=YUM http://${LOGIN}software.virtualmin.com/${repopath}universal virtualmin-universal; then
-						fatal "Unable to add rug installation source: $?"
-					fi
-				;;
-			esac
 		;;
 		freebsd)
 			if [ ! -d /usr/ports ]; then
@@ -1205,10 +1137,7 @@ install_virtualmin
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll 
-log_info "Checking for updates to Virtualmin-related packages..."
-if ! runner "$install_updates"; then
-	log_info "There may have been a problem updating some packages."
-fi
+run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
