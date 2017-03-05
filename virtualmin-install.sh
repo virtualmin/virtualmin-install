@@ -24,15 +24,28 @@ gplsupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
 
 # Some colors and formatting constants
 # used in run_ok function.
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-YELLOW=$(tput setaf 3)
-REDBG=$(tput setab 1)
-GREENBG=$(tput setab 2)
-YELLOWBG=$(tput setab 3)
-NORMAL=$(tput sgr0)
-CHECK="\u2714"
-BALLOT_X="\u2618"
+if type 'tput' > /dev/null; then
+	readonly RED=$(tput setaf 1)
+	readonly GREEN=$(tput setaf 2)
+	readonly YELLOW=$(tput setaf 3)
+	readonly REDBG=$(tput setab 1)
+	readonly GREENBG=$(tput setab 2)
+	readonly YELLOWBG=$(tput setab 3)
+	readonly NORMAL=$(tput sgr0)
+else
+	echo "tput not found, colorized output disabled."
+        readonly RED=''
+        readonly GREEN=''
+        readonly YELLOW=''
+        readonly REDBG=''
+        readonly GREENBG=''
+        readonly YELLOWBG=''
+        readonly NORMAL=''
+fi
+
+# Unicode checkmark and x mark for run_ok function
+readonly CHECK="\u2714"
+readonly BALLOT_X="\u2618"
 
 # Make sure Perl is installed
 printf "Checking for Perl..."
@@ -50,13 +63,13 @@ while true; do
                 	perl=/opt/csw/bin/perl
 			break
 		elif [ $perl_attempted = 1 ] ; then
-			echo Perl could not be installed - Installation cannot continue 
+			echo 'Perl could not be installed - Installation cannot continue.'
 			exit 2
 		fi
 	fi
 	# couldn't find Perl, so we need to try to install it
-       	echo Perl was not found on your system - Virtualmin requires it to run
-	echo Attempting to install it now.
+       	echo 'Perl was not found on your system - Virtualmin requires it to run.'
+	echo 'Attempting to install it now.'
 	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
 		yum -y install perl
 	elif [ -x /usr/bin/apt-get ]; then
@@ -112,7 +125,7 @@ echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid chara
 
 arch=$(uname -m)
 if [ "$arch" = "i686" ]; then
-	arch=i386
+	arch="i386"
 fi
 if [ "$SERIAL" = "GPL" ]; then
 	LOGIN=""
@@ -239,7 +252,7 @@ fatal () {
 
 remove_virtualmin_release () {
 	case "$os_type" in
-		"fedora" | "centos" |	"rhel" | "amazon"	)	rpm -e virtualmin-release
+		"fedora" | "centos" | "rhel" | "amazon"	)	rpm -e virtualmin-release
 		;;
 		"debian" | "ubuntu" )
 			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
@@ -249,7 +262,6 @@ remove_virtualmin_release () {
 }
 
 detect_ip () {
-	#primaryaddr=`/sbin/ifconfig eth0|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
 	primaryaddr=$(/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1)
 	if [ "$primaryaddr" ]; then
 		log_info "Primary address detected as $primaryaddr"
@@ -300,8 +312,8 @@ set_hostname () {
 				printf "%s\t%s\t%s\n" \
 				  "$address" "$line" "$shortname" >> /etc/hosts
 			fi
-		i=1
-	fi
+			i=1
+		fi
 	done
 }
   
@@ -333,7 +345,7 @@ success () {
 # folks run the install script on a production system; either to attempt
 # to upgrade, or to "fix" something. That's never the right thing.
 is_installed () {
-	if [ -f /etc/virtualmin-license ]; then
+	if [ -f /etc/virtualmin-license |]; then
 		# looks like it's been installed before
 		return 1
 	fi
@@ -422,6 +434,7 @@ if is_installed; then
 cat <<EOF
  Virtualmin may already be installed. This can happen if an installation failed,
  and can be ignored in that case.
+
  But, if Virtualmin is already successfully installed you should not run this script
  again. Updates and upgrade can be performed from within Virtualmin.
 
@@ -576,7 +589,7 @@ chmod +x spinner
 # Setup slog so we can start keeping a proper log while also feeding output
 # to the console.
 echo "Loading slog logging library..."
-if $download http://software.virtualmin.com/lib/slog.sh
+if $download http://software.virtualmin.com/lib/slog.sh; then
 	# source and configure slog
 	. ./slog
 else
