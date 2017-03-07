@@ -1,6 +1,6 @@
 #!/bin/sh
 # virtualmin-install.sh
-# Copyright 2005-2016 Virtualmin, Inc.
+# Copyright 2005-2017 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and 
 # lazy-ish.
@@ -154,8 +154,6 @@ ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simp
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
 pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
-# Gentoo
-portagedeps="postfix bind spamassassin procmail perl DBD-Pg DBD-mysql quota openssl python mailman subversion ruby irb rdoc mysql postgresql logrotate awstats webalizer php Net-SSLeay iptables clamav dovecot"
 
 yesno () {
 	if [ "$skipyesno" -eq 1 ]; then
@@ -224,6 +222,7 @@ runner () {
 }
 
 # Perform an action, log it, and print a colorful checkmark or X if failed
+# Returns 0 if successful, $? if failed.
 run_ok () {
 	local cmd=$1
 	local msg=$2
@@ -239,14 +238,14 @@ run_ok () {
 		return 0
 	else
 		env printf "$REDBG[  $BALLOT_X  ]$NORMAL\n"
-		return 1
+		return $?
 	fi
 }
 
 fatal () {
 	echo
 	log_fatal "Fatal Error Occurred: $1"
-	echo -e "${RED}Cannot continue installation.${NORMAL}"
+	printf "${RED}Cannot continue installation.${NORMAL}\n"
 	run_ok "remove_virtualmin_release" "Removing software repo configuration, so installation can be re-attempted."
 	if [ -x "$tempdir" ]; then
 		log_fatal "Removing temporary directory and files."
@@ -254,12 +253,13 @@ fatal () {
 	fi
 	log_fatal "If you are unsure of what went wrong, you may wish to review the log"
 	log_fatal "in $log"
-	exit
+	exit 1
 }
 
 remove_virtualmin_release () {
 	case "$os_type" in
-		"fedora" | "centos" | "rhel" | "amazon"	)	rpm -e virtualmin-release
+		"fedora" | "centos" | "rhel" | "amazon"	)
+			rpm -e virtualmin-release
 		;;
 		"debian" | "ubuntu" )
 			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
@@ -327,24 +327,24 @@ set_hostname () {
 is_fully_qualified () {
 	case $1 in
 		localhost.localdomain)
-			log_info "Hostname cannot be localhost.localdomain."
+			log_warning "Hostname cannot be localhost.localdomain."
 			return 1
 		;;
 		*.localdomain)
-			log_info "Hostname cannot be *.localdomain."
+			log_warning "Hostname cannot be *.localdomain."
 			return 1
 		;;
 		*.*)
-			log_info "Hostname OK: fully qualified as $1"
+			log_success "Hostname OK: fully qualified as $1"
 			return 0
 		;;
 	esac
-	log_info "Hostname $name is not fully qualified."
+	log_warning "Hostname $name is not fully qualified."
 	return 1
 }
 
 success () {
-	log_info "$1 Succeeded."
+	log_success "$1 Succeeded."
 }
 
 # Function to find out if Virtualmin is already installed, so we can get
@@ -375,13 +375,13 @@ uninstall () {
 		rpm)
 			rpm -e --nodeps virtualmin-base
 			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
-			rpm -e --nodeps wbt-virtual-server-theme ust-virtual-server-theme wbt-virtual-server-mobile
+			rpm -e --nodeps wbt-virtual-server-mobile
 			rpm -e --nodeps webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
 			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-virtualmin-svn webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit
-			dpkg --purge webmin-virtual-server-theme usermin-virtual-server-theme webmin-virtual-server-mobile
+			dpkg --purge webmin-virtual-server-mobile
 			dpkg --purge webmin usermin
 			apt-get clean
 		;;
@@ -390,6 +390,7 @@ uninstall () {
 		;;
 	esac
 	remove_virtualmin_release
+	run_ok "rm /etc/virtualmin-license" "Removing /etc/virtualmin-license"
 	echo "Done.  There's probably quite a bit of related packages and such left behind"
 	echo "but all of the Virtualmin-specific packages have been removed."
 	exit 0
@@ -444,7 +445,7 @@ cat <<EOF
  again. Updates and upgrade can be performed from within Virtualmin.
 
  To change license details, use the 'virtualmin change-license' command. Changing 
- the license does not require reinstallation.
+ the license inever requires reinstallation.
 
 EOF
 	printf " Really Continue? (y/n) "
@@ -533,7 +534,9 @@ printf "found %s\n" "$download"
 # download()
 # Use $download to download the provided filename or exit with an error.
 download() {
-	run_ok "$download $i" "Downloading $1"
+	# XXX Check this to make sure run_ok is doing the right thing.
+	# Especially make sure failure gets logged right.
+	run_ok "$download $ii >> $log" "Downloading $1"
 	#if "$download" "$1"
 	#then
 	#	success "Download of $1"
@@ -553,9 +556,7 @@ id | grep "uid=0(" >/dev/null
 if [ "$?" != "0" ]; then
 	uname -a | grep -i CYGWIN >/dev/null
 	if [ "$?" != "0" ]; then
-		echo "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
-		twolines
-		exit 1
+		fatal "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
 	fi
 fi
 
@@ -604,10 +605,15 @@ fi
 
 # Log file
 LOG_PATH=$log
-# Console output level
+# Console output level; ignore debug level messages.
 LOG_LEVEL_STDOUT="INFO"
-# Log file output level
+# Log file output level; catch literally everything.
 LOG_LEVEL_LOG="DEBUG"
+
+# log_fatal  calls log_error
+log_fatal() {
+	log_error $1
+}
 
 log_info "Started installation log in $log"
 
@@ -632,10 +638,8 @@ chmod 700 /etc/virtualmin-license
 
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
-log_info "Loading OS selection library..."
-download http://software.virtualmin.com/lib/oschooser.pl
-log_info "Loading OS list..."
-download http://software.virtualmin.com/lib/os_list.txt
+run_ok "download http://software.virtualmin.com/lib/oschooser.pl" "Loading OS selection library"
+run_ok "download http://software.virtualmin.com/lib/os_list.txt" "Loading OS list"
 
 cd ..
 
@@ -720,6 +724,8 @@ install_virtualmin_release () {
 			# packages in a completely unusable state.  FreeBSD users will just have
 			# to answer a lot of questions during installation.
 			install="pkg_add -r"
+			echo "pkg_add cannot safely be run without user interaction, so don't go anywhere."
+			echo "you'll need to answer some questions."
 			install_updates="echo Skipping checking for updates..."
 		;;
 		debian | ubuntu)
@@ -751,16 +757,16 @@ install_virtualmin_release () {
 				esac
 			fi
 			# Make sure universe repos are available
-			log_info "Enabling universe repositories, if not already available..."
-			sed -ie "s/#*[ ]*deb \(.*\) universe$/deb \1 universe/" /etc/apt/sources.list
-			log_info "Disabling cdrom repositories..."
-			sed -ie "s/^deb cdrom:/#deb cdrom:/" /etc/apt/sources.list
-			apt-get update
+			# XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
+			run_ok "sed -ie 's/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
+				"Enabling universe repositories, if not already available"
+			# XXX Is this still enabled by default on Debian/Ubuntu systems?
+			run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
+			run_ok "apt-get update" "Updating apt-get metadata"
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
-			log_info "Cleaning up apt headers and packages, so we can start fresh..."
-			log_info $(apt-get clean)
+			run_ok $(apt-get clean) "Cleaning out old metadata"
 			# Get the noninteractive apt-get configuration file (this is 
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
@@ -816,9 +822,9 @@ install_with_apt () {
 
 
 	log_info "Installing Virtualmin modules:"
-	log_info "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
+	log_info "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
 
-        if ! runner "$install webmin-virtual-server webmin-virtual-server-theme webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
+        if ! runner "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
                 log_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
                 log_warn "http://www.virtualmin.com/os-support"
                 fatal "Installation failed: $?"
@@ -869,38 +875,38 @@ install_with_tar () {
 	ssl=1
 	atboot=1
 	perl=/usr/bin/perl
-	theme=virtual-server-theme
+	theme=authentic-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
 	log_info "Installing Webmin..."
 	runner "./setup.sh /usr/local/webmin"
 	cd $tempdir
 	rm -rf webmin-[0-9]*
 
-  # Install Usermin
-  log_info "Installing Usermin..."
-  if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/usermin-current.tar.gz; then
-    fatal "Retrieving Usermin from software.virtualmin.com failed."
-  fi
-  if ! gunzip -c usermin-current.tar.gz | tar xf -; then
-    fatal "Extracting Usermin from archive failed."
-  fi
-  rm usermin-current.tar.gz
-  cd usermin-[0-9]*
-  config_dir=/usr/local/etc/usermin
-  var_dir=/var/usermin
-  autoos=3
-  port=20000
-  login=root
-  crypt=x
-  ssl=1
-  atboot=1
-  perl=/usr/bin/perl
-  theme=virtual-server-theme
-  export config_dir var_dir autoos port login crypt ssl atboot perl theme
+  	# Install Usermin
+  	log_info "Installing Usermin..."
+ 	if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/usermin-current.tar.gz; then
+    		fatal "Retrieving Usermin from software.virtualmin.com failed."
+  	fi
+  	if ! gunzip -c usermin-current.tar.gz | tar xf -; then
+		fatal "Extracting Usermin from archive failed."
+	fi
+	rm usermin-current.tar.gz
+	cd usermin-[0-9]*
+	config_dir=/usr/local/etc/usermin
+	var_dir=/var/usermin
+	autoos=3
+	port=20000
+	login=root
+	crypt=x
+	ssl=1
+	atboot=1
+	perl=/usr/bin/perl
+	theme=authentic-theme
+	export config_dir var_dir autoos port login crypt ssl atboot perl theme
 	log_info "Installing Usermin..."
-  runner "./setup.sh /usr/local/usermin"
-  cd $tempdir
-  rm -rf usermin-[0-9]*
+	runner "./setup.sh /usr/local/usermin"
+	cd $tempdir
+	rm -rf usermin-[0-9]*
 
 	# Install Virtulmin-specific modules and themes, as defined in updates.txt
 	log_info "Installing Virtualmin modules and themes..."
@@ -1127,10 +1133,9 @@ install_virtualmin () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 # We have to use $install to pre-install all deps, because some systems don't
-# cooperate with our repositories (that's SUSE, so far).
+# cooperate with our repositories.
 if [ "$mode" = "full" ]; then
 	install_deps_the_hard_way
-	success
 fi
 
 install_virtualmin
