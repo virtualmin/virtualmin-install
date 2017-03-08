@@ -66,17 +66,19 @@ while true; do
 			echo 'Perl could not be installed - Installation cannot continue.'
 			exit 2
 		fi
+		# couldn't find Perl, so we need to try to install it
+       		echo 'Perl was not found on your system - Virtualmin requires it to run.'
+		echo 'Attempting to install it now.'
+		if [ -x /usr/bin/yum ]; then
+			yum -y install perl
+		elif [ -x /usr/bin/apt-get ]; then
+			apt-get update; apt-get -q -y install perl
+		fi
+		perl_attempted = 1
+		# Loop. Next loop should either break or exit.
+	else
+		break
 	fi
-	# couldn't find Perl, so we need to try to install it
-       	echo 'Perl was not found on your system - Virtualmin requires it to run.'
-	echo 'Attempting to install it now.'
-	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
-		yum -y install perl
-	elif [ -x /usr/bin/apt-get ]; then
-		apt-get update; apt-get -q -y install perl
-	fi
-	perl_attempted = 1
-	# Loop. Next loop should either break or exit.
 done
 
 printf "found Perl at $perl"
