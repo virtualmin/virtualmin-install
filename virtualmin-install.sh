@@ -45,7 +45,7 @@ fi
 
 # Unicode checkmark and x mark for run_ok function
 CHECK='\u2714'
-BALLOT_X='\u2618'
+BALLOT_X='\u2718'
 
 # Make sure Perl is installed
 printf "Checking for Perl..."
