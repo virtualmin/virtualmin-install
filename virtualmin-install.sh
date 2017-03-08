@@ -44,8 +44,8 @@ else
 fi
 
 # Unicode checkmark and x mark for run_ok function
-CHECK="\u2714"
-BALLOT_X="\u2618"
+CHECK='\u2714'
+BALLOT_X='\u2618'
 
 # Make sure Perl is installed
 printf "Checking for Perl..."
@@ -232,7 +232,7 @@ run_ok () {
 	if [ $columns -ge 80 ]; then
 		columns=80
 	fi
-	COL=$(( ${columns}-${msg}+${#GREEN}+${#NORMAL} ))
+	COL=$(( ${columns}-${#msg}+${#GREEN}+${#NORMAL} ))
 
 	printf "%s%${COL}s" "$msg"
 	if $cmd >> $log; then
