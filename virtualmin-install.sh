@@ -158,10 +158,10 @@ ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simp
 pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
 
 yesno () {
-	if [ "$skipyesno" -eq 1 ]; then
+	if [ "$skipyesno" = "1" ]; then
 		return 0
 	fi
-	if [ "$VIRTUALMIN_NONINTERACTIVE" -eq 1 ]; then
+	if [ "$VIRTUALMIN_NONINTERACTIVE" = "1" ]; then
 		return 0
 	fi
 	while read line; do
