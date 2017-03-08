@@ -161,7 +161,7 @@ yesno () {
 	if [ "$skipyesno" -eq 1 ]; then
 		return 0
 	fi
-	if [ "$VIRTUALMIN_NONINTERACTIVE" -ne "" ]; then
+	if [ "$VIRTUALMIN_NONINTERACTIVE" -eq 1 ]; then
 		return 0
 	fi
 	while read line; do
@@ -354,7 +354,7 @@ success () {
 # folks run the install script on a production system; either to attempt
 # to upgrade, or to "fix" something. That's never the right thing.
 is_installed () {
-	if [ -f /etc/virtualmin-license |]; then
+	if [ -f /etc/virtualmin-license ]; then
 		# looks like it's been installed before
 		return 1
 	fi
@@ -412,7 +412,7 @@ Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$
  The installation is quite stable and functional when run on a freshly
  installed supported Operating System.
 
- Please read the Virtualmin Administrators Guide before proceeding if
+ Please read the Virtualmin Installation Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system!  It should only be
@@ -598,7 +598,7 @@ chmod +x spinner
 echo "Loading slog logging library..."
 if $download http://software.virtualmin.com/lib/slog.sh; then
 	# source and configure slog
-	. ./slog
+	. ./slog.sh
 else
 	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
 	echo " Check network connectivity, name resolution, and disk space and try again."
