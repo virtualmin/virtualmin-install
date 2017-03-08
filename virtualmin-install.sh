@@ -407,8 +407,6 @@ cat <<EOF
 
 Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
-                      ${RED}WARNING${NORMAL}
-
  The installation is quite stable and functional when run on a freshly
  installed supported Operating System.
 
@@ -440,6 +438,9 @@ fi
 # Double check if installed, just in case above error ignored.
 if is_installed; then
 cat <<EOF
+
+                      ${RED}WARNING${NORMAL}
+
  Virtualmin may already be installed. This can happen if an installation failed,
  and can be ignored in that case.
 
