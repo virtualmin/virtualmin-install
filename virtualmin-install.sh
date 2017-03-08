@@ -525,7 +525,7 @@ while true; do
 
 	# Made it here without finding a downloader, so try to install one
 	curl_attempted = 1
-	if [ -x /usr/bin/yum || -x /usr/bin/dnf ]; then
+	if [ -x /usr/bin/yum ]; then
 		run_ok "yum -y install curl" "Installing curl"
 	elif [ -x /usr/bin/apt-get ]; then
 		run_ok "apt-get update; apt-get -y -q install curl" "Installing curl"
@@ -539,7 +539,7 @@ printf "found %s\n" "$download"
 download() {
 	# XXX Check this to make sure run_ok is doing the right thing.
 	# Especially make sure failure gets logged right.
-	run_ok "$download $ii >> $log" "Downloading $1"
+	run_ok "$download $1 >> $log" "Downloading $1"
 	#if "$download" "$1"
 	#then
 	#	success "Download of $1"
