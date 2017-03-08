@@ -405,7 +405,7 @@ fi
 
 cat <<EOF
 
-Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER{$NORMAL}
+Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
                       ${RED}WARNING${NORMAL}
 
