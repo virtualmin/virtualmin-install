@@ -44,8 +44,8 @@ else
 fi
 
 # Unicode checkmark and x mark for run_ok function
-readonly CHECK="\u2714"
-readonly BALLOT_X="\u2618"
+CHECK="\u2714"
+BALLOT_X="\u2618"
 
 # Make sure Perl is installed
 printf "Checking for Perl..."
@@ -236,10 +236,10 @@ run_ok () {
 
 	printf "%s%${COL}s" "$msg"
 	if $cmd >> $log; then
-    		env printf "$GREENBG[  $CHECK  ]$NORMAL\n"
+    		env printf "${GREENBG}[  ${CHECK}  ]${NORMAL}\n"
 		return 0
 	else
-		env printf "$REDBG[  $BALLOT_X  ]$NORMAL\n"
+		env printf "${REDBG}[  ${BALLOT_X}  ]${NORMAL}\n"
 		return $?
 	fi
 }
