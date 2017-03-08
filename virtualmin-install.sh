@@ -232,7 +232,7 @@ run_ok () {
 	if [ $columns -ge 80 ]; then
 		columns=80
 	fi
-	COL=$(( ${columns}-${MSG}+${#GREEN}+${#NORMAL} ))
+	COL=$(( ${columns}-${msg}+${#GREEN}+${#NORMAL} ))
 
 	printf "%s%${COL}s" "$msg"
 	if $cmd >> $log; then
