@@ -641,8 +641,8 @@ chmod 700 /etc/virtualmin-license
 
 # Detecting the OS
 # Grab the Webmin oschooser.pl script
-run_ok "download http://software.virtualmin.com/lib/oschooser.pl" "Loading OS selection library"
-run_ok "download http://software.virtualmin.com/lib/os_list.txt" "Loading OS list"
+run_ok "$download http://software.virtualmin.com/lib/oschooser.pl" "Loading OS selection library"
+run_ok "$download http://software.virtualmin.com/lib/os_list.txt" "Loading OS list"
 
 cd ..
 
