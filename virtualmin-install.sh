@@ -47,8 +47,14 @@ fi
 CHECK='\u2714'
 BALLOT_X='\u2718'
 
+log=/root/virtualmin-install.log
+skipyesno=0
+
+LANG=
+export LANG
+
 # Make sure Perl is installed
-printf "Checking for Perl..."
+printf "Checking for Perl..." >> $log
 # loop until we've got a Perl or until we can't try any more
 while true; do
 	perl=$(which perl 2>/dev/null)
@@ -80,15 +86,7 @@ while true; do
 		break
 	fi
 done
-
-printf "found Perl at $perl"
-echo ""
-
-log=/root/virtualmin-install.log
-skipyesno=0
-
-LANG=
-export LANG
+printf "found Perl at $perl\n" >> $log
 
 while [ "$1" != "" ]; do
 	case $1 in
@@ -229,8 +227,8 @@ run_ok () {
 	local cmd=$1
 	local msg=$2
 	local columns=$(tput cols)
-	if [ $columns -ge 80 ]; then
-		columns=80
+	if [ $columns -ge 100 ]; then
+		columns=100
 	fi
 	COL=$(( ${columns}-${#msg}+${#GREEN}+${#NORMAL} ))
 
