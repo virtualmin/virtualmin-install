@@ -411,10 +411,10 @@ success () {
 is_installed () {
 	if [ -f /etc/virtualmin-license ]; then
 		# looks like it's been installed before
-		return 1
+		return 0
 	fi
 	# XXX Probably not installed? Maybe we should remove license on uninstall, too.
-	return 0
+	return 1
 }
 
 # This function performs a rough uninstallation of Virtualmin
