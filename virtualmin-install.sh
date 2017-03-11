@@ -15,11 +15,11 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
-prosupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
- Debian 6, 7, and 8, on i386 and amd64
+prosupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
+ Debian 7 and 8 on i386 and amd64
  Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
-gplsupported=" CentOS/RHEL/Scientific Linux 5, 6, and 7, on x86_64
- Debian 6, 7, and 8, on i386 and amd64
+gplsupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
+ Debian 7 and 8 on i386 and amd64
  Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
 # Some colors and formatting constants
@@ -42,10 +42,6 @@ else
         readonly YELLOWBG=''
         readonly NORMAL=''
 fi
-
-# Unicode checkmark and x mark for run_ok function
-CHECK='\u2714'
-BALLOT_X='\u2718'
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -221,9 +217,57 @@ runner () {
 	fi
 }
 
+# Find temp directory
+if [ "$TMPDIR" = "" ]; then
+	TMPDIR=/tmp
+fi
+
+# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
+# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
+# is mounted noexec, this won't catch it.
+TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
+if [ "$TMPNOEXEC" != "" ]; then
+	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
+	exit 1
+fi
+
+if [ "$tempdir" = "" ]; then
+	tempdir=$TMPDIR/.virtualmin-$$
+	if [ -e "$tempdir" ]; then
+		rm -rf $tempdir
+	fi
+	mkdir $tempdir
+fi
+
+# "files" subdir for libs
+mkdir $tempdir/files
+srcdir=$tempdir/files
+cd $srcdir
+
+# Check for unicode support in the shell
+# This is a weird function, but seems to work. Checks to see if a unicode char can be
+# written to a file and can be read back.
+shell_has_unicode () {
+	# Write a unicode character to a file...read it back and see if it's handled right.
+	env printf "\u2714"> unitest.txt
+
+	read unitest < unitest.txt
+	if [ ${#unitest} -le 3 ]; then
+		return 0
+	else
+		return 1
+	fi
+
+	rm unitest.txt	
+}
+
 # Perform an action, log it, and print a colorful checkmark or X if failed
 # Returns 0 if successful, $? if failed.
 run_ok () {
+	# Unicode checkmark and x mark for run_ok function
+	CHECK='\u2714'
+	BALLOT_X='\u2718'
+
 	local cmd=$1
 	local msg=$2
 	local columns=$(tput cols)
@@ -233,12 +277,25 @@ run_ok () {
 	COL=$(( ${columns}-${#msg}+${#GREEN}+${#NORMAL} ))
 
 	printf "%s%${COL}s" "$msg"
-	if $cmd >> $log; then
-    		env printf "${GREENBG}[  ${CHECK}  ]${NORMAL}\n"
-		return 0
+	# Make sure there some unicode action in the shell; there's no
+	# way to check the terminal in a POSIX-compliant way, but terms
+	# are way ahead of 
+	if shell_has_unicode; then
+		if $cmd >> $log; then
+    			env printf "${GREENBG}[  ${CHECK}  ]${NORMAL}\n"
+			return 0
+		else
+			env printf "${REDBG}[  ${BALLOT_X}  ]${NORMAL}\n"
+			return $?
+		fi
 	else
-		env printf "${REDBG}[  ${BALLOT_X}  ]${NORMAL}\n"
-		return $?
+		if $cmd >> $log; then
+			env printf "${GREEN}[  OK  ]${NORMAL}\n"
+			return 0
+		else
+			env printf "${REDBG}[ERROR ]${NORMAL}\n"
+			return $?
+		fi
 	fi
 }
 
@@ -560,33 +617,6 @@ if [ "$?" != "0" ]; then
 		fatal "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
 	fi
 fi
-
-# Find temp directory
-if [ "$TMPDIR" = "" ]; then
-	TMPDIR=/tmp
-fi
-
-# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
-# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
-# is mounted noexec, this won't catch it.
-TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
-if [ "$TMPNOEXEC" != "" ]; then
-	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
-	exit 1
-fi
-
-if [ "$tempdir" = "" ]; then
-	tempdir=$TMPDIR/.virtualmin-$$
-	if [ -e "$tempdir" ]; then
-		rm -rf $tempdir
-	fi
-	mkdir $tempdir
-fi
-
-# "files" subdir for libs
-mkdir $tempdir/files
-srcdir=$tempdir/files
-cd $srcdir
 
 # Download spinner
 $download http://software.virtualmin.com/lib/spinner
