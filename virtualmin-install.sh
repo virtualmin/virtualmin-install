@@ -84,6 +84,33 @@ while true; do
 done
 printf "found Perl at $perl\n" >> $log
 
+# Check for wget or curl or fetch
+printf "Checking for HTTP client..." >> $log
+while true; do
+	if [ -x "/usr/bin/curl" ]; then
+		download="/usr/bin/curl -s -O "
+		break
+	elif [ -x "/usr/bin/wget" ]; then
+		download="/usr/bin/wget -nv"
+		break
+	elif [ -x "/usr/bin/fetch" ]; then
+		download="/usr/bin/fetch"
+		break
+	elif [ $curl_attempted = 1 ]; then
+		echo "Could not install curl. Cannot continue."
+		exit 1
+	fi
+
+	# Made it here without finding a downloader, so try to install one
+	curl_attempted = 1
+	if [ -x /usr/bin/yum ]; then
+		yum -y install curl >> $log
+	elif [ -x /usr/bin/apt-get ]; then
+		apt-get update > /dev/null; apt-get -y -q install curl >> $log
+	fi
+done
+printf "found %s\n" "$download" >> $log
+
 while [ "$1" != "" ]; do
 	case $1 in
 		--help|-h)
@@ -564,34 +591,6 @@ if [ "$?" != 0 ]; then
 		log_error "This may cause problems, but we'll try to continue."
 	fi
 fi
-
-# Check for wget or curl or fetch
-printf "Checking for HTTP client..."
-while true; do
-	if [ -x "/usr/bin/curl" ]; then
-		download="/usr/bin/curl -s -O "
-		break
-	elif [ -x "/usr/bin/wget" ]; then
-		download="/usr/bin/wget -nv"
-		break
-	elif [ -x "/usr/bin/fetch" ]; then
-		download="/usr/bin/fetch"
-		break
-	elif [ $curl_attempted = 1 ]; then
-		echo "Could not install curl. Cannot continue."
-		exit 1
-	fi
-
-	# Made it here without finding a downloader, so try to install one
-	curl_attempted = 1
-	if [ -x /usr/bin/yum ]; then
-		run_ok "yum -y install curl" "Installing curl"
-	elif [ -x /usr/bin/apt-get ]; then
-		run_ok "apt-get update; apt-get -y -q install curl" "Installing curl"
-	fi
-done
-
-printf "found %s\n" "$download"
 
 # download()
 # Use $download to download the provided filename or exit with an error.
