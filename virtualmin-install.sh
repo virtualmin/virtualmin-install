@@ -25,22 +25,22 @@ gplsupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
 # Some colors and formatting constants
 # used in run_ok function.
 if type 'tput' > /dev/null; then
-	readonly RED=$(tput setaf 1)
-	readonly GREEN=$(tput setaf 2)
-	readonly YELLOW=$(tput setaf 3)
-	readonly REDBG=$(tput setab 1)
-	readonly GREENBG=$(tput setab 2)
-	readonly YELLOWBG=$(tput setab 3)
-	readonly NORMAL=$(tput sgr0)
+	RED=$(tput setaf 1)
+	GREEN=$(tput setaf 2)
+	YELLOW=$(tput setaf 3)
+	REDBG=$(tput setab 1)
+	GREENBG=$(tput setab 2)
+	YELLOWBG=$(tput setab 3)
+	NORMAL=$(tput sgr0)
 else
 	echo "tput not found, colorized output disabled."
-        readonly RED=''
-        readonly GREEN=''
-        readonly YELLOW=''
-        readonly REDBG=''
-        readonly GREENBG=''
-        readonly YELLOWBG=''
-        readonly NORMAL=''
+        RED=''
+        GREEN=''
+        YELLOW=''
+        REDBG=''
+        GREENBG=''
+        YELLOWBG=''
+        NORMAL=''
 fi
 
 log=/root/virtualmin-install.log
