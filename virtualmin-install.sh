@@ -195,8 +195,12 @@ setconfig () {
 	fi
 }
 	
-# Perform an action, log it, and run the spinner throughout
+# Download spinner
+$download http://software.virtualmin.com/lib/spinne.sh
+chmod +x spinner.sh
 . "${srcdir}/spinner.sh"
+
+# Perform an action, log it, and run the spinner throughout
 runner () {
 	cmd=$1
 	echo "...in progress, please wait..."
@@ -617,10 +621,6 @@ if [ "$?" != "0" ]; then
 		fatal "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
 	fi
 fi
-
-# Download spinner
-$download http://software.virtualmin.com/lib/spinner
-chmod +x spinner
 
 # Setup slog so we can start keeping a proper log while also feeding output
 # to the console.
