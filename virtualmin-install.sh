@@ -198,7 +198,7 @@ setconfig () {
 # Download spinner
 $download http://software.virtualmin.com/lib/spinner.sh
 chmod +x spinner.sh
-. "${srcdir}/spinner.sh"
+. ./spinner.sh
 
 # Perform an action, log it, and run the spinner throughout
 runner () {
