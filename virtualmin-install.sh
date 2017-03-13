@@ -196,20 +196,20 @@ setconfig () {
 }
 	
 # Perform an action, log it, and run the spinner throughout
+. "${srcdir}/spinner.sh"
 runner () {
 	cmd=$1
 	echo "...in progress, please wait..."
-	touch busy
-	"$srcdir"/spinner busy &
+	spinner &
 	if $cmd >> $log; then
-		rm busy
+		touch stopspinning
 		sleep 1
 		success "$cmd:"
 		return 0
 	else
-		rm busy
+		touch stopspinning
 		sleep 1
-		echo "$cmd failed.  Error (if any): $?"
+		echo "${RED}$cmd failed.  Error (if any):${NORMAL} $?"
 		echo
 		echo "Displaying the last 15 lines of $log to help troubleshoot this problem:"
 		tail -15 $log
@@ -274,7 +274,7 @@ run_ok () {
 	if [ $columns -ge 100 ]; then
 		columns=100
 	fi
-	COL=$(( ${columns}-${#msg}+${#GREEN}+${#NORMAL} ))
+	COL=$(( ${columns}-${#msg}+${#GREENBG}+${#NORMAL} ))
 
 	printf "%s%${COL}s" "$msg"
 	# Make sure there some unicode action in the shell; there's no
@@ -290,10 +290,10 @@ run_ok () {
 		fi
 	else
 		if $cmd >> $log; then
-			env printf "${GREEN}[  OK  ]${NORMAL}\n"
+			env printf "${GREENBG}[ OK! ]${NORMAL}\n"
 			return 0
 		else
-			env printf "${REDBG}[ERROR ]${NORMAL}\n"
+			env printf "${REDBG}[ERROR]${NORMAL}\n"
 			return $?
 		fi
 	fi
@@ -355,10 +355,10 @@ set_hostname () {
 	i=0
 	while [ $i -eq 0 ]; do
 		if [ "$forcehostname" = "" ]; then
-			printf "Please enter a fully qualified hostname (for example, host.example.com): "
+			printf "${RED}Please enter a fully qualified hostname (for example, host.example.com): ${NORMAL}"
 			read line
 		else
-			log_info "Setting hostname to $forcehostname"
+			log_debug "Setting hostname to $forcehostname"
 			line=$forcehostname
 		fi
 		if ! is_fully_qualified "$line"; then
@@ -367,12 +367,12 @@ set_hostname () {
 			hostname "$line"
 			detect_ip
 			if grep "$address" /etc/hosts; then
-				log_info "Entry for IP $address exists in /etc/hosts."
-				log_info "Updating with new hostname."
+				log_debug "Entry for IP $address exists in /etc/hosts."
+				log_debug "Updating with new hostname."
 				shortname=$(echo "$line" | cut -d"." -f1)
 				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
 			else
-				log_info "Adding new entry for hostname $line on $address to /etc/hosts."
+				log_debug "Adding new entry for hostname $line on $address to /etc/hosts."
 				printf "%s\t%s\t%s\n" \
 				  "$address" "$line" "$shortname" >> /etc/hosts
 			fi
@@ -556,8 +556,8 @@ if [ "$?" != 0 ]; then
 	echo "There is no localhost entry in /etc/hosts. This is required, so one will be added."
 	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
 	if [ $? -ne 0 ]; then
-		log_info "Failed to configure a localhost entry in /etc/hosts."
-		log_info "This may cause problems, but we'll try to continue."
+		log_error "Failed to configure a localhost entry in /etc/hosts."
+		log_error "This may cause problems, but we'll try to continue."
 	fi
 fi
 
@@ -594,7 +594,7 @@ printf "found %s\n" "$download"
 download() {
 	# XXX Check this to make sure run_ok is doing the right thing.
 	# Especially make sure failure gets logged right.
-	run_ok "$download $1 >> $log" "Downloading $1"
+	run_ok "$download $1" "Downloading $1"
 	#if "$download" "$1"
 	#then
 	#	success "Download of $1"
