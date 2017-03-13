@@ -196,7 +196,7 @@ setconfig () {
 }
 	
 # Download spinner
-$download http://software.virtualmin.com/lib/spinne.sh
+$download http://software.virtualmin.com/lib/spinner.sh
 chmod +x spinner.sh
 . "${srcdir}/spinner.sh"
 
