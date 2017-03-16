@@ -232,7 +232,7 @@ fatal () {
 	echo
 	log_fatal "Fatal Error Occurred: $1"
 	printf "${RED}Cannot continue installation.${NORMAL}\n"
-	run_ok "remove_virtualmin_release" "Removing software repo configuration, so installation can be re-attempted."
+	remove_virtualmin_release
 	if [ -x "$tempdir" ]; then
 		log_fatal "Removing temporary directory and files."
 		rm -rf "$tempdir"
@@ -245,7 +245,7 @@ fatal () {
 remove_virtualmin_release () {
 	case "$os_type" in
 		"fedora" | "centos" | "rhel" | "amazon"	)
-			rpm -e virtualmin-release
+			run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
 		;;
 		"debian" | "ubuntu" )
 			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
@@ -982,4 +982,7 @@ if type sa-update > /dev/null; then
   run_ok "sa-update" "Updating SpamAssassin rules with sa-update"
 fi
 
+success "Installation Complete!"
+success "Assuming there were no errors above, your Virtualmin system should be ready"
+success "to configure on port 10000."
 exit 0
