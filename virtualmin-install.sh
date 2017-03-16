@@ -188,12 +188,12 @@ runner () {
 	if $cmd >> $log; then
 		touch stopspinning
 		sleep 1
-		success "$cmd:"
+		log_success "$cmd:"
 		return 0
 	else
 		touch stopspinning
 		sleep 1
-		echo "${RED}$cmd failed.  Error (if any):${NORMAL} $?"
+		log_error "$cmd failed.  Error (if any): $?"
 		echo
 		echo "Displaying the last 15 lines of $log to help troubleshoot this problem:"
 		tail -15 $log
@@ -528,9 +528,7 @@ install_virtualmin_release () {
 			fi
 			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
-			if rpm -U virtualmin-release-latest.noarch.rpm; then success
-			else fatal "Installation of virtualmin-release failed: $?"
-			fi
+			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
 		;;
 		freebsd)
 			if [ ! -d /usr/ports ]; then
@@ -885,8 +883,6 @@ install_deps_the_hard_way () {
 				log_warning "This may lead to problems later in the process, and"
 				log_warning "some packages may not have installed successfully."
 				log_warning "You may wish to check $log for details."
-			else
-				success
 			fi
 			
 			# FreeBSD packages aren't very package-like
@@ -982,7 +978,7 @@ if type sa-update > /dev/null; then
   run_ok "sa-update" "Updating SpamAssassin rules with sa-update"
 fi
 
-success "Installation Complete!"
-success "Assuming there were no errors above, your Virtualmin system should be ready"
-success "to configure on port 10000."
+log_success "Installation Complete!"
+log_success "Assuming there were no errors above, your Virtualmin system should be ready"
+log_success "to configure on port 10000."
 exit 0
