@@ -202,7 +202,7 @@ runner () {
 }
 
 # Find temp directory
-if [ "$TMPDIR" = "" ]; then
+if [ -z "$TMPDIR" ]; then
 	TMPDIR=/tmp
 fi
 
@@ -210,12 +210,12 @@ fi
 # XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
 # is mounted noexec, this won't catch it.
 TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
-if [ "$TMPNOEXEC" != "" ]; then
+if [ ! -z "$TMPNOEXEC" ]; then
 	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
 	exit 1
 fi
 
-if [ "$tempdir" = "" ]; then
+if [ -z "$tempdir" ]; then
 	tempdir=$TMPDIR/.virtualmin-$$
 	if [ -e "$tempdir" ]; then
 		rm -rf $tempdir
