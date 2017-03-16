@@ -686,8 +686,7 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=authentic-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	log_info "Installing Webmin..."
-	runner "./setup.sh /usr/local/webmin"
+	run_ok "./setup.sh /usr/local/webmin" "Installing Webmin"
 	cd $tempdir
 	rm -rf webmin-[0-9]*
 
@@ -712,8 +711,7 @@ install_with_tar () {
 	perl=/usr/bin/perl
 	theme=authentic-theme
 	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	log_info "Installing Usermin..."
-	runner "./setup.sh /usr/local/usermin"
+	run_ok "./setup.sh /usr/local/usermin" "Installing Usermin"
 	cd $tempdir
 	rm -rf usermin-[0-9]*
 
@@ -804,8 +802,7 @@ install_with_tar () {
 	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
 
 	# PostgreSQL needs to be initialized
-	log_info "Initializing postgresql database..."
-	runner "/usr/local/etc/rc.d/postgresql initdb"
+	run_ok "/usr/local/etc/rc.d/postgresql initdb" "Initializing postgresql database"
 
 	# Webmin <=1.411 doesn't know the right paths
 	setconfig "stop_cmd=/usr/local/etc/rc.d/postgresql stop" $webmin_config_dir/postgresql/config
@@ -912,8 +909,8 @@ install_deps_the_hard_way () {
 			return 0
 		;;
 		*)
-			log_info "Installing dependencies using command: $install $deps"
-			if ! runner "$install $deps"; then
+			run_ok "$install $deps" "Installing dependencies"
+			if [ $? -ne 0 ]; then
 				fatal "Something went wrong during installation: $?"
 			fi
 			return 0
