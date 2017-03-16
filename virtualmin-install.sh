@@ -22,27 +22,6 @@ gplsupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
  Debian 7 and 8 on i386 and amd64
  Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
-# Some colors and formatting constants
-# used in run_ok function.
-if type 'tput' > /dev/null; then
-	RED=$(tput setaf 1)
-	GREEN=$(tput setaf 2)
-	YELLOW=$(tput setaf 3)
-	REDBG=$(tput setab 1)
-	GREENBG=$(tput setab 2)
-	YELLOWBG=$(tput setab 3)
-	NORMAL=$(tput sgr0)
-else
-	echo "tput not found, colorized output disabled."
-        RED=''
-        GREEN=''
-        YELLOW=''
-        REDBG=''
-        GREENBG=''
-        YELLOWBG=''
-        NORMAL=''
-fi
-
 log=/root/virtualmin-install.log
 skipyesno=0
 
@@ -178,54 +157,28 @@ ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simp
 # config for each...this sucks.
 pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
 
-yesno () {
-	if [ "$skipyesno" = "1" ]; then
-		return 0
-	fi
-	if [ "$VIRTUALMIN_NONINTERACTIVE" = "1" ]; then
-		return 0
-	fi
-	while read line; do
-		case $line in
-			y|Y|Yes|YES|yes|yES|yEs|YeS|yeS) return 0
-			;;
-			n|N|No|NO|no|nO) return 1
-			;;
-			*)
-			printf "\nPlease enter y or n: "
-			;;
-		esac
-	done
+# Download the slib (source: http://github.com/virtualmin/slib)
+# Lots of little utility functions.
+$download http://software.virtualmin.com/lib/slib.sh
+chmod +x slib.sh
+. ./slib.sh
+
+# Setup slog
+LOG_PATH=$log
+# Console output level; ignore debug level messages.
+if [ "$VERBOSE" = "1" ]; then
+	LOG_LEVEL_STDOUT="DEBUG"
+else
+	LOG_LEVEL_STDOUT="INFO"
+fi
+# Log file output level; catch literally everything.
+LOG_LEVEL_LOG="DEBUG"
+
+# log_fatal calls log_error
+log_fatal() {
+	log_error $1
 }
 
-# mkdir if it doesn't exist
-testmkdir () {
-	if [ ! -d "$1" ]; then
-		mkdir -p "$1"
-	fi
-}
-# Copy a file if the destination doesn't exist
-testcp () {
-	if [ ! -e "$2" ]; then
-		cp "$1" "$2"
-	fi
-}
-# Set a Webmin directive or add it if it doesn't exist
-setconfig () {
-	sc_config="$2"
-	sc_value="$1"
-	sc_directive=$(echo "$sc_value" | cut -d'=' -f1)
-	if grep -q "$sc_directive $2"; then
-		sed -i -e "s#$sc_directive.*#$sc_value#" "$sc_config"
-	else
-		echo "$1" >> "$2"
-	fi
-}
-	
-# Download spinner
-$download http://software.virtualmin.com/lib/spinner.sh
-chmod +x spinner.sh
-. ./spinner.sh
 
 # Perform an action, log it, and run the spinner throughout
 runner () {
@@ -275,61 +228,6 @@ mkdir $tempdir/files
 srcdir=$tempdir/files
 cd $srcdir
 
-# Check for unicode support in the shell
-# This is a weird function, but seems to work. Checks to see if a unicode char can be
-# written to a file and can be read back.
-shell_has_unicode () {
-	# Write a unicode character to a file...read it back and see if it's handled right.
-	env printf "\u2714"> unitest.txt
-
-	read unitest < unitest.txt
-	if [ ${#unitest} -le 3 ]; then
-		return 0
-	else
-		return 1
-	fi
-
-	rm unitest.txt	
-}
-
-# Perform an action, log it, and print a colorful checkmark or X if failed
-# Returns 0 if successful, $? if failed.
-run_ok () {
-	# Unicode checkmark and x mark for run_ok function
-	CHECK='\u2714'
-	BALLOT_X='\u2718'
-
-	local cmd=$1
-	local msg=$2
-	local columns=$(tput cols)
-	if [ $columns -ge 100 ]; then
-		columns=100
-	fi
-	COL=$(( ${columns}-${#msg}+${#GREENBG}+${#NORMAL} ))
-
-	printf "%s%${COL}s" "$msg"
-	# Make sure there some unicode action in the shell; there's no
-	# way to check the terminal in a POSIX-compliant way, but terms
-	# are way ahead of 
-	if shell_has_unicode; then
-		if $cmd >> $log; then
-    			env printf "${GREENBG}[  ${CHECK}  ]${NORMAL}\n"
-			return 0
-		else
-			env printf "${REDBG}[  ${BALLOT_X}  ]${NORMAL}\n"
-			return $?
-		fi
-	else
-		if $cmd >> $log; then
-			env printf "${GREENBG}[ OK! ]${NORMAL}\n"
-			return 0
-		else
-			env printf "${REDBG}[ERROR]${NORMAL}\n"
-			return $?
-		fi
-	fi
-}
-
 fatal () {
 	echo
 	log_fatal "Fatal Error Occurred: $1"
@@ -354,81 +252,6 @@ remove_virtualmin_release () {
 			mv "$tempdir"/sources.list /etc/apt/sources.list 
 		;;
 	esac
-}
-
-detect_ip () {
-	primaryaddr=$(/sbin/ip -f inet -o -d addr show dev \`/sbin/ip ro ls | grep default | awk '{print $5}'\` | head -1 | awk '{print $4}' | cut -d"/" -f1)
-	if [ "$primaryaddr" ]; then
-		log_info "Primary address detected as $primaryaddr"
-		address=$primaryaddr
-		return 0
-	else
-		log_info "Unable to determine IP address of primary interface."
-		echo "Please enter the name of your primary network interface: "
-		read primaryinterface
-		#primaryaddr=`/sbin/ifconfig $primaryinterface|grep 'inet addr'|cut -d: -f2|cut -d" " -f1`
-		primaryaddr=$(/sbin/ip -f inet -o -d addr show dev "$primaryinterface" | head -1 | awk '{print $4}' | cut -d"/" -f1)
-		if [ "$primaryaddr" = "" ]; then
-			# Try again with FreeBSD format
-			primaryaddr=$(/sbin/ifconfig "$primaryinterface"|grep 'inet' | awk '{ print $2 }')
-		fi
-		if [ "$primaryaddr" ]; then
-			log_info "Primary address detected as $primaryaddr"
-			address=$primaryaddr
-		else
-			fatal "Unable to determine IP address of selected interface.  Cannot continue."
-		fi
-		return 0
-	fi
-}
-
-set_hostname () {
-	i=0
-	while [ $i -eq 0 ]; do
-		if [ "$forcehostname" = "" ]; then
-			printf "${RED}Please enter a fully qualified hostname (for example, host.example.com): ${NORMAL}"
-			read line
-		else
-			log_debug "Setting hostname to $forcehostname"
-			line=$forcehostname
-		fi
-		if ! is_fully_qualified "$line"; then
-			log_info "Hostname $line is not fully qualified."
-		else
-			hostname "$line"
-			detect_ip
-			if grep "$address" /etc/hosts; then
-				log_debug "Entry for IP $address exists in /etc/hosts."
-				log_debug "Updating with new hostname."
-				shortname=$(echo "$line" | cut -d"." -f1)
-				sed -i "s/^$address\([\s\t]+\).*$/$address\1$line\t$shortname/" /etc/hosts
-			else
-				log_debug "Adding new entry for hostname $line on $address to /etc/hosts."
-				printf "%s\t%s\t%s\n" \
-				  "$address" "$line" "$shortname" >> /etc/hosts
-			fi
-			i=1
-		fi
-	done
-}
-  
-is_fully_qualified () {
-	case $1 in
-		localhost.localdomain)
-			log_warning "Hostname cannot be localhost.localdomain."
-			return 1
-		;;
-		*.localdomain)
-			log_warning "Hostname cannot be *.localdomain."
-			return 1
-		;;
-		*.*)
-			log_success "Hostname OK: fully qualified as $1"
-			return 0
-		;;
-	esac
-	log_warning "Hostname $name is not fully qualified."
-	return 1
 }
 
 success () {
@@ -513,7 +336,7 @@ cat <<EOF
  If your OS/version is not listed above, this script will fail. More 
  details about the systems supported by the script can be found here:
 
-   http://www.virtualmin.com/os-support
+          ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
  
 EOF
 printf " Continue? (y/n) "
@@ -525,7 +348,7 @@ fi
 if is_installed; then
 cat <<EOF
 
-                      ${RED}WARNING${NORMAL}
+                      ${REDBG}WARNING${NORMAL}
 
  Virtualmin may already be installed. This can happen if an installation failed,
  and can be ignored in that case.
@@ -584,7 +407,7 @@ fi
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
-	echo "There is no localhost entry in /etc/hosts. This is required, so one will be added."
+	log_warninging "There is no localhost entry in /etc/hosts. This is required, so one will be added."
 	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
 	if [ $? -ne 0 ]; then
 		log_error "Failed to configure a localhost entry in /etc/hosts."
@@ -620,30 +443,6 @@ if [ "$?" != "0" ]; then
 		fatal "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
 	fi
 fi
-
-# Setup slog so we can start keeping a proper log while also feeding output
-# to the console.
-echo "Loading slog logging library..."
-if $download http://software.virtualmin.com/lib/slog.sh; then
-	# source and configure slog
-	. ./slog.sh
-else
-	echo " Could not load logging library from software.virtualmin.com.  Cannot continue."
-	echo " Check network connectivity, name resolution, and disk space and try again."
-	exit 1
-fi
-
-# Log file
-LOG_PATH=$log
-# Console output level; ignore debug level messages.
-LOG_LEVEL_STDOUT="INFO"
-# Log file output level; catch literally everything.
-LOG_LEVEL_LOG="DEBUG"
-
-# log_fatal  calls log_error
-log_fatal() {
-	log_error $1
-}
 
 log_info "Started installation log in $log"
 
@@ -695,14 +494,14 @@ if [ "$os_type" = "freebsd" ]; then
 	primaryiface=$(echo "$network_interfaces" | cut -d" " -f1)
 	address=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)
 	if ! grep "$name" /etc/hosts; then
-		log_info "Detected IP $address for $primaryiface..."
+		log_debug "Detected IP $address for $primaryiface..."
 		if grep "$address" /etc/hosts; then
-			log_info "Entry for IP $address exists in /etc/hosts."
-			log_info "Updating with new hostname."
+			log_debug "Entry for IP $address exists in /etc/hosts."
+			log_debug "Updating with new hostname."
 			shortname=$(echo "$name" | cut -d"." -f1)
 			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
 		else
-			log_info "Adding new entry for hostname $name on $address to /etc/hosts."
+			log_debug "Adding new entry for hostname $name on $address to /etc/hosts."
 			printf "%s\t%s\t%s\n" \
 			  "$address" "$name" "$shortname" >> /etc/hosts
 		fi	
@@ -715,16 +514,16 @@ install_virtualmin_release () {
 	case $os_type in
 		rhel|fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
-				log_info "Disabling SELinux during installation..."
+				log_debug "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
-				else log_info "  setenforce 0 failed: $?"
+				else log_warninging "  setenforce 0 failed: $?"
 				fi 
 			fi
 			package_type="rpm"
 			deps=$rhdeps
 			if type dnf; then
 				install="/usr/bin/dnf -y install"
-			else	
+			else
 				install="/usr/bin/yum -y install"
 			fi
 			install_updates="$install $deps"
@@ -753,9 +552,7 @@ install_virtualmin_release () {
 			# Holy crap!  FreeBSD pkg_add cannot run non-interactively...it leaves
 			# packages in a completely unusable state.  FreeBSD users will just have
 			# to answer a lot of questions during installation.
-			install="pkg_add -r"
-			echo "pkg_add cannot safely be run without user interaction, so don't go anywhere."
-			echo "you'll need to answer some questions."
+			install="pkg install"
 			install_updates="echo Skipping checking for updates..."
 		;;
 		debian | ubuntu)
@@ -775,9 +572,6 @@ install_virtualmin_release () {
 			else
 				deps=$debdeps
 				case $os_version in
-					6.0*)
-						repos="virtualmin-squeeze virtualmin-universal"
-					;;
 					7*)
 						repos="virtualmin-wheezy virtualmin-universal"
 					;;
@@ -829,12 +623,10 @@ install_virtualmin_release () {
 
 # Install Functions
 install_with_apt () {
-	log_info "Installing Virtualmin and all related packages now using the command:"
-	log_info "$install $virtualminmeta"
-
-	if ! runner "$install $virtualminmeta"; then
-		log_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
-		log_warn "http://www.virtualmin.com/os-support"
+	run_ok "$install $virtualminmeta" "Installing Virtualmin and all related packages"
+	if [ $? -ne 0 ]; then
+		log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
+		log_warning "http://www.virtualmin.com/os-support"
 		fatal "Installation failed: $?"
 	fi
 
@@ -851,12 +643,10 @@ install_with_apt () {
         service clamav-daemon stop
 
 
-	log_info "Installing Virtualmin modules:"
-	log_info "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd"
-
-        if ! runner "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd"; then
-                log_warn "apt-get seems to have failed. Are you sure your OS and version is supported?"
-                log_warn "http://www.virtualmin.com/os-support"
+	run_ok "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd" "Installing Virtualmin modules:"
+        if [ $? -ne 0 ]; then
+                log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
+                log_warning "http://www.virtualmin.com/os-support"
                 fatal "Installation failed: $?"
         fi
 
@@ -1093,12 +883,12 @@ install_deps_the_hard_way () {
 			log_info " for i in $deps; do $install \$i; done"	
 			for i in $deps; do $install "$i">>$log; done
 			if [ "$?" != "0" ]; then
-				log_warn "Something went wrong during installation: $?"
-				log_warn "FreeBSD pkd_add cannot reliably detect failures, or successes,"
-				log_warn "so we're going to proceed as if nothing bad happened."
-				log_warn "This may lead to problems later in the process, and"
-				log_warn "some packages may not have installed successfully."
-				log_warn "You may wish to check $log for details."
+				log_warning "Something went wrong during installation: $?"
+				log_warning "FreeBSD pkd_add cannot reliably detect failures, or successes,"
+				log_warning "so we're going to proceed as if nothing bad happened."
+				log_warning "This may lead to problems later in the process, and"
+				log_warning "some packages may not have installed successfully."
+				log_warning "You may wish to check $log for details."
 			else
 				success
 			fi
