@@ -453,14 +453,14 @@ log_debug "Virtualmin Meta-Package list: $virtualminmeta"
 log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
-log_info "Checking for fully qualified hostname..."
+log_debug "Checking for fully qualified hostname..."
 name=$(hostname -f)
 if ! is_fully_qualified "$name"; then set_hostname
 elif [ "$forcehostname" != "" ]; then set_hostname
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
-log_info "Installing serial number and license key into /etc/virtualmin-license"
+log_debug "Installing serial number and license key into /etc/virtualmin-license"
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
 echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
 chmod 700 /etc/virtualmin-license
@@ -484,8 +484,8 @@ if [ "$os_type" = "" ]; then
 	. $tempdir/$$.os
 	rm -f $tempdir/$$.os
 fi
-log_info "Operating system name:    $real_os_type" 
-log_info "Operating system version: $real_os_version"
+log_debug "Operating system name:    $real_os_type" 
+log_debug "Operating system version: $real_os_version"
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
@@ -510,7 +510,7 @@ fi
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	log_info "Configuring package manager for $real_os_type $real_os_version..."
+	log_debug "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
 		rhel|fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
@@ -535,13 +535,13 @@ install_virtualmin_release () {
 		freebsd)
 			if [ ! -d /usr/ports ]; then
 				if [ ! -d /usr/ports/www/apache20 ]; then
-					log_info " You don't have the ports system installed.  Installation cannot  "
-					log_info " complete without the ports system.  Would you like to fetch "
-					log_info " ports now using portsnap?  (This may take a long time.)"
-					log_info " (y/n)"
+					log_warning " You don't have the ports system installed.  Installation cannot  "
+					log_warning " complete without the ports system.  Would you like to fetch "
+					log_warning " ports now using portsnap?  (This may take a long time.)"
+					log_warning " (y/n)"
 					if ! yesno; then 
-						log_info " Exiting.  Please install the ports system using portsnap, and"
-						log_info " run this script again."
+						log_warning " Exiting.  Please install the ports system using portsnap, and"
+						log_warning " run this script again."
 						exit
 					fi
 					portsnap fetch; portsnap extract
@@ -599,21 +599,20 @@ install_virtualmin_release () {
 				echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
 			done
 			# Install our keys
-			log_info "Installing Webmin and Virtualmin package signing keys..."
+			log_debug "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			log_info $(apt-key add RPM-GPG-KEY-virtualmin)
-			log_info $(apt-key add RPM-GPG-KEY-webmin)
-			log_info $(apt-get update)
-			log_info "Removing Debian standard Webmin package, if they exist..."
-			log_info "Removing Debian apache packages..."
+			log_debug $(apt-key add RPM-GPG-KEY-virtualmin)
+			log_debug $(apt-key add RPM-GPG-KEY-webmin)
+			log_debug $(apt-get update)
+			log_debug "Removing Debian standard Webmin package, if they exist..."
+			log_debug "Removing Debian apache packages..."
 			log_debug $(apt-get -y --purge remove webmin-core apache apache2)
 		;;
 		*)
-			log_info " Your OS is not currently supported by this installer."
-			log_info " You can probably run Virtualmin Professional on your system, anyway,"
-			log_info " but you'll have to install it using the manual installation process."
-			log_info ""
+			log_error " Your OS is not currently supported by this installer."
+			log_error " You can probably run Virtualmin Professional on your system, anyway,"
+			log_error " but you'll have to install it using the manual installation process."
 			exit 1
 		;;
 	esac
@@ -657,14 +656,11 @@ install_with_apt () {
 }
 
 install_with_yum () {
-	log_info "Installing Virtualmin and all related packages now using the command:"
-	log_info "yum clean all"
-	yum clean all
-	log_info "yum -y -d 2 install $virtualminmeta"
-
-	if ! runner "yum -y -d 2 install $virtualminmeta"; then
+	run_ok "yum -y -d 2 install $virtualminmeta" "Installing Virtualmin and all related packages"
+	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
+	yum clean all
 
 	return 0
 }
