@@ -273,8 +273,8 @@ is_installed () {
 uninstall () {
 	# This is a crummy way to detect package manager...but going through 
 	# half the installer just to get here is even crummier.
-	if type rpm>/dev/null; then package_type=rpm
-	elif type dpkg>/dev/null; then package_type=deb
+	if type -t rpm>/dev/null; then package_type=rpm
+	elif type -t dpkg>/dev/null; then package_type=deb
 	fi
 
 	case $package_type in
@@ -516,7 +516,7 @@ install_virtualmin_release () {
 			fi
 			package_type="rpm"
 			deps=$rhdeps
-			if type dnf; then
+			if type -t dnf; then
 				install="/usr/bin/dnf -y install"
 			else
 				install="/usr/bin/yum -y install"
@@ -966,7 +966,7 @@ case $os_type in
 esac
 
 # Run sa-update if installed, to ensure spamassassin rules are recent
-if type sa-update > /dev/null; then
+if type -t sa-update > /dev/null; then
   run_ok "sa-update" "Updating SpamAssassin rules with sa-update"
 fi
 
