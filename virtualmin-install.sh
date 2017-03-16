@@ -15,12 +15,9 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
-prosupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
- Debian 7 and 8 on i386 and amd64
- Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
-gplsupported=" CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
- Debian 7 and 8 on i386 and amd64
- Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
+supported="   CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
+   Debian 7 and 8 on i386 and amd64
+   Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -132,12 +129,10 @@ fi
 if [ "$SERIAL" = "GPL" ]; then
 	LOGIN=""
 	PRODUCT="GPL"
-	supported=$gplsupported
 	repopath="gpl/"
 else
 	LOGIN="$SERIAL:$KEY@"
 	PRODUCT="Professional"
-	supported=$prosupported
 	repopath=""
 fi
 
@@ -330,7 +325,7 @@ Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$
 
  The systems currently supported by install.sh are:
 EOF
-echo "$supported"
+echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
 
  If your OS/version is not listed above, this script will fail. More 
