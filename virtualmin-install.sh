@@ -30,7 +30,7 @@ printf "Checking for Perl..." >> $log
 # loop until we've got a Perl or until we can't try any more
 while true; do
 	perl=$(which perl 2>/dev/null)
-	if [ "$perl" = "" ]; then
+	if [ -z $perl ]; then
         	if [ -x /usr/bin/perl ]; then
                 	perl=/usr/bin/perl
 			break
@@ -172,28 +172,6 @@ LOG_LEVEL_LOG="DEBUG"
 # log_fatal calls log_error
 log_fatal() {
 	log_error $1
-}
-
-
-# Perform an action, log it, and run the spinner throughout
-runner () {
-	cmd=$1
-	echo "...in progress, please wait..."
-	spinner &
-	if $cmd >> $log; then
-		touch stopspinning
-		sleep 1
-		log_success "$cmd:"
-		return 0
-	else
-		touch stopspinning
-		sleep 1
-		log_error "$cmd failed.  Error (if any): $?"
-		echo
-		echo "Displaying the last 15 lines of $log to help troubleshoot this problem:"
-		tail -15 $log
-		return 1
-	fi
 }
 
 # Find temp directory
