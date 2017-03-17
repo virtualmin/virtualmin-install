@@ -415,7 +415,8 @@ fi
 download() {
 	# XXX Check this to make sure run_ok is doing the right thing.
 	# Especially make sure failure gets logged right.
-	run_ok "$download $1" "Downloading $1"
+	# awk magic prints the filename, rather than whole URL
+	run_ok "$download $1" "Downloading $(echo $1 |awk -F/ '{print $NF}')"
 	#if "$download" "$1"
 	#then
 	#	success "Download of $1"
