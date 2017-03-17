@@ -260,10 +260,10 @@ uninstall () {
 
 	case $package_type in
 		rpm)
-			rpm -e --nodeps virtualmin-base
-			rpm -e --nodeps wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
-			rpm -e --nodeps wbt-virtual-server-mobile
-			rpm -e --nodeps webmin usermin awstats
+			yum remove -y virtualmin-base
+			yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-virtualmin-svn wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
+			yum remove -y wbt-virtual-server-mobile
+			yum remove -y webmin usermin awstats
 		;;
 		deb)
 			dpkg --purge virtualmin-base
