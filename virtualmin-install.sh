@@ -152,6 +152,34 @@ ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simp
 # config for each...this sucks.
 pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
 
+# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
+# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
+# is mounted noexec, this won't catch it.
+
+# Find temp directory
+if [ -z "$TMPDIR" ]; then
+	TMPDIR=/tmp
+fi
+
+TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
+if [ ! -z "$TMPNOEXEC" ]; then
+	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
+	exit 1
+fi
+
+if [ -z "$tempdir" ]; then
+	tempdir=$TMPDIR/.virtualmin-$$
+	if [ -e "$tempdir" ]; then
+		rm -rf $tempdir
+	fi
+	mkdir $tempdir
+fi
+
+# "files" subdir for libs
+mkdir $tempdir/files
+srcdir=$tempdir/files
+cd $srcdir
+
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
 $download http://software.virtualmin.com/lib/slib.sh
@@ -176,33 +204,6 @@ LOG_LEVEL_LOG="DEBUG"
 log_fatal() {
 	log_error $1
 }
-
-# Find temp directory
-if [ -z "$TMPDIR" ]; then
-	TMPDIR=/tmp
-fi
-
-# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
-# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
-# is mounted noexec, this won't catch it.
-TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
-if [ ! -z "$TMPNOEXEC" ]; then
-	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
-	exit 1
-fi
-
-if [ -z "$tempdir" ]; then
-	tempdir=$TMPDIR/.virtualmin-$$
-	if [ -e "$tempdir" ]; then
-		rm -rf $tempdir
-	fi
-	mkdir $tempdir
-fi
-
-# "files" subdir for libs
-mkdir $tempdir/files
-srcdir=$tempdir/files
-cd $srcdir
 
 fatal () {
 	echo
@@ -947,14 +948,8 @@ case $os_type in
 	;;
 esac
 
-# Run sa-update if installed, to ensure spamassassin rules are recent
-if type -t sa-update > /dev/null; then
-  # Or this with true, so it never returns error. It returns 1 on "no update", which
-  # isn't very shelly.
-  run_ok "sa-update || true" "Updating SpamAssassin rules with sa-update"
-fi
-
 log_success "Installation Complete!"
 log_success "Assuming there were no errors above, your Virtualmin system should be ready"
 log_success "to configure on port 10000."
+
 exit 0
