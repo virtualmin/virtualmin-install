@@ -160,6 +160,9 @@ chmod +x slib.sh
 
 # Setup slog
 LOG_PATH=$log
+# Setup run_ok
+RUN_LOG=$log
+
 # Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
 	LOG_LEVEL_STDOUT="DEBUG"
