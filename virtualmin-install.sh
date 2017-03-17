@@ -949,7 +949,9 @@ esac
 
 # Run sa-update if installed, to ensure spamassassin rules are recent
 if type -t sa-update > /dev/null; then
-  run_ok "sa-update" "Updating SpamAssassin rules with sa-update"
+  # Or this with true, so it never returns error. It returns 1 on "no update", which
+  # isn't very shelly.
+  run_ok "sa-update || true" "Updating SpamAssassin rules with sa-update"
 fi
 
 log_success "Installation Complete!"
