@@ -36,13 +36,14 @@ export LANG
 
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
-CYAN=$(tput setaf 6)
+RED=$(tput setaf 1)
 YELLOW=$(tput setaf 3)
+CYAN=$(tput setaf 6)
 NORMAL=$(tput sgr0)
 while [ "$1" != "" ]; do
 	case $1 in
 		--help|-h)
-			printf "${CYAN}Usage: $(basename $0) [--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
+			printf "Usage: ${CYAN}$(basename $0) ${YELLOW}[--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
 	  		echo
 			echo "  If called without arguments, installs Virtualmin Professional."
 			echo
@@ -85,7 +86,7 @@ while true; do
                 	perl=/opt/csw/bin/perl
 			break
 		elif [ $perl_attempted = 1 ] ; then
-			echo 'Perl could not be installed - Installation cannot continue.'
+			printf "${RED}Perl could not be installed - Installation cannot continue.${NORMAL}\n"
 			exit 2
 		fi
 		# couldn't find Perl, so we need to try to install it
@@ -120,7 +121,7 @@ while true; do
 		download="/usr/bin/fetch"
 		break
 	elif [ $curl_attempted = 1 ]; then
-		echo "Could not install curl. Cannot continue."
+		printf "${RED}No HTPP client available. Could not install curl. Cannot continue.${NORMAL}"
 		exit 1
 	fi
 
