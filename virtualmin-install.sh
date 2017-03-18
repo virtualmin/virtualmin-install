@@ -294,7 +294,8 @@ cat <<EOF
 Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
  The installation is quite stable and functional when run on a freshly
- installed supported Operating System.
+ installed supported Operating System. We strongly recommend you use 
+ the latest supported version of your preferred distribution.
 
  Please read the Virtualmin Installation Guide before proceeding if
  your system is not a freshly installed and supported OS.
