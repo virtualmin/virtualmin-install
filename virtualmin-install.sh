@@ -408,7 +408,7 @@ fi
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
-	log_warninging "There is no localhost entry in /etc/hosts. This is required, so one will be added."
+	log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
 	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
 	if [ $? -ne 0 ]; then
 		log_error "Failed to configure a localhost entry in /etc/hosts."
@@ -956,7 +956,7 @@ install_virtualmin () {
 
 install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
-		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
 		run_ok "rpm -Uvh epel-release-latest-${major_os_version}.noarch.rpm" "Installing EPEL release package"
 	fi
 }
