@@ -15,9 +15,9 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Currently supported systems:
-supported="   CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
-   Debian 7 and 8 on i386 and amd64
-   Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
+supported="    CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
+    Debian 7 and 8 on i386 and amd64
+    Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -299,9 +299,9 @@ Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$
  Please read the Virtualmin Installation Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
- This script is not intended to update your system!  It should only be
- used to perform your initial Virtualmin installation.  Updates and 
- upgrasdes can be performed from within Virtualmin or via the system
+ This script is not intended to update your system! It should only be
+ used to perform your initial Virtualmin installation. Updates and 
+ upgrades can be performed from within Virtualmin or via the system
  package manager. License changes can be performed with the
  "virtualmin change-license" command.
 
