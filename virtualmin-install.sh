@@ -637,7 +637,7 @@ install_with_yum () {
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
-	yum clean all
+	run_ok "yum clean all" "Cleaning up yum repo metadata"
 
 	return 0
 }
