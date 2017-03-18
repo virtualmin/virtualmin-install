@@ -14,6 +14,14 @@
 # A manual install might work for you though.
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
+# Some environment variables that control the installation:
+# DISABLE_EPEL - Install will not enable EPEL repository on CentOS/RHEL. 
+#                Some features will not be available, in this case. Set it 
+#                1 to instruct the script not to enable EPEL.
+# DISABLE_SCL  - Install will not enable the Software Collections Library
+#                on CentOS/RHEL. PHP7 will not be installed. Set it to 1
+#                to instruct the script not to enable SCL.
+
 # Currently supported systems:
 supported="    CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
     Debian 7 and 8 on i386 and amd64
@@ -47,10 +55,13 @@ while true; do
 		# couldn't find Perl, so we need to try to install it
        		echo 'Perl was not found on your system - Virtualmin requires it to run.'
 		echo 'Attempting to install it now.'
-		if [ -x /usr/bin/yum ]; then
-			yum -y install perl
+		if [ -x /usr/bin/dnf ]; then
+			dnf -y install perl >> $log
+		elif [ -x /usr/bin/yum ]; then
+			yum -y install perl >> $log
 		elif [ -x /usr/bin/apt-get ]; then
-			apt-get update; apt-get -q -y install perl
+			apt-get updatei >> $log
+			apt-get -q -y install perl >> $log
 		fi
 		perl_attempted = 1
 		# Loop. Next loop should either break or exit.
@@ -79,10 +90,13 @@ while true; do
 
 	# Made it here without finding a downloader, so try to install one
 	curl_attempted = 1
-	if [ -x /usr/bin/yum ]; then
+	if [ -x /usr/bin/dnf ]; then
+		dnf -y install curl >> $log
+	elif [ -x /usr/bin/yum ]; then
 		yum -y install curl >> $log
 	elif [ -x /usr/bin/apt-get ]; then
-		apt-get update > /dev/null; apt-get -y -q install curl >> $log
+		apt-get update >> /dev/null
+		apt-get -y -q install curl >> $log
 	fi
 done
 printf "found %s\n" "$download" >> $log
@@ -466,6 +480,7 @@ if [ "$os_type" = "" ]; then
 fi
 log_debug "Operating system name:    $real_os_type" 
 log_debug "Operating system version: $real_os_version"
+os_major_version=$(echo $os_version | cut -d '.' -f1)
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
@@ -503,8 +518,10 @@ install_virtualmin_release () {
 			deps=$rhdeps
 			if type -t dnf; then
 				install="/usr/bin/dnf -y install"
+				install_cmd="/usr/bin/dnf"
 			else
 				install="/usr/bin/yum -y install"
+				install_cmd="/usr/bin/yum"
 			fi
 			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
@@ -634,11 +651,18 @@ install_with_apt () {
 }
 
 install_with_yum () {
-	run_ok "yum -y -d 2 install $virtualminmeta" "Installing Virtualmin and all related packages"
+	# install extras from EPEL and SCL
+	if [ "$os_type" = "centos" -o "$os_type" = "rhel" ]; then
+		install_epel_release
+		install_scl_php
+	fi
+
+	run_ok "$install $virtualminmeta" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
-	run_ok "yum clean all" "Cleaning up yum repo metadata"
+
+	run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
 	return 0
 }
@@ -915,12 +939,36 @@ install_virtualmin () {
 			install_with_tar
 		;;
 	esac
-	return 0
+	if [ $? -eq 0 ]; then
+		return 0
+	else
+		return $?
+	fi
+}
+
+install_epel_release () {
+	if [ -z $DISABLE_EPEL ]; then
+		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+		run_ok "rpm -Uvh epel-release-latest-${major_os_version}.noarch.rpm" "Installing EPEL release package"
+	fi
+}
+
+install_scl_php () {
+	if [ -z $DISABLE_SCL ]; then
+		if [ $os_type = "centos" ]; then
+			run_ok "$install centos-release-scl" "Install Software Collections release package"
+		elif [ $os_type = "rhel" ]; then
+			run_ok "${install_cmd}-config-manager --enable rhel-server-rhscl-${major_os_version}-rpms" "Enabling Server Software Collection"
+		fi
+		run_ok "$install rh-php70" "Installing PHP7"
+		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
+	fi
 }
 
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
+
 # We have to use $install to pre-install all deps, because some systems don't
 # cooperate with our repositories.
 if [ "$mode" = "full" ]; then
