@@ -33,6 +33,42 @@ skipyesno=0
 LANG=
 export LANG
 
+
+# Print usage info, if --help, set mode, etc.
+# Temporary colors
+CYAN=$(tput setaf 6)
+YELLOW=$(tput setaf 3)
+NORMAL=$(tput sgr0)
+while [ "$1" != "" ]; do
+	case $1 in
+		--help|-h)
+			printf "${CYAN}Usage: $(basename $0) [--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
+	  		echo
+			echo "  If called without arguments, installs Virtualmin Professional."
+			echo
+			printf "  ${YELLOW}--uninstall|-u:${NORMAL} Removes all Virtualmin packages (do not use on a production system)\n"
+			printf "  ${YELLOW}--help|-h:${NORMAL} This message\n"
+			printf "  ${YELLOW}--force|-f:${NORMAL} Skip confirmation message\n"
+			printf "  ${YELLOW}--hostname|-host:${NORMAL} Set fully qualified hostname\n"
+			echo
+			exit 0
+		;;
+		--uninstall|-u)
+			mode="uninstall"
+		;;
+		--force|-f|--yes|-y)
+			skipyesno=1
+		;;
+		--hostname|--host)
+			shift
+			forcehostname=$1
+		;;
+		*)
+		;;
+	esac
+	shift
+done
+
 # Make sure Perl is installed
 printf "Checking for Perl..." >> $log
 # loop until we've got a Perl or until we can't try any more
@@ -100,35 +136,6 @@ while true; do
 	fi
 done
 printf "found %s\n" "$download" >> $log
-
-while [ "$1" != "" ]; do
-	case $1 in
-		--help|-h)
-		  echo "Usage: $(basename $0) [--uninstall|-u|--help|-h|--force|-f|--hostname]"
-			echo "  If called without arguments, installs Virtualmin Professional."
-			echo
-			echo "  --uninstall|-u: Removes all Virtualmin packages (do not use on a production system)"
-			echo "  --help|-h: This message"
-			echo "  --force|-f: Skip confirmation message"
-			echo "  --hostname|-host: Set fully qualified hostname"
-			echo
-			exit 0
-		;;
-		--uninstall|-u)
-			mode="uninstall"
-		;;
-		--force|-f|--yes|-y)
-			skipyesno=1
-		;;
-		--hostname|--host)
-			shift
-			forcehostname=$1
-		;;
-		*)
-		;;
-	esac
-	shift
-done
 
 SERIAL=GPL
 KEY=GPL
