@@ -306,6 +306,7 @@ Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$
  "virtualmin change-license" command.
 
  The systems currently supported by install.sh are:
+
 EOF
 echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
