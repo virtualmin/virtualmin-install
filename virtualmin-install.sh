@@ -964,6 +964,7 @@ install_epel_release () {
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
 		run_ok "$install yum-utils" "Installing yum-utils"
+		run_ok "$install scl-utils" "Installing scl-utils"
 		if [ $os_type = "centos" ]; then
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ $os_type = "rhel" ]; then
