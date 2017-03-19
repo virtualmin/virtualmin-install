@@ -488,7 +488,7 @@ if [ "$os_type" = "" ]; then
 fi
 log_debug "Operating system name:    $real_os_type" 
 log_debug "Operating system version: $real_os_version"
-os_major_version=$(echo $os_version | cut -d '.' -f1)
+os_major_version=$(echo ${os_version} | cut -d '.' -f1)
 
 # FreeBSD returns a FQDN without having it set in /etc/hosts...but
 # Apache doesn't use it unless it's in hosts
@@ -519,7 +519,7 @@ install_virtualmin_release () {
 			if [ -x /usr/sbin/setenforce ]; then
 				log_debug "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
-				else log_warninging "  setenforce 0 failed: $?"
+				else log_warning "  setenforce 0 failed: $?"
 				fi 
 			fi
 			package_type="rpm"
