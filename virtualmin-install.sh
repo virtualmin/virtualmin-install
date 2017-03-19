@@ -963,6 +963,7 @@ install_epel_release () {
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
+		run_ok "$install yum-config-manager" "Installing yum-config-manager"
 		if [ $os_type = "centos" ]; then
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ $os_type = "rhel" ]; then
