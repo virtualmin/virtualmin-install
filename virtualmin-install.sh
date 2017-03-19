@@ -956,18 +956,18 @@ install_virtualmin () {
 
 install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
-		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
-		run_ok "rpm -Uvh epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
+		run_ok "rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
 	fi
 }
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
-		run_ok "$install yum-config-manager" "Installing yum-config-manager"
+		run_ok "$install yum-utils" "Installing yum-utils"
 		if [ $os_type = "centos" ]; then
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ $os_type = "rhel" ]; then
-			run_ok "${install_cmd}-config-manager --enable rhel-server-rhscl-${major_os_version}-rpms" "Enabling Server Software Collection"
+			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
+			run_ok "yum-config-manager --enable rhel-server-rhscl-${major_os_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
 		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
