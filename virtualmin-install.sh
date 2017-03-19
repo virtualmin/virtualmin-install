@@ -957,7 +957,7 @@ install_virtualmin () {
 install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
 		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
-		run_ok "rpm -Uvh epel-release-latest-${major_os_version}.noarch.rpm" "Installing EPEL release package"
+		run_ok "rpm -Uvh epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
 	fi
 }
 
