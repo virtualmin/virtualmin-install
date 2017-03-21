@@ -51,6 +51,7 @@ while [ "$1" != "" ]; do
 			printf "  ${YELLOW}--help|-h:${NORMAL} This message\n"
 			printf "  ${YELLOW}--force|-f:${NORMAL} Skip confirmation message\n"
 			printf "  ${YELLOW}--hostname|-host:${NORMAL} Set fully qualified hostname\n"
+			printf "  ${YELLOW}--varbose|-v:${NORMAL} Verbose\n"
 			echo
 			exit 0
 		;;
@@ -63,6 +64,10 @@ while [ "$1" != "" ]; do
 		--hostname|--host)
 			shift
 			forcehostname=$1
+		;;
+		--verbose|-v)
+			shift
+			VERBOSE=1
 		;;
 		*)
 		;;
@@ -112,7 +117,7 @@ printf "found Perl at $perl\n" >> $log
 printf "Checking for HTTP client..." >> $log
 while true; do
 	if [ -x "/usr/bin/curl" ]; then
-		download="/usr/bin/curl -s -O "
+		download="/usr/bin/curl -s -O"
 		break
 	elif [ -x "/usr/bin/wget" ]; then
 		download="/usr/bin/wget -nv"
@@ -168,7 +173,7 @@ rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail p
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
-# pkg_add-based systems (FreeBSD, NetBSD, OpenBSD)
+# pkg-based systems (FreeBSD)
 # FreeBSD php4 and php5 packages conflict, so both versions can't run together
 # Many packages need to be installed via ports, and they require custom
 # config for each...this sucks.
@@ -963,6 +968,7 @@ install_epel_release () {
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
+		run_ok "yum-config-manager --enable extras" "Enabling extras repository"
 		run_ok "$install yum-utils" "Installing yum-utils"
 		run_ok "$install scl-utils" "Installing scl-utils"
 		if [ $os_type = "centos" ]; then
