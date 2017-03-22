@@ -21,6 +21,10 @@
 # DISABLE_SCL  - Install will not enable the Software Collections Library
 #                on CentOS/RHEL. PHP7 will not be installed. Set it to 1
 #                to instruct the script not to enable SCL.
+# DISABLE_PG   - Do not install Postgres.
+# ENABLE_NGINX - Install will setup nginx, instead of Apache. This is
+#                experimental. And, nginx is still much less capable than
+#                Apache. Apache will NOT be installed/configured.
 
 # Currently supported systems:
 supported="    CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
@@ -47,30 +51,53 @@ while [ "$1" != "" ]; do
 	  		echo
 			echo "  If called without arguments, installs Virtualmin Professional."
 			echo
-			printf "  ${YELLOW}--uninstall|-u:${NORMAL} Removes all Virtualmin packages (do not use on a production system)\n"
-			printf "  ${YELLOW}--help|-h:${NORMAL} This message\n"
-			printf "  ${YELLOW}--force|-f:${NORMAL} Skip confirmation message\n"
-			printf "  ${YELLOW}--hostname|-host:${NORMAL} Set fully qualified hostname\n"
-			printf "  ${YELLOW}--varbose|-v:${NORMAL} Verbose\n"
+			printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
+			printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
+			printf "  ${YELLOW}--force|-f:${NORMAL} - Skip confirmation message\n"
+			printf "  ${YELLOW}--hostname|-host${NORMAL} - Set fully qualified hostname\n"
+			printf "  ${YELLOW}--varbose|-v${NORMAL} - Verbose\n"
+			printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]"
 			echo
 			exit 0
-		;;
+			;;
 		--uninstall|-u)
 			mode="uninstall"
-		;;
+			;;
 		--force|-f|--yes|-y)
+			shift
 			skipyesno=1
-		;;
+			;;
 		--hostname|--host)
 			shift
 			forcehostname=$1
-		;;
+			;;
 		--verbose|-v)
 			shift
 			VERBOSE=1
-		;;
+			;;
+		--disable)
+			shift
+			case "$1" in
+				SCL)
+					shift
+					DISABLE_SCL=1
+					;;
+				EPEL)
+					shift
+					DISABLE_EPEL=1
+					;;
+				PG)
+					shift
+					DISABLE_PG=1
+					;;
+				*)
+					printf "Unknown feature ${YELLOW}$1${NORMAL}: exiting\n"
+					exit 1
+					;;
+			esac
+			;;
 		*)
-		;;
+			;;
 	esac
 	shift
 done
@@ -173,11 +200,6 @@ rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail p
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
-# pkg-based systems (FreeBSD)
-# FreeBSD php4 and php5 packages conflict, so both versions can't run together
-# Many packages need to be installed via ports, and they require custom
-# config for each...this sucks.
-pkgdeps="p5-Mail-SpamAssassin procmail p5-Class-DBI-Pg p5-Class-DBI-mysql openssl p5-Net-SSLeay python mailman ruby mysql50-server mysql50-client mysql50-scripts postgresql81-server postgresql81-client logrotate awstats webalizer php5 php5-mysql php5-mbstring php5-xmlrpc php5-mcrypt php5-gd php5-dom php5-pgsql php5-session clamav dovecot proftpd unzip p5-IO-Tty mod_perl2"
 
 # Check whether $TMPDIR is mounted noexec (everything will fail, if so)
 # XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
@@ -495,32 +517,11 @@ log_debug "Operating system name:    $real_os_type"
 log_debug "Operating system version: $real_os_version"
 os_major_version=$(echo ${os_version} | cut -d '.' -f1)
 
-# FreeBSD returns a FQDN without having it set in /etc/hosts...but
-# Apache doesn't use it unless it's in hosts
-if [ "$os_type" = "freebsd" ]; then
-	. /etc/rc.conf
-	primaryiface=$(echo "$network_interfaces" | cut -d" " -f1)
-	address=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)
-	if ! grep "$name" /etc/hosts; then
-		log_debug "Detected IP $address for $primaryiface..."
-		if grep "$address" /etc/hosts; then
-			log_debug "Entry for IP $address exists in /etc/hosts."
-			log_debug "Updating with new hostname."
-			shortname=$(echo "$name" | cut -d"." -f1)
-			sed -i "s/^$address\([\s\t]+\).*$/$address\1$name\t$shortname/" /etc/hosts
-		else
-			log_debug "Adding new entry for hostname $name on $address to /etc/hosts."
-			printf "%s\t%s\t%s\n" \
-			  "$address" "$name" "$shortname" >> /etc/hosts
-		fi	
-	fi
-fi
-
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	log_debug "Configuring package manager for $real_os_type $real_os_version..."
 	case $os_type in
-		rhel|fedora|amazon)
+		rhel|centos|fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
 				log_debug "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
@@ -539,29 +540,6 @@ install_virtualmin_release () {
 			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
-		;;
-		freebsd)
-			if [ ! -d /usr/ports ]; then
-				if [ ! -d /usr/ports/www/apache20 ]; then
-					log_warning " You don't have the ports system installed.  Installation cannot  "
-					log_warning " complete without the ports system.  Would you like to fetch "
-					log_warning " ports now using portsnap?  (This may take a long time.)"
-					log_warning " (y/n)"
-					if ! yesno; then 
-						log_warning " Exiting.  Please install the ports system using portsnap, and"
-						log_warning " run this script again."
-						exit
-					fi
-					portsnap fetch; portsnap extract
-				fi
-			fi
-			package_type="tar"
-			deps=$pkgdeps
-			# Holy crap!  FreeBSD pkg_add cannot run non-interactively...it leaves
-			# packages in a completely unusable state.  FreeBSD users will just have
-			# to answer a lot of questions during installation.
-			install="pkg install"
-			install_updates="echo Skipping checking for updates..."
 		;;
 		debian | ubuntu)
 			package_type="deb"
@@ -680,264 +658,12 @@ install_with_yum () {
 	return 0
 }
 
-install_with_tar () {
-	# XXX This is FreeBSD specific at the moment.  Needs to be smarter for other BSDs
-	# or merging the solaris standalone installer into this script.  It'll probably
-	# be rewritten in perl by then anyway.
-	log_info "Installing Webmin..."
-	# Try to make Webmin not disown Apache on install
-	ln -s /usr/local/etc/apache22 /usr/local/etc/apache
-	# Install Webmin
-	if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/webmin-current.tar.gz; then
-		fatal "Retrieving Webmin from software.virtualmin.com failed."
-	fi
-	if ! gunzip -c webmin-current.tar.gz | tar xf -; then
-		fatal "Extracting Webmin from archive failed."
-	fi
-	rm webmin-current.tar.gz
-	cd webmin-[0-9]*
-	config_dir=/usr/local/etc/webmin
-	webmin_config_dir=$config_dir
-	var_dir=/var/webmin
-	autoos=3
-	port=10000
-	login=root
-	crypt=x
-	ssl=1
-	atboot=1
-	perl=/usr/bin/perl
-	theme=authentic-theme
-	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	run_ok "./setup.sh /usr/local/webmin" "Installing Webmin"
-	cd $tempdir
-	rm -rf webmin-[0-9]*
-
-  	# Install Usermin
-  	log_info "Installing Usermin..."
- 	if ! download http://${LOGIN}software.virtualmin.com/${repopath}wbm/usermin-current.tar.gz; then
-    		fatal "Retrieving Usermin from software.virtualmin.com failed."
-  	fi
-  	if ! gunzip -c usermin-current.tar.gz | tar xf -; then
-		fatal "Extracting Usermin from archive failed."
-	fi
-	rm usermin-current.tar.gz
-	cd usermin-[0-9]*
-	config_dir=/usr/local/etc/usermin
-	var_dir=/var/usermin
-	autoos=3
-	port=20000
-	login=root
-	crypt=x
-	ssl=1
-	atboot=1
-	perl=/usr/bin/perl
-	theme=authentic-theme
-	export config_dir var_dir autoos port login crypt ssl atboot perl theme
-	run_ok "./setup.sh /usr/local/usermin" "Installing Usermin"
-	cd $tempdir
-	rm -rf usermin-[0-9]*
-
-	# Install Virtulmin-specific modules and themes, as defined in updates.txt
-	log_info "Installing Virtualmin modules and themes..."
-	cd $tempdir
-	$download http://${LOGIN}software.virtualmin.com/${repopath}wbm/updates.txt
-	for modpath in $(cut -f 3 updates.txt); do
-	  modfile=$(basename "$modpath")
-		$download "http://${LOGIN}software.virtualmin.com/$modpath"
-		if [ "$?" != "0" ]; then
-			log_info "Download of Webmin module from $modpath failed"
-		fi
-		/usr/local/webmin/install-module.pl "$tempdir/$modfile" /usr/local/etc/webmin >> $log
-		if [ "$?" != "0" ]; then
-			log_info "Installation of Webmin module from $modpath failed"
-		fi
-		if [ -r $tempdir/virtual-server-theme-*.wbt.gz ]; then
-			/usr/local/usermin/install-module.pl $tempdir/$modfile /usr/local/etc/webmin >> $log
-		fi
-		rm -f "$tempdir/$modfile"
-	done
-
-	# Configure Webmin to use updates.txt
-	log_info "Configuring Webmin to use Virtualmin updates service..."
-	echo "upsource=http://software.virtualmin.com/${repopath}wbm/updates.txt	http://www.webmin.com/updates/updates.txt" >>$webmin_config_dir/webmin/config
-	if [ -n "$LOGIN" ]; then
-		echo "upuser=$SERIAL" >>$webmin_config_dir/webmin/config
-		echo "uppass=$KEY" >>$webmin_config_dir/webmin/config
-	fi
-	echo "upthird=1" >>$webmin_config_dir/webmin/config
-	echo "upshow=1" >>$webmin_config_dir/webmin/config
-
-	# Configure Webmin to know where apache22 lives
-	log_info "Configuring Webmin Apache module..."
-	sed -i -e "s/apache\//apache22\//" $webmin_config_dir/apache/config
-	# Tell Webmin about a great wrongness in the force
-	if grep pid_file $webmin_config_dir/apache/config; then
-		sed -i -e "s/pid_file=.*/pid_file=\/var\/run\/httpd.pid/" $webmin_config_dir/apache/config
-	else
-		echo "pid_file=/var/run/httpd.pid" >> $webmin_config_dir/apache/config
-	fi
-	sed -i -e "s/httpd_dir=.*/httpd_dir=\/usr\/local/" $webmin_config_dir/apache/config
-	setconfig "stop_cmd=/usr/local/etc/rc.d/apache22 stop" $webmin_config_dir/apache/config
-	setconfig "start_cmd=/usr/local/etc/rc.d/apache22 start" $webmin_config_dir/apache/config
-	setconfig "graceful_cmd=/usr/local/etc/rc.d/apache22 reload" $webmin_config_dir/apache/config
-	setconfig "apply_cmd=/usr/local/etc/rc.d/apache22 restart" $webmin_config_dir/apache/config
-	
-	# Configure Webmin to know how to stop and start MySQL
-	setconfig "start_cmd=/usr/local/etc/rc.d/mysql-server start" $webmin_config_dir/mysql/config
-	setconfig "stop_cmd=/usr/local/etc/rc.d/mysql-server stop" $webmin_config_dir/mysql/config
-
-	# Configure Webmin to know Usermin lives in /usr/local/etc/usermin
-	sed -i -e "s/usermin_dir=.*/usermin_dir=\/usr\/local\/etc\/usermin/" $webmin_config_dir/usermin/config
-
-	# Add environment settings so that API scripts work
-	if grep -qv WEBMIN_CONFIG /etc/profile; then 
-		echo "export WEBMIN_CONFIG=/usr/local/etc/webmin" >>/etc/profile
-	fi
-	if grep -qv WEBMIN_CONFIG /etc/csh.cshrc; then
-		echo "setenv WEBMIN_CONFIG '/usr/local/etc/webmin'" >>/etc/csh.cshrc
-	fi
-
-	# Dovecot won't start with our default config without an SSL cert
-	testmkdir /etc/ssl/certs/; testmkdir /etc/ssl/private
-	openssl x509 -in /usr/local/webmin/miniserv.pem > /etc/ssl/certs/dovecot.pem
-	openssl rsa -in /usr/local/webmin/miniserv.pem > /etc/ssl/private/dovecot.pem
-
-	# It's possible to get here without address being defined
-	. /etc/rc.conf
-	primaryiface=${primaryiface:=$(echo "$network_interfaces" | cut -d" " -f1)}
-	address=${address:=$(/sbin/ifconfig "$primaryiface" | grep "inet " | cut -d" " -f2)}
-	# Tons of syntax errors in the default Apache configuration files.
-	# Seriously?  Syntax errors?
-	vhostsconf=/usr/local/etc/apache22/extra/httpd-vhosts.conf
-	sed -i -e "s/NameVirtualHost \*:80/NameVirtualHost $address:80/" $vhostsconf
-	sed -i -e "s/VirtualHost \*:80/VirtualHost $address:80/" $vhostsconf
-	sed -i -e "s#CustomLog \"/var/log/dummy-host.example.com-access_log common\"#CustomLog \"/var/log/dummy-host.example.com-access_log\" common#" $vhostsconf
-	sed -i -e "s#CustomLog \"/var/log/dummy-host2.example.com-access_log common\"#CustomLog \"/var/log/dummy-host2.example.com-access_log\" common#" $vhostsconf
-	sed -i -e "s#/usr/local/docs/dummy-host.example.com#/usr/local/www/apache22/data#" $vhostsconf
-	sed -i -e "s#/usr/local/docs/dummy-host2.example.com#/usr/local/www/apache22/data#" $vhostsconf
-	# mod_dav loaded twice.  No idea why, but luckily, they have slightly
-	# different spacing, so we can strip out just one of 'em.
-	sed -i -e "s#LoadModule dav_module         libexec/apache22/mod_dav.so##" /usr/local/etc/apache22/httpd.conf
-
-	# Dummy SSL cert, if none exists
-	testcp /etc/ssl/certs/dovecot.pem /usr/local/etc/apache22/server.crt
-	testcp /etc/ssl/private/dovecot.pem /usr/local/etc/apache22/server.key
-
-	# PostgreSQL needs to be initialized
-	run_ok "/usr/local/etc/rc.d/postgresql initdb" "Initializing postgresql database"
-
-	# Webmin <=1.411 doesn't know the right paths
-	setconfig "stop_cmd=/usr/local/etc/rc.d/postgresql stop" $webmin_config_dir/postgresql/config
-	setconfig "start_cmd=/usr/local/etc/rc.d/postgresql start" $webmin_config_dir/postgresql/config
-	setconfig "setup_cmd=/usr/local/etc/rc.d/postgresql initdb" $webmin_config_dir/postgresql/config
-
-
-	# Virtualmin configuration
-	export WEBMIN_CONFIG=/usr/local/etc/webmin
-	$download http://software.virtualmin.com/lib/virtualmin-base-standalone.pl
-	perl virtualmin-base-standalone.pl install>>$log
-
-	# Virtualmin can't guess the interface on FreeBSD (and neither can this
-	# script, but it pretends)
-	log_info "Detecting network interface on FreeBSD is unreliable.  Be sure to check the"
-	log_info "interface in module configuration before creating any virtual servers."
-	sed -i -e "s/iface=.*/iface=$primaryiface/" $webmin_config_dir/virtual-server/config
-
-	return 0
-}
-
 install_deps_the_hard_way () {
-	case $os_type in
-		freebsd)
-			portsenv="BATCH=YES DISABLE_VULNERABILITIES=YES"
-			for i in $portsenv; do
-				export $i
-			done
-
-			previousdir=$(pwd)
-			log_info "Installing Apache from ports..."
-			apacheopts="WITH_AUTH_MODULES=yes WITH_PROXY_MODULES=yes WITH_SSL_MODULES=yes WITH_SUEXEC=yes SUEXEC_DOCROOT=/home WITH_BERKELEYDB=db42"
-			cd /usr/ports/www/apache22
-			make "$apacheopts" install
-			# Load accept filter into kernel...no idea why, but Apache issues
-			# warnings without it.
-			if ! grep -qv 'accf_http_load=”YES”' /boot/loader.conf; then
-				echo 'accf_http_load=”YES”' >>/boot/loader.conf
-				kldload accf_http
-			fi
-
-			log_info "Installing mod_fcgid using ports..."
-			cd /usr/ports/www/mod_fcgid
-			make APACHE_VERSION=22 install
-
-			log_info "Installing Subversion using ports..."
-			export WITH_MOD_DAV_SVN=yes
-			export WITH_APACHE2_APR=yes
-			cd /usr/ports/devel/subversion
-			make install
-
-			# cyrus-sasl2 pkg doesn't have passwd auth, so build port 
-			log_info "Installing cyrus-sasl2-saslauthd from ports..."
-			cd /usr/ports/security/cyrus-sasl2-saslauthd
-			make install
-
-			log_info "Installing postfix from ports..."
-			export WITH_SASL2=yes
-			cd /usr/ports/mail/postfix23
-			make install
-
-			cd "$previousdir"
-			log_info "Installing dependencies using command: "
-			log_info " for i in $deps; do $install \$i; done"	
-			for i in $deps; do $install "$i">>$log; done
-			if [ "$?" != "0" ]; then
-				log_warning "Something went wrong during installation: $?"
-				log_warning "FreeBSD pkd_add cannot reliably detect failures, or successes,"
-				log_warning "so we're going to proceed as if nothing bad happened."
-				log_warning "This may lead to problems later in the process, and"
-				log_warning "some packages may not have installed successfully."
-				log_warning "You may wish to check $log for details."
-			fi
-			
-			# FreeBSD packages aren't very package-like
-			log_info "Copying default my.cnf and initializing database..."
-			testcp /usr/local/share/mysql/my-medium.cnf /etc/my.cnf
-			testmkdir /var/db/mysql
-			log_info $(/usr/local/etc/rc.d/mysql-server start)
-			
-			# SpamAssassin needs a config file
-			testcp /usr/local/etc/mail/spamassassin/local.cf.sample /usr/local/etc/mail/spamassassin/local.cf
-			
-			# Clam needs fresh database
-			log_info "Initializing the clamav database.  This may take a long time..."
-			freshclam
-
-			# awstats
-			testmkdir /usr/local/etc/awstats
-			testcp /usr/local/www/awstats/cgi-bin/awstats.model.conf /usr/local/etc/awstats/awstats.model.conf
-
-			# www user needs a shell to run mailman commands
-			chpass -s /bin/sh www
-
-			# procmail-wrapper download and install
-			log_info "Installing procmail-wrapper."
-			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/procmail-wrapper"
-			mv procmail-wrapper /usr/bin
-			chmod 6755 /usr/bin/procmail-wrapper
-			if [ ! -e /usr/bin/procmail ]; then
-			    ln -s /usr/local/bin/procmail /usr/bin/procmail
-			fi
-
-			return 0
-		;;
-		*)
-			run_ok "$install $deps" "Installing dependencies"
-			if [ $? -ne 0 ]; then
-				fatal "Something went wrong during installation: $?"
-			fi
-			return 0
-		;;
-	esac
+	run_ok "$install $deps" "Installing dependencies"
+	if [ $? -ne 0 ]; then
+		fatal "Something went wrong during installation: $?"
+	fi
+	return 0
 }
 
 install_virtualmin () {
