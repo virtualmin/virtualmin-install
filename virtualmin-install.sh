@@ -191,25 +191,25 @@ else
 fi
 
 # Virtualmin-provided packages
-rhvmpackages="usermin webmin wbm-virtualmin-awstats wbm-virtualmin-dav wbm-virtualmin-htpasswd wbm-virtualmin-svn wbm-virtual-server wbm-jailkit"
+vmgroup="Virtualmin Core"
 debvmpackages="usermin webmin webmin-virtualmin-awstats webmin-virtualmin-dav webmin-virtualmin-htpasswd webmin-virtualmin-svn webmin-virtualmin-git webmin-jailkit"
 deps=
-# Red Hat-based systems 
-rhdeps="bind bind-utils caching-nameserver httpd postfix spamassassin procmail perl-DBD-Pg perl-DBD-MySQL quota iptables openssl python mailman subversion mysql mysql-server mysql-devel mariadb mariadb-server postgresql postgresql-server logrotate webalizer php php-xml php-gd php-imap php-mysql php-odbc php-pear php-pgsql php-snmp php-xmlrpc php-mbstring mod_perl mod_python cyrus-sasl dovecot spamassassin mod_dav_svn cyrus-sasl-gssapi mod_ssl ruby ruby-devel rubygems perl-XML-Simple perl-Crypt-SSLeay mlocate perl-LWP-Protocol-https clamav clamav-server clamav-server-systemd clamav-scanner-systemd jailkit ca-certificates"
+# Red Hat-based systems XXX Need switch for nginx
+rhgroup="Virtualmin Apache Environment"
+rhnginxgroup="Virtualmin nginx Environment"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libapache2-svn libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
-
-# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
-# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
-# is mounted noexec, this won't catch it.
 
 # Find temp directory
 if [ -z "$TMPDIR" ]; then
 	TMPDIR=/tmp
 fi
 
+# Check whether $TMPDIR is mounted noexec (everything will fail, if so)
+# XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
+# is mounted noexec, this won't catch it.
 TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
 if [ ! -z "$TMPNOEXEC" ]; then
 	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
@@ -420,17 +420,8 @@ EOF
 	sleep 3
 }
 
-# Set the mode (switch to get_mode when 
-# minimal mode is finished)
-#get_mode
+# XXX Should be a minimal option
 mode=full
-
-virtualminmeta="virtualmin-base"
-# If minimal, we don't install any extra packages, or perform any configuration
-if [ "$mode" = "minimal" ]; then
-	rhdeps=debdeps=ubudeps=pkgdeps=""
-	virtualminmeta=$rhvmpackages
-fi
 
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
@@ -531,11 +522,21 @@ install_virtualmin_release () {
 			package_type="rpm"
 			deps=$rhdeps
 			if type -t dnf; then
-				install="/usr/bin/dnf -y install"
-				install_cmd="/usr/bin/dnf"
+				install="dnf -y install"
+				install_cmd="dnf"
+				if [ $mode="full" ]; then
+					install_group="dnf -y group install"
+				else
+					install_group="dnf -y group install --setopt=group_package_types=mandatory"
+				fi
 			else
 				install="/usr/bin/yum -y install"
 				install_cmd="/usr/bin/yum"
+				if [ $mode="full"]; then
+					install_group="yum -y group install"
+				else
+					install_group="yum -y group install --setopt=group_package_types=mandatory"
+				fi
 			fi
 			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
@@ -546,14 +547,12 @@ install_virtualmin_release () {
 			if [ "$os_type" = "ubuntu" ]; then
 				deps=$ubudeps
 				case $os_version in
-					12.04*)
-						repos="virtualmin-precise virtualmin-universal"
-					;;
 					14.04*)
 						repos="virtualmin-trusty virtualmin-universal"
 					;;
 					16.04*)
 						repos="virtualmin-xenial virtualmin-univseral"
+					;;
 				esac
 			else
 				deps=$debdeps
@@ -615,6 +614,7 @@ install_with_apt () {
 		fatal "Installation failed: $?"
 	fi
 
+		# XXX Maybe we can use --trivial-only to avoid starting services?
         # Disable some things by default
         update-rc.d mailman disable
         service mailman stop
@@ -648,7 +648,8 @@ install_with_yum () {
 		install_scl_php
 	fi
 
-	run_ok "$install $virtualminmeta" "Installing Virtualmin and all related packages"
+	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
+	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
@@ -659,6 +660,9 @@ install_with_yum () {
 }
 
 install_deps_the_hard_way () {
+	# XXX Don't need for rpm distros, need to get metapackages for deb
+	# to remove it completely/
+	return 0
 	run_ok "$install $deps" "Installing dependencies"
 	if [ $? -ne 0 ]; then
 		fatal "Something went wrong during installation: $?"
