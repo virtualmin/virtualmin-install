@@ -2,7 +2,7 @@
 # virtualmin-install.sh
 # Copyright 2005-2017 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
-# The packages do most of the hard work, so this script can be small-ish and 
+# The packages do most of the hard work, so this script can be small-ish and
 # lazy-ish.
 
 # WARNING: Anything not listed in the currently supported systems list is not
@@ -15,8 +15,8 @@
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
 # Some environment variables that control the installation:
-# DISABLE_EPEL - Install will not enable EPEL repository on CentOS/RHEL. 
-#                Some features will not be available, in this case. Set it 
+# DISABLE_EPEL - Install will not enable EPEL repository on CentOS/RHEL.
+#                Some features will not be available, in this case. Set it
 #                1 to instruct the script not to enable EPEL.
 # DISABLE_SCL  - Install will not enable the Software Collections Library
 #                on CentOS/RHEL. PHP7 will not be installed. Set it to 1
@@ -275,7 +275,7 @@ remove_virtualmin_release () {
 		;;
 		"debian" | "ubuntu" )
 			grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
-			mv "$tempdir"/sources.list /etc/apt/sources.list 
+			mv "$tempdir"/sources.list /etc/apt/sources.list
 		;;
 	esac
 }
@@ -302,7 +302,7 @@ is_installed () {
 # anything.  It is primarily useful for cleaning up a botched install, so you
 # can run the installer again.
 uninstall () {
-	# This is a crummy way to detect package manager...but going through 
+	# This is a crummy way to detect package manager...but going through
 	# half the installer just to get here is even crummier.
 	if type -t rpm>/dev/null; then package_type=rpm
 	elif type -t dpkg>/dev/null; then package_type=deb
@@ -340,17 +340,17 @@ fi
 
 cat <<EOF
 
-Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
+ Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
  The installation is quite stable and functional when run on a freshly
- installed supported Operating System. We strongly recommend you use 
+ installed supported Operating System. We strongly recommend you use
  the latest supported version of your preferred distribution.
 
  Please read the Virtualmin Installation Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
  This script is not intended to update your system! It should only be
- used to perform your initial Virtualmin installation. Updates and 
+ used to perform your initial Virtualmin installation. Updates and
  upgrades can be performed from within Virtualmin or via the system
  package manager. License changes can be performed with the
  "virtualmin change-license" command.
@@ -361,14 +361,14 @@ EOF
 echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
 
- If your OS/version is not listed above, this script will fail. More 
+ If your OS/version is not listed above, this script will fail. More
  details about the systems supported by the script can be found here:
 
           ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
- 
+
 EOF
 printf " Continue? (y/n) "
-if ! yesno; then 
+if ! yesno; then
 	exit
 fi
 
@@ -384,7 +384,7 @@ cat <<EOF
  But, if Virtualmin is already successfully installed you should not run this script
  again. Updates and upgrade can be performed from within Virtualmin.
 
- To change license details, use the 'virtualmin change-license' command. Changing 
+ To change license details, use the 'virtualmin change-license' command. Changing
  the license inever requires reinstallation.
 
 EOF
@@ -397,16 +397,16 @@ fi
 get_mode () {
 cat <<EOF
  FULL or MINIMAL INSTALLATION
- It is possible to install only the minimum set of components and 
- and perform no configuration changes to existing mail/web/DNS 
+ It is possible to install only the minimum set of components and
+ and perform no configuration changes to existing mail/web/DNS
  or packages.  This mode of installation is called the minimal mode
  because only Webmin, Usermin and the Virtualmin-related modules and
  themes are installed.  The minimal mode will not modify your
  existing configuration.  The full install is recommended if
  this system is a fresh install of the OS.  If your system has
  a working Virtualmin GPL installation using components other than
- our defaults, or you already have virtual hosts, users, mailboxes, 
- etc. configured manually or with another administration tool, the 
+ our defaults, or you already have virtual hosts, users, mailboxes,
+ etc. configured manually or with another administration tool, the
  minimal mode is a much safer choice.
 
 EOF
@@ -492,32 +492,23 @@ run_ok "$download http://software.virtualmin.com/lib/os_list.txt" "Loading OS li
 
 cd ..
 
-# Get operating system type
-if [ "$os_type" = "" ]; then
-	if [ "$autoos" = "" ]; then
-		autoos=1
-	fi
-	$perl "$srcdir/oschooser.pl" "$srcdir/os_list.txt" $tempdir/$$.os $autoos
-	if [ "$?" != 0 ]; then
-		exit $?
-	fi
-	. $tempdir/$$.os
-	rm -f $tempdir/$$.os
-fi
-log_debug "Operating system name:    $real_os_type" 
-log_debug "Operating system version: $real_os_version"
-os_major_version=$(echo ${os_version} | cut -d '.' -f1)
+# Populate some distro version globals
+get_distro
+log_debug "Operating system name:    $os_real"
+log_debug "Operating system version: $os_version"
+log_debug "Operating system type:    $os_type"
+log_debug "Operating system major:   $os_major_version"
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	log_debug "Configuring package manager for $real_os_type $real_os_version..."
+	log_debug "Configuring package manager for $os_real $os_version..."
 	case $os_type in
 		rhel|centos|fedora|amazon)
 			if [ -x /usr/sbin/setenforce ]; then
 				log_debug "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
 				else log_warning "  setenforce 0 failed: $?"
-				fi 
+				fi
 			fi
 			package_type="rpm"
 			deps=$rhdeps
@@ -576,7 +567,7 @@ install_virtualmin_release () {
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
 			run_ok $(apt-get clean) "Cleaning out old metadata"
-			# Get the noninteractive apt-get configuration file (this is 
+			# Get the noninteractive apt-get configuration file (this is
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
@@ -725,7 +716,7 @@ fi
 install_virtualmin
 
 # We want to make sure we're running our version of packages if we have
-# our own version.  There's no good way to do this, but we'll 
+# our own version.  There's no good way to do this, but we'll
 run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
 
 # Functions that are used in the OS specific modifications section
