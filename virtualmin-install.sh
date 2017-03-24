@@ -504,6 +504,36 @@ install_virtualmin_release () {
 	log_debug "Configuring package manager for $os_real $os_version..."
 	case $os_type in
 		rhel|centos|fedora|amazon)
+      case $os_type in
+        rhel|centos)
+          if [ $os_version -lt 6 ]; then
+            printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+            exit 1
+          fi
+          ;;
+        fedora)
+          if [ $os_version -ne 25 ]; then
+            printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+            exit 1
+          fi
+          ;;
+        ubuntu)
+          if [ ! $os_version="14.04" | ! $os_version="16.04" ]; then
+            printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+            exit 1
+          fi
+          ;;
+        debian)
+          if [ $os_major_version -lt 7 ]; then
+            printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+            exit 1
+          fi
+          ;;
+        *)
+          printf "${RED}This OS/version is not recognized. Can't continue.${NORMAL}\n"
+          exit 1
+          ;;
+      esac
 			if [ -x /usr/sbin/setenforce ]; then
 				log_debug "Disabling SELinux during installation..."
 				if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
@@ -511,7 +541,6 @@ install_virtualmin_release () {
 				fi
 			fi
 			package_type="rpm"
-			deps=$rhdeps
 			if type -t dnf; then
 				install="dnf -y install"
 				install_cmd="dnf"
@@ -529,7 +558,6 @@ install_virtualmin_release () {
 					install_group="yum -y group install --setopt=group_package_types=mandatory"
 				fi
 			fi
-			install_updates="$install $deps"
 			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
 		;;
