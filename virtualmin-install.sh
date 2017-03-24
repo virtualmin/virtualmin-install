@@ -27,7 +27,7 @@
 #                Apache. Apache will NOT be installed/configured.
 
 # Currently supported systems:
-supported="    CentOS/RHEL/Scientific Linux 6 and 7 on x86_64
+supported="    CentOS/RHEL Linux 6 and 7 on x86_64
     Debian 7 and 8 on i386 and amd64
     Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
 
