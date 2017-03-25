@@ -1,6 +1,8 @@
 # virtualmin-install
 Shell script to perform a Virtualmin GPL or Professional installation
 
+**Do not use this script for installation right now. Use the one from [Virtualmin.com](https://www.virtualmin.com/download). This one is in heavy development and is broken due to missing groups/metapackages in our repos. Will be fixed in a few days.**
+
 # How it Works
 The script relies on our software repositories on software.virtualmin.com in order to function. You'll need internet access.
 
