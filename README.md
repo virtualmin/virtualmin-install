@@ -19,7 +19,7 @@ Currently, well-supported systems are:
 
   - CentOS/RHEL/Scientific 6 and 7
   - Debian 7 and 8
-  - Ubuntu 12.04 LTS, 14.04, and 16.04 LTS
+  - Ubuntu 14.04 LTS, and 16.04 LTS
   
 Previously working, but probably moderately broken now (and missing repository support at software.virtualmin.com) includes SuSE and FreeBSD.
 
