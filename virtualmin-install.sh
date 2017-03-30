@@ -29,14 +29,10 @@
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
     Debian 7 and 8 on i386 and amd64
-    Ubuntu 12.04 LTS, 14.04 LTS, and 16.04 LTS, on i386 and amd64"
+    Ubuntu 14.04 LTS and 16.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
-
-LANG=
-export LANG
-
 
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
@@ -56,7 +52,7 @@ while [ "$1" != "" ]; do
 			printf "  ${YELLOW}--force|-f:${NORMAL} - Skip confirmation message\n"
 			printf "  ${YELLOW}--hostname|-host${NORMAL} - Set fully qualified hostname\n"
 			printf "  ${YELLOW}--varbose|-v${NORMAL} - Verbose\n"
-			printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]"
+			printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
 			echo
 			exit 0
 			;;
