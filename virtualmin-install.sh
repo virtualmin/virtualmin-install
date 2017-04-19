@@ -170,6 +170,7 @@ printf "found %s\n" "$download" >> $log
 SERIAL=GPL
 KEY=GPL
 VER=6.0.0
+vmversion=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -555,7 +556,7 @@ install_virtualmin_release () {
 					install_group="yum -y group install --setopt=group_package_types=mandatory"
 				fi
 			fi
-			download "http://${LOGIN}software.virtualmin.com/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
+			download "http://${LOGIN}software.virtualmin.com/vm/${vmversion}/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
 			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
 		;;
 		debian | ubuntu)
