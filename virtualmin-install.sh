@@ -516,7 +516,7 @@ install_virtualmin_release () {
           fi
           ;;
         ubuntu)
-          if [ ! $os_version="14.04" | ! $os_version="16.04" ]; then
+          if [ $os_version != "14.04" ] && [ $os_version != "16.04" ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
