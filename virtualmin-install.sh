@@ -170,7 +170,7 @@ printf "found %s\n" "$download" >> $log
 SERIAL=GPL
 KEY=GPL
 VER=6.0.0
-vmversion=6
+vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
@@ -504,7 +504,7 @@ install_virtualmin_release () {
 		rhel|centos|fedora|amazon)
       case $os_type in
         rhel|centos)
-          if [ $os_version -lt 6 ]; then
+          if [ $os_major_version -lt 6 ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
@@ -556,7 +556,7 @@ install_virtualmin_release () {
 					install_group="yum -y group install --setopt=group_package_types=mandatory"
 				fi
 			fi
-			download "http://${LOGIN}software.virtualmin.com/vm/${vmversion}/${repopath}$os_type/$os_version/$arch/virtualmin-release-latest.noarch.rpm"
+			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
 			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
 		;;
 		debian | ubuntu)
@@ -722,7 +722,7 @@ install_scl_php () {
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ $os_type = "rhel" ]; then
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
-			run_ok "yum-config-manager --enable rhel-server-rhscl-${major_os_version}-rpms" "Enabling Server Software Collection"
+			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
 		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
