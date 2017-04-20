@@ -717,16 +717,16 @@ install_epel_release () {
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
-    run_ok "${install} yum-utils" "Installing yum-utils"
+    run_ok "$install yum-utils" "Installing yum-utils"
 		run_ok "yum-config-manager --enable extras" "Enabling extras repository"
-    run_ok "${install} scl-utils" "Installing scl-utils"
+    run_ok "$install scl-utils" "Installing scl-utils"
 		if [ ${os_type} = "centos" ]; then
-			run_ok "${install} centos-release-scl" "Install Software Collections release package"
+			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ ${os_type} = "rhel" ]; then
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
-		run_ok "${install} rh-php70" "Installing PHP7"
+		run_ok "$install rh-php70" "Installing PHP7"
 		run_ok 'scl enable rh-php70 bash' "Setting PHP7 as the default PHP version"
 	fi
 }
