@@ -734,20 +734,12 @@ install_scl_php () {
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
-		$(scl enable rh-php70 bash)
 	fi
 }
 
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
-
-# We have to use $install to pre-install all deps, because some systems don't
-# cooperate with our repositories.
-#if [ "$mode" = "full" ]; then
-#	install_deps_the_hard_way
-#fi
-
 install_virtualmin
 
 # We want to make sure we're running our version of packages if we have
