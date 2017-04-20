@@ -308,6 +308,9 @@ uninstall () {
 
 	case $package_type in
 		rpm)
+      yum groups mark remove "Virtualmin Core"
+      yum group remove "Virtualmin Core"
+      yum groups mark remove "Virtualmin LAMP Stack"
 			yum remove -y virtualmin-base
 			yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
 			yum remove -y wbt-virtual-server-mobile
@@ -544,7 +547,7 @@ install_virtualmin_release () {
 				install="dnf -y install"
 				install_cmd="dnf"
 				if [ $mode="full" ]; then
-					install_group="dnf -y group install"
+					install_group="dnf -y group install --setopt=group_package_types=mandatory,default"
 				else
 					install_group="dnf -y group install --setopt=group_package_types=mandatory"
 				fi
@@ -553,9 +556,9 @@ install_virtualmin_release () {
 				install_cmd="/usr/bin/yum"
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
 				if [ $mode="full" ]; then
-					install_group="yum -y groupinstall"
+					install_group="yum -y group install --setopt=group_package_types=mandatory,default"
 				else
-					install_group="yum -y groupinstall --setopt=group_package_types=mandatory"
+					install_group="yum -y group install --setopt=group_package_types=mandatory"
 				fi
 			fi
 			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
@@ -667,7 +670,10 @@ install_with_yum () {
 		install_scl_php
 	fi
 
+  # XXX This is so stupid. Why does yum insist on extra commands?
+  yum groups mark install "$rhgroup"
 	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
+  yum groups mark install "$vmgroup"
 	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
@@ -728,7 +734,7 @@ install_scl_php () {
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
-		scl enable rh-php70 bash
+		$(scl enable rh-php70 bash)
 	fi
 }
 
@@ -738,9 +744,9 @@ install_virtualmin_release
 
 # We have to use $install to pre-install all deps, because some systems don't
 # cooperate with our repositories.
-if [ "$mode" = "full" ]; then
-	install_deps_the_hard_way
-fi
+#if [ "$mode" = "full" ]; then
+#	install_deps_the_hard_way
+#fi
 
 install_virtualmin
 
