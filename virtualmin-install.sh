@@ -500,7 +500,7 @@ log_debug "Operating system major:   $os_major_version"
 
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
-	log_debug "Configuring package manager for $os_real $os_version..."
+	log_debug "Configuring package manager for ${os_real} ${os_version}..."
 	case $os_type in
 		rhel|centos|fedora|amazon)
       case $os_type in
@@ -666,8 +666,8 @@ install_with_yum () {
 		install_scl_php
 	fi
 
-	run_ok "$install_group \"${rhgroup}\"" "Installing dependencies and system packages"
-	run_ok "$install_group \"${vmgroup}\"" "Installing Virtualmin and all related packages"
+	run_ok "$install_group \${rhgroup}" "Installing dependencies and system packages"
+	run_ok "$install_group \${vmgroup}" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
@@ -717,17 +717,17 @@ install_epel_release () {
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
-    run_ok "$install yum-utils" "Installing yum-utils"
+    run_ok "${install} yum-utils" "Installing yum-utils"
 		run_ok "yum-config-manager --enable extras" "Enabling extras repository"
-    run_ok "$install scl-utils" "Installing scl-utils"
-		if [ $os_type = "centos" ]; then
-			run_ok "$install centos-release-scl" "Install Software Collections release package"
-		elif [ $os_type = "rhel" ]; then
+    run_ok "${install} scl-utils" "Installing scl-utils"
+		if [ ${os_type} = "centos" ]; then
+			run_ok "${install} centos-release-scl" "Install Software Collections release package"
+		elif [ ${os_type} = "rhel" ]; then
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
-		run_ok "$install rh-php70" "Installing PHP7"
-		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
+		run_ok "${install} rh-php70" "Installing PHP7"
+		run_ok 'scl enable rh-php70 bash' "Setting PHP7 as the default PHP version"
 	fi
 }
 
