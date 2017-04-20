@@ -556,9 +556,9 @@ install_virtualmin_release () {
 				install_cmd="/usr/bin/yum"
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
 				if [ $mode="full" ]; then
-					install_group="yum -y group install --setopt=group_package_types=mandatory,default"
+					install_group="yum -y --quiet group install --setopt=group_package_types=mandatory,default"
 				else
-					install_group="yum -y group install --setopt=group_package_types=mandatory"
+					install_group="yum -y --quiet group install --setopt=group_package_types=mandatory"
 				fi
 			fi
 			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
