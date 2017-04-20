@@ -671,9 +671,9 @@ install_with_yum () {
 	fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
-  yum groups mark install "$rhgroup"
+  run_ok "yum --quiet groups mark install '$rhgroup'" "Marking \"$rhgroup\" for install"
 	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  yum groups mark install "$vmgroup"
+  run_ok "yum --quiet groups mark install '$vmgroup'" "Marking \"$vmgroup\" for install"
 	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
