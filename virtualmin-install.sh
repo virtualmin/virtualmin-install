@@ -189,12 +189,12 @@ else
 fi
 
 # Virtualmin-provided packages
-vmgroup="Virtualmin Core"
+vmgroup="'Virtualmin Core'"
 debvmpackages="usermin webmin webmin-virtualmin-awstats webmin-virtualmin-dav webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-jailkit"
 deps=
 # Red Hat-based systems XXX Need switch for nginx
-rhgroup="Virtualmin LAMP Stack"
-rhnginxgroup="Virtualmin LEMP Stack"
+rhgroup="'Virtualmin LAMP Stack'"
+rhnginxgroup="'Virtualmin LEMP Stack'"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -551,10 +551,11 @@ install_virtualmin_release () {
 			else
 				install="/usr/bin/yum -y install"
 				install_cmd="/usr/bin/yum"
+        run_ok "yum --quiet groups mark convert" "Updating yum Groups"
 				if [ $mode="full" ]; then
-					install_group="yum -y group install"
+					install_group="yum -y groupinstall"
 				else
-					install_group="yum -y group install --setopt=group_package_types=mandatory"
+					install_group="yum -y groupinstall --setopt=group_package_types=mandatory"
 				fi
 			fi
 			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
@@ -666,8 +667,8 @@ install_with_yum () {
 		install_scl_php
 	fi
 
-	run_ok "$install_group \${rhgroup}" "Installing dependencies and system packages"
-	run_ok "$install_group \${vmgroup}" "Installing Virtualmin and all related packages"
+	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
+	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
@@ -727,7 +728,7 @@ install_scl_php () {
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
-		run_ok 'scl enable rh-php70 bash' "Setting PHP7 as the default PHP version"
+		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
 	fi
 }
 
