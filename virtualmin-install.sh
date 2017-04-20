@@ -728,7 +728,7 @@ install_scl_php () {
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
 		run_ok "$install rh-php70" "Installing PHP7"
-		run_ok "scl enable rh-php70 bash" "Setting PHP7 as the default PHP version"
+		scl enable rh-php70 bash
 	fi
 }
 
