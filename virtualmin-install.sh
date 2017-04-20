@@ -325,7 +325,8 @@ uninstall () {
 		;;
 	esac
 	remove_virtualmin_release
-	run_ok "rm /etc/virtualmin-license" "Removing /etc/virtualmin-license"
+  echo "Removing /etc/virtualmin-license, if it exists."
+	rm /etc/virtualmin-license
 	echo "Done.  There's probably quite a bit of related packages and such left behind"
 	echo "but all of the Virtualmin-specific packages have been removed."
 	exit 0
@@ -665,8 +666,8 @@ install_with_yum () {
 		install_scl_php
 	fi
 
-	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
+	run_ok "$install_group '${rhgroup}'" "Installing dependencies and system packages"
+	run_ok "$install_group '${vmgroup}'" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
@@ -715,9 +716,9 @@ install_epel_release () {
 
 install_scl_php () {
 	if [ -z $DISABLE_SCL ]; then
+    run_ok "$install yum-utils" "Installing yum-utils"
 		run_ok "yum-config-manager --enable extras" "Enabling extras repository"
-		run_ok "$install yum-utils" "Installing yum-utils"
-		run_ok "$install scl-utils" "Installing scl-utils"
+    run_ok "$install scl-utils" "Installing scl-utils"
 		if [ $os_type = "centos" ]; then
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
 		elif [ $os_type = "rhel" ]; then
