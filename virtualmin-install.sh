@@ -551,14 +551,14 @@ install_virtualmin_release () {
 			else
 				install="/usr/bin/yum -y install"
 				install_cmd="/usr/bin/yum"
-				if [ $mode="full"]; then
+				if [ $mode="full" ]; then
 					install_group="yum -y group install"
 				else
 					install_group="yum -y group install --setopt=group_package_types=mandatory"
 				fi
 			fi
 			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
-			run_ok "rpm -U virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
+			run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
 		;;
 		debian | ubuntu)
 			package_type="deb"
@@ -666,8 +666,8 @@ install_with_yum () {
 		install_scl_php
 	fi
 
-	run_ok "$install_group '${rhgroup}'" "Installing dependencies and system packages"
-	run_ok "$install_group '${vmgroup}'" "Installing Virtualmin and all related packages"
+	run_ok "$install_group \"${rhgroup}\"" "Installing dependencies and system packages"
+	run_ok "$install_group \"${vmgroup}\"" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
 	fi
@@ -710,7 +710,7 @@ install_virtualmin () {
 install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
 		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
-		run_ok "rpm -U --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
+		run_ok "rpm -U --replacepkgs --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
 		rpm --quiet --import '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7'
 	fi
 }
