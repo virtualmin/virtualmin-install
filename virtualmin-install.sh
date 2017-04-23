@@ -126,7 +126,7 @@ while true; do
 		elif [ -x /usr/bin/yum ]; then
 			yum -y install perl >> $log
 		elif [ -x /usr/bin/apt-get ]; then
-			apt-get updatei >> $log
+			apt-get update >> $log
 			apt-get -q -y install perl >> $log
 		fi
 		perl_attempted = 1
@@ -649,6 +649,8 @@ install_with_apt () {
         update-rc.d clamav-daemon disable
         service clamav-daemon stop
 
+        # Disable the Ubuntu/Debian default site since Virtualmin places websites in /home
+        a2dissite 000-default
 
 	run_ok "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd" "Installing Virtualmin modules:"
         if [ $? -ne 0 ]; then
