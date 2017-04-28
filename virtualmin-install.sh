@@ -195,6 +195,7 @@ deps=
 # Red Hat-based systems XXX Need switch for nginx
 rhgroup="'Virtualmin LAMP Stack'"
 rhnginxgroup="'Virtualmin LEMP Stack'"
+sclgroup="'Software Collections PHP 7 Environment'"
 # Debian
 debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
@@ -735,7 +736,7 @@ install_scl_php () {
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
-		run_ok "$install_group scl-php70" "Installing PHP7"
+		run_ok "$install_group $sclgroup" "Installing PHP7"
 	fi
 }
 
