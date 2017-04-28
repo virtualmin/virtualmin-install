@@ -671,9 +671,9 @@ install_with_yum () {
 	fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
-  run_ok "yum --quiet groups mark install '$rhgroup'" "Marking \"$rhgroup\" for install"
+  run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
 	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "yum --quiet groups mark install '$vmgroup'" "Marking \"$vmgroup\" for install"
+  run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgroup for install"
 	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
@@ -733,7 +733,7 @@ install_scl_php () {
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
-		run_ok "$install rh-php70" "Installing PHP7"
+		run_ok "$install_group scl-php70" "Installing PHP7"
 	fi
 }
 
@@ -764,7 +764,7 @@ case $os_type in
 esac
 
 log_success "Installation Complete!"
-log_success "Assuming there were no errors above, your Virtualmin system should be ready"
+log_success "If there were no errors above, Virtualmin should be ready"
 log_success "to configure on port 10000."
 
 exit 0
