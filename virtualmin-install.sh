@@ -309,9 +309,8 @@ uninstall () {
 
 	case $package_type in
 		rpm)
-      yum groups mark remove "Virtualmin Core"
-      yum group remove "Virtualmin Core"
-      yum groups mark remove "Virtualmin LAMP Stack"
+      yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
+      yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
 			yum remove -y virtualmin-base
 			yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
 			yum remove -y wbt-virtual-server-mobile
@@ -487,12 +486,6 @@ log_debug "Installing serial number and license key into /etc/virtualmin-license
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
 echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
 chmod 700 /etc/virtualmin-license
-
-# Detecting the OS
-# Grab the Webmin oschooser.pl script
-run_ok "$download http://software.virtualmin.com/lib/oschooser.pl" "Loading OS selection library"
-run_ok "$download http://software.virtualmin.com/lib/os_list.txt" "Loading OS list"
-
 cd ..
 
 # Populate some distro version globals
@@ -555,12 +548,15 @@ install_virtualmin_release () {
 			else
 				install="/usr/bin/yum -y install"
 				install_cmd="/usr/bin/yum"
-        run_ok "yum --quiet groups mark convert" "Updating yum Groups"
-				if [ $mode="full" ]; then
-					install_group="yum -y --quiet group install --setopt=group_package_types=mandatory,default"
-				else
-					install_group="yum -y --quiet group install --setopt=group_package_types=mandatory"
-				fi
+        # XXX Dumb new thing in new yum versions?
+        if [ $os_major_version -ge 7 ]; then
+          run_ok "yum --quiet groups mark convert" "Updating yum Groups"
+        fi
+			  if [ $mode="full" ]; then
+				  install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
+			  else
+				  install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory"
+			  fi
 			fi
 			download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
 			run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
