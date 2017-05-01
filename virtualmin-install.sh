@@ -670,9 +670,11 @@ install_with_yum () {
 	fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
-  run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
+  if [ "$os_major_version" -ge 7 ]; then
+    run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
+    run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgroup for install"
+  fi
 	run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgroup for install"
 	run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		fatal "Installation failed: $?"
@@ -717,7 +719,7 @@ install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
 		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
 		run_ok "rpm -U --replacepkgs --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
-		rpm --quiet --import '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-7'
+		rpm --quiet --import '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*'
 	fi
 }
 
