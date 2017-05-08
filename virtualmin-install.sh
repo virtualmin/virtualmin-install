@@ -745,7 +745,7 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 install_virtualmin
-virtualmin-init-system.pl --bundle $config_bundle
+virtualmin-config-system --bundle $config_bundle
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
