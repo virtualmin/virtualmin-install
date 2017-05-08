@@ -51,8 +51,8 @@ while [ "$1" != "" ]; do
 			printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
 			printf "  ${YELLOW}--force|-f:${NORMAL} - Skip confirmation message\n"
 			printf "  ${YELLOW}--hostname|-host${NORMAL} - Set fully qualified hostname\n"
-			printf "  ${YELLOW}--varbose|-v${NORMAL} - Verbose\n"
-			printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
+			printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
+			#printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
 			echo
 			exit 0
 			;;
@@ -98,6 +98,9 @@ while [ "$1" != "" ]; do
 	esac
 	shift
 done
+
+# Should be configurable, once LEMP stack is configurable with virtualmin-config
+config_bundle="LAMP"
 
 # Make sure Perl is installed
 printf "Checking for Perl..." >> $log
@@ -742,6 +745,7 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 install_virtualmin
+virtualmin-init-system.pl --bundle $config_bundle
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
