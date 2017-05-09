@@ -722,7 +722,7 @@ install_epel_release () {
 	if [ -z $DISABLE_EPEL ]; then
 		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
 		run_ok "rpm -U --replacepkgs --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
-		rpm --quiet --import '/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*'
+		rpm --quiet --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*"
 	fi
 }
 
