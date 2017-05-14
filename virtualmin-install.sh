@@ -122,7 +122,7 @@ while true; do
 			exit 2
 		fi
 		# couldn't find Perl, so we need to try to install it
-       		echo 'Perl was not found on your system - Virtualmin requires it to run.'
+    echo 'Perl was not found on your system - Virtualmin requires it to run.'
 		echo 'Attempting to install it now.'
 		if [ -x /usr/bin/dnf ]; then
 			dnf -y install perl >> $log
@@ -144,7 +144,7 @@ printf "found Perl at $perl\n" >> $log
 printf "Checking for HTTP client..." >> $log
 while true; do
 	if [ -x "/usr/bin/curl" ]; then
-		download="/usr/bin/curl -s -O"
+		download="/usr/bin/curl -s -L -O"
 		break
 	elif [ -x "/usr/bin/wget" ]; then
 		download="/usr/bin/wget -nv"
@@ -193,14 +193,14 @@ fi
 
 # Virtualmin-provided packages
 vmgroup="'Virtualmin Core'"
-debvmpackages="usermin webmin webmin-virtualmin-awstats webmin-virtualmin-dav webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-jailkit"
+debvmpackages="virtualmin-core"
 deps=
 # Red Hat-based systems XXX Need switch for nginx
 rhgroup="'Virtualmin LAMP Stack'"
 rhnginxgroup="'Virtualmin LEMP Stack'"
 sclgroup="'Software Collections PHP 7 Environment'"
 # Debian
-debdeps="bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
+debdeps="virtualmin-lamp-stack"
 # Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
 ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
 
@@ -320,7 +320,7 @@ uninstall () {
 			yum remove -y webmin usermin awstats
 		;;
 		deb)
-			dpkg --purge virtualmin-base
+			dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
 			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit
 			dpkg --purge webmin-virtual-server-mobile
 			dpkg --purge webmin usermin
@@ -354,7 +354,7 @@ cat <<EOF
  Please read the Virtualmin Installation Guide before proceeding if
  your system is not a freshly installed and supported OS.
 
- This script is not intended to update your system! It should only be
+ This script does not update or upgrade Virtualmin! It should only be
  used to perform your initial Virtualmin installation. Updates and
  upgrades can be performed from within Virtualmin or via the system
  package manager. License changes can be performed with the
@@ -386,11 +386,11 @@ cat <<EOF
  Virtualmin may already be installed. This can happen if an installation failed,
  and can be ignored in that case.
 
- But, if Virtualmin is already successfully installed you should not run this script
- again. Updates and upgrade can be performed from within Virtualmin.
+ But, if Virtualmin has already successfully installed you should not run this
+ script again. Updates and upgrade can be performed from within Virtualmin.
 
- To change license details, use the 'virtualmin change-license' command. Changing
- the license inever requires reinstallation.
+ To change license details, use the 'virtualmin change-license' command.
+ Changing the license never requires re-installation.
 
 EOF
 	printf " Really Continue? (y/n) "
@@ -398,32 +398,6 @@ EOF
 		exit
 	fi
 fi
-
-get_mode () {
-cat <<EOF
- FULL or MINIMAL INSTALLATION
- It is possible to install only the minimum set of components and
- and perform no configuration changes to existing mail/web/DNS
- or packages.  This mode of installation is called the minimal mode
- because only Webmin, Usermin and the Virtualmin-related modules and
- themes are installed.  The minimal mode will not modify your
- existing configuration.  The full install is recommended if
- this system is a fresh install of the OS.  If your system has
- a working Virtualmin GPL installation using components other than
- our defaults, or you already have virtual hosts, users, mailboxes,
- etc. configured manually or with another administration tool, the
- minimal mode is a much safer choice.
-
-EOF
-
-	printf " Would you like to perform a full installation? (y/n) "
-	if yesno; then mode=full
-	else mode=minimal
-	fi
-
-	echo "Installation type: $mode"
-	sleep 3
-}
 
 # XXX Should be a minimal option
 mode=full
@@ -446,13 +420,6 @@ download() {
 	# Especially make sure failure gets logged right.
 	# awk magic prints the filename, rather than whole URL
 	run_ok "$download $1" "Downloading $(echo $1 |awk -F/ '{print $NF}')"
-	#if "$download" "$1"
-	#then
-	#	success "Download of $1"
-   	#return $?
-	#else
-	#	fatal "Failed to download $1."
-	#fi
 	if [ $? -ne 0 ]; then
 		fatal "Failed to download $1. Cannot continue. Check your network connection and DNS settings."
 	else
@@ -474,7 +441,6 @@ log_info "Started installation log in $log"
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
 log_debug "Product: Virtualmin $PRODUCT"
-log_debug "Virtualmin Meta-Package list: $virtualminmeta"
 log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
@@ -603,7 +569,7 @@ install_virtualmin_release () {
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
 			for repo in $repos; do
-				echo "deb http://${LOGIN}software.virtualmin.com/${repopath}$os_type/ $repo main" >> /etc/apt/sources.list
+				echo "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/apt $repo main" >> /etc/apt/sources.list
 			done
 			# Install our keys
 			log_debug "Installing Webmin and Virtualmin package signing keys..."
@@ -636,31 +602,25 @@ install_with_apt () {
 		fatal "Installation failed: $?"
 	fi
 
-		# XXX Maybe we can use --trivial-only to avoid starting services?
-        # Disable some things by default
-        update-rc.d mailman disable
-        service mailman stop
-        update-rc.d postgresql-8.3 disable
-        service postgresql-8.3 stop
-        update-rc.d postgresql-8.4 disable
-        service postgresql-8.4 stop
-        update-rc.d spamassassin disable
-        service spamassassin stop
-        update-rc.d clamav-daemon disable
-        service clamav-daemon stop
+	# XXX Maybe we can use --trivial-only to avoid starting services?
+  # Disable some things by default
+  update-rc.d spamassassin disable
+  service spamassassin stop
+  update-rc.d clamav-daemon disable
+  service clamav-daemon stop
 
-        # Disable the Ubuntu/Debian default site since Virtualmin places websites in /home
-        a2dissite 000-default
+  # Disable the Ubuntu/Debian default site since Virtualmin places websites in /home
+  a2dissite 000-default
 
 	run_ok "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd" "Installing Virtualmin modules:"
-        if [ $? -ne 0 ]; then
-                log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
-                log_warning "http://www.virtualmin.com/os-support"
-                fatal "Installation failed: $?"
-        fi
+    if [ $? -ne 0 ]; then
+      log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
+      log_warning "http://www.virtualmin.com/os-support"
+      fatal "Installation failed: $?"
+    fi
 
-        # Make sure the time is set properly
-        /usr/sbin/ntpdate-debian
+  # Make sure the time is set properly
+  /usr/sbin/ntpdate-debian
 
 	return 0
 }
