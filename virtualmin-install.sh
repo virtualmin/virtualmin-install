@@ -563,7 +563,7 @@ install_virtualmin_release () {
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
-			run_ok $(apt-get clean) "Cleaning out old metadata"
+			run_ok "apt-get clean" "Cleaning out old metadata"
 			# Get the noninteractive apt-get configuration file (this is
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
@@ -573,9 +573,9 @@ install_virtualmin_release () {
 			done
 			# Install our keys
 			log_debug "Installing Webmin and Virtualmin package signing keys..."
-			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin"
+			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			log_debug $(apt-key add RPM-GPG-KEY-virtualmin)
+			log_debug $(apt-key add RPM-GPG-KEY-virtualmin-6)
 			log_debug $(apt-key add RPM-GPG-KEY-webmin)
 			log_debug $(apt-get update)
 			log_debug "Removing Debian standard Webmin package, if they exist..."
