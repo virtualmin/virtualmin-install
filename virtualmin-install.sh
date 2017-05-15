@@ -595,7 +595,7 @@ install_virtualmin_release () {
 
 # Install Functions
 install_with_apt () {
-	run_ok "$install $virtualminmeta" "Installing Virtualmin and all related packages"
+	run_ok "$install ${debdeps} ${debvmpackages}" "Installing Virtualmin and all related packages"
 	if [ $? -ne 0 ]; then
 		log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
 		log_warning "http://www.virtualmin.com/os-support"
