@@ -306,8 +306,8 @@ is_installed () {
 uninstall () {
 	# This is a crummy way to detect package manager...but going through
 	# half the installer just to get here is even crummier.
-	if type -t rpm>/dev/null; then package_type=rpm
-	elif type -t dpkg>/dev/null; then package_type=deb
+	if type rpm>/dev/null; then package_type=rpm
+	elif type dpkg>/dev/null; then package_type=deb
 	fi
 
 	case $package_type in
