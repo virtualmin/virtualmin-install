@@ -595,7 +595,11 @@ install_virtualmin_release () {
 
 # Install Functions
 install_with_apt () {
-	run_ok "$install ${debdeps} ${debvmpackages}" "Installing Virtualmin and all related packages"
+  # Install Webmin first, because it needs to be already done for the deps
+  run_ok "$install webmin" "Installing Webmin"
+  run_ok "$install usermin" "Installing Usermin"
+	run_ok "$install ${debdeps}" "Installing OS packages that Virtualmin needs"
+  run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
 	if [ $? -ne 0 ]; then
 		log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
 		log_warning "http://www.virtualmin.com/os-support"
