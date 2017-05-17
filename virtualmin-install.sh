@@ -36,10 +36,10 @@ skipyesno=0
 
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
-RED=$(tput setaf 1)
-YELLOW=$(tput setaf 3)
-CYAN=$(tput setaf 6)
-NORMAL=$(tput sgr0)
+RED="$(tput setaf 1)"
+YELLOW="$(tput setaf 3)"
+CYAN="$(tput setaf 6)"
+NORMAL="$(tput sgr0)"
 while [ "$1" != "" ]; do
 	case $1 in
 		--help|-h)
@@ -106,8 +106,8 @@ config_bundle="LAMP"
 printf "Checking for Perl..." >> $log
 # loop until we've got a Perl or until we can't try any more
 while true; do
-	perl=$(which perl 2>/dev/null)
-	if [ -z $perl ]; then
+	perl="$(which perl 2>/dev/null)"
+	if [ -z "$perl" ]; then
         	if [ -x /usr/bin/perl ]; then
                 	perl=/usr/bin/perl
 			break
@@ -117,7 +117,7 @@ while true; do
                 elif [ -x /opt/csw/bin/perl ]; then
                 	perl=/opt/csw/bin/perl
 			break
-		elif [ $perl_attempted = 1 ] ; then
+		elif [ "$perl_attempted" = 1 ] ; then
 			printf "${RED}Perl could not be installed - Installation cannot continue.${NORMAL}\n"
 			exit 2
 		fi
@@ -132,7 +132,7 @@ while true; do
 			apt-get update >> $log
 			apt-get -q -y install perl >> $log
 		fi
-		perl_attempted = 1
+		perl_attempted=1
 		# Loop. Next loop should either break or exit.
 	else
 		break
@@ -152,13 +152,13 @@ while true; do
 	elif [ -x "/usr/bin/fetch" ]; then
 		download="/usr/bin/fetch"
 		break
-	elif [ $curl_attempted = 1 ]; then
+	elif [ "$curl_attempted" = 1 ]; then
 		printf "${RED}No HTPP client available. Could not install curl. Cannot continue.${NORMAL}"
 		exit 1
 	fi
 
 	# Made it here without finding a downloader, so try to install one
-	curl_attempted = 1
+	curl_attempted=1
 	if [ -x /usr/bin/dnf ]; then
 		dnf -y install curl >> $log
 	elif [ -x /usr/bin/yum ]; then
@@ -177,7 +177,7 @@ vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
 
-arch=$(uname -m)
+arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
 	arch="i386"
 fi
@@ -212,24 +212,24 @@ fi
 # Check whether $TMPDIR is mounted noexec (everything will fail, if so)
 # XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
 # is mounted noexec, this won't catch it.
-TMPNOEXEC=$(grep $TMPDIR /etc/mtab | grep noexec)
+TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
 if [ ! -z "$TMPNOEXEC" ]; then
 	echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
 	exit 1
 fi
 
 if [ -z "$tempdir" ]; then
-	tempdir=$TMPDIR/.virtualmin-$$
+	tempdir="$TMPDIR/.virtualmin-$$"
 	if [ -e "$tempdir" ]; then
-		rm -rf $tempdir
+		rm -rf "$tempdir"
 	fi
-	mkdir $tempdir
+	mkdir "$tempdir"
 fi
 
 # "files" subdir for libs
-mkdir $tempdir/files
-srcdir=$tempdir/files
-cd $srcdir
+mkdir "$tempdir/files"
+srcdir="$tempdir/files"
+cd "$srcdir"
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
@@ -238,9 +238,9 @@ chmod +x slib.sh
 . ./slib.sh
 
 # Setup slog
-LOG_PATH=$log
+LOG_PATH="$log"
 # Setup run_ok
-RUN_LOG=$log
+RUN_LOG="$log"
 
 # Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
@@ -253,7 +253,7 @@ LOG_LEVEL_LOG="DEBUG"
 
 # log_fatal calls log_error
 log_fatal() {
-	log_error $1
+	log_error "$1"
 }
 
 fatal () {
@@ -306,11 +306,11 @@ is_installed () {
 uninstall () {
 	# This is a crummy way to detect package manager...but going through
 	# half the installer just to get here is even crummier.
-	if type rpm>/dev/null; then package_type=rpm
-	elif type dpkg>/dev/null; then package_type=deb
+	if which rpm>/dev/null; then package_type=rpm
+	elif which dpkg>/dev/null; then package_type=deb
 	fi
 
-	case $package_type in
+	case "$package_type" in
 		rpm)
       yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
       yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
@@ -445,7 +445,7 @@ log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
 log_debug "Checking for fully qualified hostname..."
-name=$(hostname -f)
+name="$(hostname -f)"
 if ! is_fully_qualified "$name"; then set_hostname
 elif [ "$forcehostname" != "" ]; then set_hostname
 fi
@@ -467,29 +467,29 @@ log_debug "Operating system major:   $os_major_version"
 install_virtualmin_release () {
 	# Grab virtualmin-release from the server
 	log_debug "Configuring package manager for ${os_real} ${os_version}..."
-	case $os_type in
+	case "$os_type" in
 		rhel|centos|fedora|amazon)
-      case $os_type in
+      case "$os_type" in
         rhel|centos)
-          if [ $os_major_version -lt 6 ]; then
+          if [ "$os_major_version" -lt 6 ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
           ;;
         fedora)
-          if [ $os_version -ne 25 ]; then
+          if [ "$os_version" -ne 25 ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
           ;;
         ubuntu)
-          if [ $os_version != "14.04" ] && [ $os_version != "16.04" ]; then
+          if [ "$os_version" != "14.04" ] && [ "$os_version" != "16.04" ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
           ;;
         debian)
-          if [ $os_major_version -lt 7 ]; then
+          if [ "$os_major_version" -lt 7 ]; then
             printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
             exit 1
           fi
@@ -506,10 +506,10 @@ install_virtualmin_release () {
 				fi
 			fi
 			package_type="rpm"
-			if type -t dnf; then
+			if which dnf; then
 				install="dnf -y install"
 				install_cmd="dnf"
-				if [ $mode="full" ]; then
+				if [ "$mode" = "full" ]; then
 					install_group="dnf -y group install --setopt=group_package_types=mandatory,default"
 				else
 					install_group="dnf -y group install --setopt=group_package_types=mandatory"
@@ -518,10 +518,10 @@ install_virtualmin_release () {
 				install="/usr/bin/yum -y install"
 				install_cmd="/usr/bin/yum"
         # XXX Dumb new thing in new yum versions?
-        if [ $os_major_version -ge 7 ]; then
+        if [ "$os_major_version" -ge 7 ]; then
           run_ok "yum --quiet groups mark convert" "Updating yum Groups"
         fi
-			  if [ $mode="full" ]; then
+			  if [ "$mode" = "full" ]; then
 				  install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
 			  else
 				  install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory"
@@ -533,8 +533,8 @@ install_virtualmin_release () {
 		debian | ubuntu)
 			package_type="deb"
 			if [ "$os_type" = "ubuntu" ]; then
-				deps=$ubudeps
-				case $os_version in
+				deps="$ubudeps"
+				case "$os_version" in
 					14.04*)
 						repos="virtualmin-trusty virtualmin-universal"
 					;;
@@ -543,8 +543,8 @@ install_virtualmin_release () {
 					;;
 				esac
 			else
-				deps=$debdeps
-				case $os_version in
+				deps="$debdeps"
+				case "$os_version" in
 					7*)
 						repos="virtualmin-wheezy virtualmin-universal"
 					;;
@@ -575,12 +575,12 @@ install_virtualmin_release () {
 			log_debug "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			log_debug $(apt-key add RPM-GPG-KEY-virtualmin-6)
-			log_debug $(apt-key add RPM-GPG-KEY-webmin)
-			log_debug $(apt-get update)
+			log_debug "$(apt-key add RPM-GPG-KEY-virtualmin-6)"
+			log_debug "$(apt-key add RPM-GPG-KEY-webmin)"
+			log_debug "$(apt-get update)"
 			log_debug "Removing Debian standard Webmin package, if they exist..."
 			log_debug "Removing Debian apache packages..."
-			log_debug $(apt-get -y --purge remove webmin-core apache apache2)
+			log_debug "$(apt-get -y --purge remove webmin-core apache apache2)"
 		;;
 		*)
 			log_error " Your OS is not currently supported by this installer."
@@ -631,7 +631,7 @@ install_with_apt () {
 
 install_with_yum () {
 	# install extras from EPEL and SCL
-	if [ "$os_type" = "centos" -o "$os_type" = "rhel" ]; then
+	if [ "$os_type" = "centos" ] || [ "$os_type" = "rhel" ]; then
 		install_epel_release
 		install_scl_php
 	fi
@@ -664,7 +664,7 @@ install_deps_the_hard_way () {
 }
 
 install_virtualmin () {
-	case $package_type in
+	case "$package_type" in
 		rpm)
 			install_with_yum
 		;;
@@ -683,7 +683,7 @@ install_virtualmin () {
 }
 
 install_epel_release () {
-	if [ -z $DISABLE_EPEL ]; then
+	if [ -z "$DISABLE_EPEL" ]; then
 		download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
 		run_ok "rpm -U --replacepkgs --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
 		rpm --quiet --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*"
@@ -691,13 +691,13 @@ install_epel_release () {
 }
 
 install_scl_php () {
-	if [ -z $DISABLE_SCL ]; then
+	if [ -z "$DISABLE_SCL" ]; then
     run_ok "$install yum-utils" "Installing yum-utils"
 		run_ok "yum-config-manager --enable extras >/dev/null" "Enabling extras repository"
     run_ok "$install scl-utils" "Installing scl-utils"
-		if [ ${os_type} = "centos" ]; then
+		if [ "${os_type}" = "centos" ]; then
 			run_ok "$install centos-release-scl" "Install Software Collections release package"
-		elif [ ${os_type} = "rhel" ]; then
+		elif [ "${os_type}" = "rhel" ]; then
 			# XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
 			run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
 		fi
@@ -709,7 +709,7 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 install_virtualmin
-virtualmin-config-system --bundle $config_bundle
+virtualmin-config-system --bundle "$config_bundle"
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
@@ -726,7 +726,7 @@ disable_selinux () {
 }
 
 # Changes that are specific to OS
-case $os_type in
+case "$os_type" in
 	"fedora" | "centos" | "rhel" | "amazon" )
 		disable_selinux
 	;;
