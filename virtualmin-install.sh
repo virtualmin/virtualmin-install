@@ -387,7 +387,7 @@ if ! yesno; then
 	exit
 fi
 }
-if ! $skipyesno; then
+if [ "$skipyesno" -ne 1 ]; then
   install_msg
 fi
 
@@ -414,7 +414,7 @@ EOF
 	fi
 fi
 }
-if ! skipyesno; then
+if [ "$skipyesno" -ne 1 ]; then
   already_installed_msg
 fi
 
