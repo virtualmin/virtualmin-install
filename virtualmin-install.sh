@@ -478,6 +478,7 @@ chmod 700 /etc/virtualmin-license
 cd ..
 
 # Populate some distro version globals
+get_distro
 log_debug "Operating system name:    $os_real"
 log_debug "Operating system version: $os_version"
 log_debug "Operating system type:    $os_type"
