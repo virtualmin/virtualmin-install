@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154
 # virtualmin-install.sh
 # Copyright 2005-2017 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
@@ -21,7 +22,6 @@
 # DISABLE_SCL  - Install will not enable the Software Collections Library
 #                on CentOS/RHEL. PHP7 will not be installed. Set it to 1
 #                to instruct the script not to enable SCL.
-# DISABLE_PG   - Do not install Postgres.
 # ENABLE_NGINX - Install will setup nginx, instead of Apache. This is
 #                experimental. And, nginx is still much less capable than
 #                Apache. Apache will NOT be installed/configured.
@@ -43,8 +43,10 @@ NORMAL="$(tput sgr0)"
 while [ "$1" != "" ]; do
 	case $1 in
 		--help|-h)
-			printf "Usage: ${CYAN}$(basename $0) ${YELLOW}[--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
-	  		echo
+      # shellcheck disable=SC2046
+			printf "Usage: %s %s " "${CYAN}" $(basename "$0")
+      printf "${YELLOW}[--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
+	  	echo
 			echo "  If called without arguments, installs Virtualmin Professional."
 			echo
 			printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
@@ -82,10 +84,6 @@ while [ "$1" != "" ]; do
 				EPEL)
 					shift
 					DISABLE_EPEL=1
-					;;
-				PG)
-					shift
-					DISABLE_PG=1
 					;;
 				*)
 					printf "Unknown feature ${YELLOW}$1${NORMAL}: exiting\n"
@@ -197,7 +195,7 @@ debvmpackages="virtualmin-core"
 deps=
 # Red Hat-based systems XXX Need switch for nginx
 rhgroup="'Virtualmin LAMP Stack'"
-rhnginxgroup="'Virtualmin LEMP Stack'"
+#rhnginxgroup="'Virtualmin LEMP Stack'"
 sclgroup="'Software Collections PHP 7 Environment'"
 # Debian
 debdeps="virtualmin-lamp-stack"
@@ -229,26 +227,35 @@ fi
 # "files" subdir for libs
 mkdir "$tempdir/files"
 srcdir="$tempdir/files"
-cd "$srcdir"
+if ! cd "$srcdir"; then
+  echo "Failed to cd to $srcdir"
+  exit 1
+fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
 $download http://software.virtualmin.com/lib/slib.sh
 chmod +x slib.sh
+# shellcheck disable=SC1091
 . ./slib.sh
 
 # Setup slog
+# shellcheck disable=SC2034
 LOG_PATH="$log"
 # Setup run_ok
+# shellcheck disable=SC2034
 RUN_LOG="$log"
 
 # Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
+  # shellcheck disable=SC2034
 	LOG_LEVEL_STDOUT="DEBUG"
 else
+  # shellcheck disable=SC2034
 	LOG_LEVEL_STDOUT="INFO"
 fi
 # Log file output level; catch literally everything.
+# shellcheck disable=SC2034
 LOG_LEVEL_LOG="DEBUG"
 
 # log_fatal calls log_error
@@ -271,6 +278,7 @@ fatal () {
 }
 
 remove_virtualmin_release () {
+  # shellcheck disable=SC2154
 	case "$os_type" in
 		"fedora" | "centos" | "rhel" | "amazon"	)
 			run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
@@ -343,6 +351,8 @@ if [ "$mode" = "uninstall" ]; then
 	uninstall
 fi
 
+# Message to display in interactive mode
+install_msg() {
 cat <<EOF
 
  Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
@@ -376,7 +386,12 @@ printf " Continue? (y/n) "
 if ! yesno; then
 	exit
 fi
+}
+if ! $skipyesno; then
+  install_msg
+fi
 
+already_installed_msg() {
 # Double check if installed, just in case above error ignored.
 if is_installed; then
 cat <<EOF
@@ -398,6 +413,10 @@ EOF
 		exit
 	fi
 fi
+}
+if ! skipyesno; then
+  already_installed_msg
+fi
 
 # XXX Should be a minimal option
 mode=full
@@ -407,7 +426,7 @@ grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
 	log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
 	run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
-	if [ $? -ne 0 ]; then
+	if [ "$?" -ne 0 ]; then
 		log_error "Failed to configure a localhost entry in /etc/hosts."
 		log_error "This may cause problems, but we'll try to continue."
 	fi
@@ -419,7 +438,8 @@ download() {
 	# XXX Check this to make sure run_ok is doing the right thing.
 	# Especially make sure failure gets logged right.
 	# awk magic prints the filename, rather than whole URL
-	run_ok "$download $1" "Downloading $(echo $1 |awk -F/ '{print $NF}')"
+  download_file=$(echo "$1" |awk -F/ '{print $NF}')
+	run_ok "$download $1" "Downloading $download_file"
 	if [ $? -ne 0 ]; then
 		fatal "Failed to download $1. Cannot continue. Check your network connection and DNS settings."
 	else
@@ -458,7 +478,6 @@ chmod 700 /etc/virtualmin-license
 cd ..
 
 # Populate some distro version globals
-get_distro
 log_debug "Operating system name:    $os_real"
 log_debug "Operating system version: $os_version"
 log_debug "Operating system type:    $os_type"
