@@ -633,16 +633,6 @@ install_with_apt () {
   update-rc.d clamav-daemon disable
   service clamav-daemon stop
 
-  # Disable the Ubuntu/Debian default site since Virtualmin places websites in /home
-  a2dissite 000-default
-
-	run_ok "$install webmin-virtual-server webmin-virtualmin-awstats webmin-virtualmin-htpasswd" "Installing Virtualmin modules:"
-    if [ $? -ne 0 ]; then
-      log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
-      log_warning "http://www.virtualmin.com/os-support"
-      fatal "Installation failed: $?"
-    fi
-
   # Make sure the time is set properly
   /usr/sbin/ntpdate-debian
 
