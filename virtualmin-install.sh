@@ -595,12 +595,10 @@ install_virtualmin_release () {
 			log_debug "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-			log_debug "$(apt-key add RPM-GPG-KEY-virtualmin-6)"
-			log_debug "$(apt-key add RPM-GPG-KEY-webmin)"
-			log_debug "$(apt-get update)"
-			log_debug "Removing Debian standard Webmin package, if they exist..."
-			log_debug "Removing Debian apache packages..."
-			log_debug "$(apt-get -y --purge remove webmin-core apache apache2)"
+			run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
+			run_ok "apt-key add RPM-GPG-KEY-webmin" "Installer Webmin key"
+			run_ok "apt-get update" "Refreshing available packages"
+			run_ok "apt-get -y --purge remove webmin-core" "Removing non-standard Webmin package, if installed"
 		;;
 		*)
 			log_error " Your OS is not currently supported by this installer."
