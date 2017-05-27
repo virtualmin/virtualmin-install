@@ -597,7 +597,6 @@ install_virtualmin_release () {
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
 			run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
 			run_ok "apt-key add RPM-GPG-KEY-webmin" "Installer Webmin key"
-			run_ok "apt-get update" "Refreshing available packages"
 			run_ok "apt-get -y --purge remove webmin-core" "Removing non-standard Webmin package, if installed"
 		;;
 		*)
@@ -718,6 +717,7 @@ install_scl_php () {
 install_virtualmin_release
 install_virtualmin
 virtualmin-config-system --bundle "$config_bundle"
+config_system_pid=$!
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
@@ -739,6 +739,13 @@ case "$os_type" in
 		disable_selinux
 	;;
 esac
+
+# Reap any clingy processes (like spinner forks)
+allpids="$(ps -o pid= --ppid $$) $allpids"
+kill "$allpids" 2>/dev/null
+kill "$config_system_pid" 2>/dev/null
+# Make sure the cursor is back (if spinners misbehaved)
+tput cnorm
 
 log_success "Installation Complete!"
 log_success "If there were no errors above, Virtualmin should be ready"
