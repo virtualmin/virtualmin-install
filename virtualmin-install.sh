@@ -573,13 +573,16 @@ install_virtualmin_release () {
 					;;
 				esac
 			fi
+      log_info "apt-get repos: ${repos}"
+      for repo in $repos; do
+				echo "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/apt ${repo} main" >> /etc/apt/sources.list
+			done
 			# Make sure universe repos are available
 			# XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
 			run_ok "sed -ie 's/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
 				"Enabling universe repositories, if not already available"
 			# XXX Is this still enabled by default on Debian/Ubuntu systems?
 			run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-			run_ok "apt-get update" "Updating apt-get metadata"
 			install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
 			export DEBIAN_FRONTEND=noninteractive
 			install_updates="$install $deps"
@@ -588,15 +591,13 @@ install_virtualmin_release () {
 			# stupid... -y ought to do all of this).
 			download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
 			sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
-			for repo in $repos; do
-				echo "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/apt $repo main" >> /etc/apt/sources.list
-			done
+
 			# Install our keys
 			log_debug "Installing Webmin and Virtualmin package signing keys..."
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
 			download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
 			run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
-			run_ok "apt-key add RPM-GPG-KEY-webmin" "Installer Webmin key"
+			run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
 			run_ok "apt-get -y --purge remove webmin-core" "Removing non-standard Webmin package, if installed"
 		;;
 		*)
