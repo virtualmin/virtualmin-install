@@ -352,7 +352,7 @@ fi
 
 # Message to display in interactive mode
 install_msg() {
-  cat <<EOF
+cat <<EOF
 
   Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
@@ -371,16 +371,16 @@ install_msg() {
 
   The systems currently supported by install.sh are:
 
-  EOF
-  echo "${CYAN}$supported${NORMAL}"
-  cat <<EOF
+EOF
+echo "${CYAN}$supported${NORMAL}"
+cat <<EOF
 
   If your OS/version is not listed above, this script will fail. More
   details about the systems supported by the script can be found here:
 
   ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
 
-  EOF
+EOF
   printf " Continue? (y/n) "
   if ! yesno; then
     exit
@@ -393,20 +393,20 @@ fi
 already_installed_msg() {
   # Double check if installed, just in case above error ignored.
   if is_installed; then
-    cat <<EOF
+cat <<EOF
 
-    ${REDBG}WARNING${NORMAL}
+  ${REDBG}WARNING${NORMAL}
 
-    Virtualmin may already be installed. This can happen if an installation failed,
-    and can be ignored in that case.
+  Virtualmin may already be installed. This can happen if an installation failed,
+  and can be ignored in that case.
 
-    But, if Virtualmin has already successfully installed you should not run this
-    script again. Updates and upgrade can be performed from within Virtualmin.
+  But, if Virtualmin has already successfully installed you should not run this
+  script again. Updates and upgrade can be performed from within Virtualmin.
 
-    To change license details, use the 'virtualmin change-license' command.
-    Changing the license never requires re-installation.
+  To change license details, use the 'virtualmin change-license' command.
+  Changing the license never requires re-installation.
 
-    EOF
+EOF
     printf " Really Continue? (y/n) "
     if ! yesno; then
       exit
