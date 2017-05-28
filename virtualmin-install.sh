@@ -199,8 +199,7 @@ rhgroup="'Virtualmin LAMP Stack'"
 sclgroup="'Software Collections PHP 7 Environment'"
 # Debian
 debdeps="virtualmin-lamp-stack"
-# Ubuntu (uses odd virtual packaging for some packages that are separate on Debian!)
-ubudeps="apt-utils bsdutils postfix postfix-pcre webmin usermin ruby libxml-simple-perl libcrypt-ssleay-perl unzip zip libfcgi-dev bind9 spamassassin spamc procmail procmail-wrapper libnet-ssleay-perl libpg-perl libdbd-pg-perl libdbd-mysql-perl quota iptables openssl python mailman subversion ruby irb rdoc ri mysql-server mysql-client mysql-common postgresql postgresql-client awstats webalizer dovecot-common dovecot-imapd dovecot-pop3d proftpd libcrypt-ssleay-perl awstats clamav-base clamav-daemon clamav clamav-freshclam clamav-docs clamav-testfiles libapache2-mod-fcgid apache2-suexec-custom scponly apache2 apache2-doc libsasl2-2 libsasl2-modules sasl2-bin php-pear php5 php5-cgi libapache2-mod-php5 php5-mysql jailkit"
+ubudeps="virtualmin-lamp-stack"
 
 # Find temp directory
 if [ -z "$TMPDIR" ]; then
