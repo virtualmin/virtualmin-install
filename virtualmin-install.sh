@@ -326,12 +326,14 @@ uninstall () {
 			yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit
 			yum remove -y wbt-virtual-server-mobile
 			yum remove -y webmin usermin awstats
+      os_type="centos"
 		;;
 		deb)
 			dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
 			dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit
 			dpkg --purge webmin-virtual-server-mobile
 			dpkg --purge webmin usermin
+      os_type="debian"
 			apt-get clean
 		;;
 		*)
@@ -345,8 +347,6 @@ uninstall () {
 	echo "but all of the Virtualmin-specific packages have been removed."
 	exit 0
 }
-
-# XXX Needs to move after os_detection
 if [ "$mode" = "uninstall" ]; then
 	uninstall
 fi
@@ -559,7 +559,7 @@ install_virtualmin_release () {
 						repos="virtualmin-trusty virtualmin-universal"
 					;;
 					16.04*)
-						repos="virtualmin-xenial virtualmin-univseral"
+						repos="virtualmin-xenial virtualmin-universal"
 					;;
 				esac
 			else
@@ -575,8 +575,9 @@ install_virtualmin_release () {
 			fi
       log_info "apt-get repos: ${repos}"
       for repo in $repos; do
-				echo "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/apt ${repo} main" >> /etc/apt/sources.list
+				printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
 			done
+      run_ok "apt-get update" "Downloading Virtualmin repository metadata"
 			# Make sure universe repos are available
 			# XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
 			run_ok "sed -ie 's/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
@@ -623,13 +624,6 @@ install_with_apt () {
 		log_warning "http://www.virtualmin.com/os-support"
 		fatal "Installation failed: $?"
 	fi
-
-	# XXX Maybe we can use --trivial-only to avoid starting services?
-  # Disable some things by default
-  update-rc.d spamassassin disable
-  service spamassassin stop
-  update-rc.d clamav-daemon disable
-  service clamav-daemon stop
 
   # Make sure the time is set properly
   /usr/sbin/ntpdate-debian
