@@ -28,8 +28,8 @@
 
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
-Debian 7 and 8 on i386 and amd64
-Ubuntu 14.04 LTS and 16.04 LTS, on i386 and amd64"
+    Debian 7 and 8 on i386 and amd64
+    Ubuntu 14.04 LTS and 16.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -51,8 +51,8 @@ while [ "$1" != "" ]; do
     echo
     printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
     printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
-    printf "  ${YELLOW}--force|-f:${NORMAL} - Skip confirmation message\n"
-    printf "  ${YELLOW}--hostname|-host${NORMAL} - Set fully qualified hostname\n"
+    printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
+    printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
     printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
     #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
     echo
