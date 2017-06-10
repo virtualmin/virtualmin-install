@@ -44,8 +44,8 @@ https://www.virtualmin.com/buy/virtualmin
 
 Download it to your server from git:
 
-    # wget -O https://raw.githubusercontent.com/virtualmin/virtualmin-install/master/virtualmin-install.sh
-    # /bin/sh virtualmin-install.sh
+    # wget -O install.sh https://raw.githubusercontent.com/virtualmin/virtualmin-install/master/virtualmin-install.sh
+    # /bin/sh install.sh
     
 If you're using Virtualmin Professional, you'll need to update the KEY and SERIAL variables inside the script (lines 171 and 172). Get that info from your Software Licenses page under Account on Virtualmin.com.
 
