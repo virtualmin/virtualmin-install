@@ -142,7 +142,7 @@ printf "found Perl at $perl\n" >> $log
 printf "Checking for HTTP client..." >> $log
 while true; do
   if [ -x "/usr/bin/curl" ]; then
-    download="/usr/bin/curl -s -L -O"
+    download="/usr/bin/curl -f -s -L -O"
     break
   elif [ -x "/usr/bin/wget" ]; then
     download="/usr/bin/wget -nv"
