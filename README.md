@@ -53,9 +53,22 @@ Please file tickets, either here or at Virtualmin.com, about bugs you find. The 
 
 # How to contribute
 
-Wrap your head around how install.sh does its job (requires a "virtualmin-base" package for your distro/version and 
-a software repository, all of which will be documented in their respective git repos). Ask questions if you're not sure what's going on.
+Wrap your head around how install.sh does its job (mostly by setting up package repositories and installed metapackages or yum groups). Ask questions if you're not sure what's going on.
 
 Pick your favorite distro or OS, and start coding and packaging for it! I'm usually happy to devote time and resources 
 to helping make Virtualmin work on other systems. I just don't have the time/resources to maintain more than the 
 most popular server operating systems myself.
+
+# See also
+
+These are the tools the shell script uses to actually perform the installation and configuration. It sets up package repositories, installs the yum groups or the metapackages, and then uses Virtualmin-Config to perform the initial configuration steps, like turning on services, making service configuration changes, etc.
+
+[Virtualmin-Config: a post-modern post-installation configuration tool](https://github.com/virtualmin/Virtualmin-Config)
+
+[virtualmin-yum-groups: Package groups for CentOS and Fedora](https://github.com/virtualmin/virtualmin-yum-groups)
+
+[virtualmin-lamp-stack-deb: Metapackage for the LAMP stack on Debian](https://github.com/virtualmin/virtualmin-lamp-stack-deb)
+
+[virtualmin-lamp-stack-ubu: Metapackage for the LAMP stack on Ubuntu](https://github.com/virtualmin/virtualmin-lamp-stack-ubu)
+
+[virtualmin-core-deb: Metapackage for the Virtualmin core packages](https://github.com/virtualmin/virtualmin-core-deb)
