@@ -1,7 +1,7 @@
 # virtualmin-install
 Shell script to perform a Virtualmin GPL or Professional installation
 
-**The version here in git is an alpha release of the Virtualmin installer. For the production quality version (which installs the stable Virtualmin 5 rather than Virtualmin 6 alpha that is installed by this) go to [Virtualmin.com](https://www.virtualmin.com/download).**
+**The version here in git is a beta release of the Virtualmin 6 installer. For the production quality version (which installs the stable Virtualmin 5, with most of the core Virtualmin 6 features, rather than Virtualmin 6 beta that is installed by this) go to [Virtualmin.com](https://www.virtualmin.com/download).**
 
 # How it Works
 The script relies on our software repositories on software.virtualmin.com in order to function. You'll need internet access.
