@@ -313,9 +313,9 @@ is_installed () {
 uninstall () {
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if which rpm>/dev/null; then package_type=rpm
-elif which dpkg>/dev/null; then package_type=deb
-fi
+  if which rpm &>/dev/null; then package_type=rpm
+  elif which dpkg &>/dev/null; then package_type=deb
+  fi
 
 case "$package_type" in
   rpm)
@@ -525,7 +525,7 @@ install_virtualmin_release () {
     fi
   fi
   package_type="rpm"
-  if which dnf; then
+  if which dnf &>/dev/null; then
     install="dnf -y install"
     install_cmd="dnf"
     if [ "$mode" = "full" ]; then
