@@ -28,7 +28,7 @@
 
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
-    Debian 7 and 8 on i386 and amd64
+    Debian 7, 8, and 9, on i386 and amd64
     Ubuntu 14.04 LTS and 16.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -569,6 +569,9 @@ install_virtualmin_release () {
       ;;
       8*)
       repos="virtualmin-jessie virtualmin-universal"
+      ;;
+      9*)
+      repos="virtualmin-stretch virtualmin-universal"
       ;;
     esac
   fi
