@@ -198,8 +198,8 @@ rhgroup="'Virtualmin LAMP Stack'"
 #rhnginxgroup="'Virtualmin LEMP Stack'"
 sclgroup="'Software Collections PHP 7 Environment'"
 # Debian
-debdeps="virtualmin-lamp-stack"
-ubudeps="virtualmin-lamp-stack"
+debdeps="postfix virtualmin-lamp-stack"
+ubudeps="postfix virtualmin-lamp-stack"
 
 # Find temp directory
 if [ -z "$TMPDIR" ]; then
