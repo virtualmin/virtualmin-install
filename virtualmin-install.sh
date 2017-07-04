@@ -739,8 +739,8 @@ esac
 
 # Reap any clingy processes (like spinner forks)
 allpids="$(ps -o pid= --ppid $$) $allpids"
-kill "$allpids" 2>/dev/null
-kill "$config_system_pid" 2>/dev/null
+kill "$allpids" &>/dev/null
+kill "$config_system_pid" &>/dev/null
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm
 
