@@ -582,7 +582,7 @@ install_virtualmin_release () {
   run_ok "apt-get update" "Downloading Virtualmin repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
-  run_ok "sed -ie 's/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
+  run_ok "sed -ie '/backports/b; s/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
@@ -738,8 +738,10 @@ case "$os_type" in
 esac
 
 # Reap any clingy processes (like spinner forks)
+# get the parent pids (as those are the problem)
 allpids="$(ps -o pid= --ppid $$) $allpids"
 kill "$allpids" &>/dev/null
+# kill the virtualmin config-system command, if it's still running
 kill "$config_system_pid" &>/dev/null
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm
