@@ -313,8 +313,8 @@ is_installed () {
 uninstall () {
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if which rpm &>/dev/null; then package_type=rpm
-  elif which dpkg &>/dev/null; then package_type=deb
+  if which rpm 1>/dev/null 2>&1; then package_type=rpm
+  elif which 1>/dev/null 2>&1; then package_type=deb
   fi
 
 case "$package_type" in
@@ -525,7 +525,7 @@ install_virtualmin_release () {
     fi
   fi
   package_type="rpm"
-  if which dnf &>/dev/null; then
+  if which dnf 1>/dev/null 2>&1; then
     install="dnf -y install"
     install_cmd="dnf"
     if [ "$mode" = "full" ]; then
@@ -740,9 +740,11 @@ esac
 # Reap any clingy processes (like spinner forks)
 # get the parent pids (as those are the problem)
 allpids="$(ps -o pid= --ppid $$) $allpids"
-kill "$allpids" &>/dev/null
+for pid in $allpids; do
+  kill "$pid" 1>/dev/null 2>&1
+done
 # kill the virtualmin config-system command, if it's still running
-kill "$config_system_pid" &>/dev/null
+kill "$config_system_pid" 1>/dev/null 2>&1
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm
 
