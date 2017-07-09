@@ -314,7 +314,7 @@ uninstall () {
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
   if which rpm 1>/dev/null 2>&1; then package_type=rpm
-  elif which 1>/dev/null 2>&1; then package_type=deb
+  elif which dpkg 1>/dev/null 2>&1; then package_type=deb
   fi
 
 case "$package_type" in
