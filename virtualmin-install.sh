@@ -322,14 +322,14 @@ case "$package_type" in
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
   yum remove -y virtualmin-base
-  yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns
+  yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite
   yum remove -y wbt-virtual-server-mobile
   yum remove -y webmin usermin awstats
   os_type="centos"
   ;;
   deb)
   dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
-  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit
+  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtuamlin-sqlite
   dpkg --purge webmin-virtual-server-mobile
   dpkg --purge webmin usermin
   os_type="debian"
