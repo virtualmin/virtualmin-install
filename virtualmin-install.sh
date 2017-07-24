@@ -748,6 +748,14 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm
 
+# Cleanup the tmp files
+if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
+  log_info "Cleaning up temporary files in $tmpdir."
+  find "$tempdir" -delete
+else
+  log_error "Could not safely clean up temporary files because TMPDIR set to $tempdir."
+fi
+
 if [ ! -z "$QUOTA_FAILED" ]; then
   log_warning "Quotas were not configurable. A reboot may be required. Or, if this is"
   log_warning "a VM, configuration may be required at the host level."
