@@ -322,14 +322,14 @@ case "$package_type" in
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
   yum remove -y virtualmin-base
-  yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite
+  yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
   yum remove -y wbt-virtual-server-mobile
   yum remove -y webmin usermin awstats
   os_type="centos"
   ;;
   deb)
   dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
-  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtuamlin-sqlite
+  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtuamlin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
   dpkg --purge webmin usermin
   os_type="debian"
@@ -360,7 +360,7 @@ cat <<EOF
   installed supported Operating System. We strongly recommend you use
   the latest supported version of your preferred distribution.
 
-  Please read the Virtualmin Installation Guide before proceeding if
+  Please read the Virtualmin Installation Documentation before proceeding if
   your system is not a freshly installed and supported OS.
 
   This script does not update or upgrade Virtualmin! It should only be
@@ -586,7 +586,7 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --force-yes install"
+  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --allow-change-held --with-new-pkgs install"
   export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
