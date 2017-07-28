@@ -40,6 +40,10 @@ RED="$(tput setaf 1)"
 YELLOW="$(tput setaf 3)"
 CYAN="$(tput setaf 6)"
 NORMAL="$(tput sgr0)"
+
+# Set defaults
+BUNDLE='LAMP'
+
 while [ "$1" != "" ]; do
   case $1 in
     --help|-h)
@@ -54,6 +58,8 @@ while [ "$1" != "" ]; do
     printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
     printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
     printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
+    printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation)\n"
+    printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (default: LAMP)\n"
     #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
     echo
     exit 0
@@ -74,6 +80,11 @@ while [ "$1" != "" ]; do
     shift
     VERBOSE=1
     ;;
+    --setup|-s)
+    shift
+    install_virtualmin_release
+    exit $?
+    ;;
     --disable)
     shift
     case "$1" in
@@ -91,14 +102,28 @@ while [ "$1" != "" ]; do
       ;;
     esac
     ;;
+    --bundle)
+    shift
+    case "$1" in
+      LAMP)
+      shift
+      BUNDLE='LAMP'
+      ;;
+      LEMP)
+      shift
+      BUNDLE='LEMP'
+      ;;
+      *)
+      printf "Unknown bundle ${YELLOW}$1${NORMAL}: exiting\n"
+      exit 1
+      ;;
+    esac
+    ;;
     *)
     ;;
   esac
   shift
 done
-
-# Should be configurable, once LEMP stack is configurable with virtualmin-config
-config_bundle="LAMP"
 
 # Make sure Perl is installed
 printf "Checking for Perl..." >> $log
@@ -193,13 +218,17 @@ fi
 vmgroup="'Virtualmin Core'"
 debvmpackages="virtualmin-core"
 deps=
-# Red Hat-based systems XXX Need switch for nginx
-rhgroup="'Virtualmin LAMP Stack'"
-#rhnginxgroup="'Virtualmin LEMP Stack'"
 sclgroup="'Software Collections PHP 7 Environment'"
-# Debian
-debdeps="postfix virtualmin-lamp-stack"
-ubudeps="postfix virtualmin-lamp-stack"
+
+if [ "$BUNDLE" = 'LAMP' ]; then
+  rhgroup="'Virtualmin LAMP Stack'"
+  debdeps="postfix virtualmin-lamp-stack"
+  ubudeps="postfix virtualmin-lamp-stack"
+elif [ "$BUNDLE" = 'LEMP' ]; then
+  rhgroup="'Virtualmin LEMP Stack'"
+  debdeps="postfix virtualmin-lemp-stack"
+  ubudeps="postfix virtualmin-lemp-stack"
+fi
 
 # Find temp directory
 if [ -z "$TMPDIR" ]; then
@@ -268,7 +297,7 @@ fatal () {
   printf "${RED}Cannot continue installation.${NORMAL}\n"
   remove_virtualmin_release
   if [ -x "$tempdir" ]; then
-    log_fatal "Removing temporary directory and files."
+    log_warning "Removing temporary directory and files."
     rm -rf "$tempdir"
   fi
   log_fatal "If you are unsure of what went wrong, you may wish to review the log"
@@ -356,18 +385,14 @@ cat <<EOF
 
   Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
-  The installation is quite stable and functional when run on a freshly
-  installed supported Operating System. We strongly recommend you use
-  the latest supported version of your preferred distribution.
+  The installation should be run on a freshly installed supported Operating
+  System. We recommend you use the latest supported version of your preferred
+  Linux distribution. Please read the Virtualmin Installation Documentation
+  before proceeding if your system is not a freshly installed and supported OS.
 
-  Please read the Virtualmin Installation Documentation before proceeding if
-  your system is not a freshly installed and supported OS.
-
-  This script does not update or upgrade Virtualmin! It should only be
-  used to perform your initial Virtualmin installation. Updates and
-  upgrades can be performed from within Virtualmin or via the system
-  package manager. License changes can be performed with the
-  "virtualmin change-license" command.
+  This script does not update or upgrade Virtualmin! Updates and upgrades can
+  be performed from within Virtualmin or via the system package manager.
+  License changes can be performed using "virtualmin change-license".
 
   The systems currently supported by install.sh are:
 
@@ -375,7 +400,7 @@ EOF
 echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
 
-  If your OS/version is not listed above, this script will fail. More
+  If your OS/version is not listed above, installation ${RED}will fail{NORMAL}. More
   details about the systems supported by the script can be found here:
 
   ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
@@ -713,7 +738,8 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 install_virtualmin_release
 install_virtualmin
-virtualmin-config-system --bundle "$config_bundle"
+log_info "Package installation completed. Beginning configuration..."
+virtualmin-config-system --bundle "$BUNDLE"
 config_system_pid=$!
 
 # We want to make sure we're running our version of packages if we have
