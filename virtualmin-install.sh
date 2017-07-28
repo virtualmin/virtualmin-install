@@ -48,8 +48,7 @@ while [ "$1" != "" ]; do
   case $1 in
     --help|-h)
     # shellcheck disable=SC2046
-    printf "Usage: %s %s " "${CYAN}" $(basename "$0")
-    printf "${YELLOW}[--uninstall|-u|--help|-h|--force|-f|--hostname]${NORMAL}\n"
+    printf "Usage: %s %s [options]" "${CYAN}" $(basename "$0")
     echo
     echo "  If called without arguments, installs Virtualmin Professional."
     echo
@@ -65,6 +64,7 @@ while [ "$1" != "" ]; do
     exit 0
     ;;
     --uninstall|-u)
+    shift
     mode="uninstall"
     ;;
     --force|-f|--yes|-y)
@@ -122,7 +122,6 @@ while [ "$1" != "" ]; do
     *)
     ;;
   esac
-  shift
 done
 
 # Make sure Perl is installed
@@ -611,7 +610,7 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --with-new-pkgs install"
+  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y install"
   export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
