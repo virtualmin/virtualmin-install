@@ -611,7 +611,7 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --allow-change-held --with-new-pkgs install"
+  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y --with-new-pkgs install"
   export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
