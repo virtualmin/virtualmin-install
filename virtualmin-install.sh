@@ -400,7 +400,7 @@ EOF
 echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
 
-  If your OS/version is not listed above, installation ${RED}will fail{NORMAL}. More
+  If your OS/version is not listed above, installation ${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
   ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
@@ -420,7 +420,7 @@ already_installed_msg() {
   if is_installed; then
 cat <<EOF
 
-  ${REDBG}WARNING${NORMAL}
+                       ${REDBG}WARNING${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation failed,
   and can be ignored in that case.
@@ -678,17 +678,6 @@ install_with_yum () {
 
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
-  return 0
-}
-
-install_deps_the_hard_way () {
-  # XXX Don't need for rpm distros, need to get metapackages for deb
-  # to remove it completely/
-  return 0
-  run_ok "$install $deps" "Installing dependencies"
-  if [ $? -ne 0 ]; then
-    fatal "Something went wrong during installation: $?"
-  fi
   return 0
 }
 
