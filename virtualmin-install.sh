@@ -272,6 +272,8 @@ LOG_PATH="$log"
 # Setup run_ok
 # shellcheck disable=SC2034
 RUN_LOG="$log"
+# Exit on any failure during shell stage
+RUN_ERRORS_FATAL=1
 
 # Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
@@ -419,7 +421,7 @@ already_installed_msg() {
   if is_installed; then
 cat <<EOF
 
-                       ${REDBG}WARNING${NORMAL}
+                             ${REDBG}WARNING${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation failed,
   and can be ignored in that case.
