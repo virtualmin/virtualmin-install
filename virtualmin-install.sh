@@ -359,7 +359,7 @@ case "$package_type" in
   ;;
   deb)
   dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
-  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtuamlin-sqlite webmin-virtualmin-svn
+  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
   dpkg --purge webmin usermin
   os_type="debian"
