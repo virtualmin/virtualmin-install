@@ -273,6 +273,7 @@ LOG_PATH="$log"
 # shellcheck disable=SC2034
 RUN_LOG="$log"
 # Exit on any failure during shell stage
+# shellcheck disable=SC2034
 RUN_ERRORS_FATAL=1
 
 # Console output level; ignore debug level messages.
@@ -351,6 +352,7 @@ case "$package_type" in
   rpm)
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
+  yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LEMP Stack"
   yum remove -y virtualmin-base
   yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
   yum remove -y wbt-virtual-server-mobile
@@ -358,7 +360,7 @@ case "$package_type" in
   os_type="centos"
   ;;
   deb)
-  dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack
+  dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
   dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
   dpkg --purge webmin usermin
@@ -427,9 +429,11 @@ cat <<EOF
   and can be ignored in that case.
 
   But, if Virtualmin has already successfully installed you should not run this
-  script again. Updates and upgrade can be performed from within Virtualmin.
+  script again! It will cause breakage to your existing configuration.
 
-  To change license details, use the 'virtualmin change-license' command.
+  Updates and upgrades can be performed from within Virtualmin. To change
+  license details, use the 'virtualmin change-license' command.
+
   Changing the license never requires re-installation.
 
 EOF
@@ -726,15 +730,28 @@ install_scl_php () {
 
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
+errors=$((0))
 install_virtualmin_release
 install_virtualmin
+if [ "$?" != "0" ]; then
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
+  errors=$((errors + 1))
+fi
 log_info "Package installation completed. Beginning configuration..."
 virtualmin-config-system --bundle "$BUNDLE"
 config_system_pid=$!
+if [ "$?" != "0" ]; then
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"
+  errors=$((errors + 1))
+fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
 run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
+if [ "$?" != "0" ]; then
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\n"
+  errors=$((errors + 1))
+fi
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
@@ -777,8 +794,16 @@ if [ ! -z "$QUOTA_FAILED" ]; then
   log_warning "a VM, configuration may be required at the host level."
 fi
 echo
-log_success "Installation Complete!"
-log_success "If there were no errors above, Virtualmin should be ready"
-log_success "to configure on port 10000."
+if [ $errors -eq "0" ]; then
+  log_success "Installation Complete!"
+  log_success "If there were no errors above, Virtualmin should be ready"
+  log_success "to configure on port 10000."
+else
+  log_warning "The following errors occurred during installation:"
+  echo
+  printf "$errorlist"
+  log_warning "The last few lines of the log file were:"
+  tail -15 $RUN_LOG
+fi
 
 exit 0
