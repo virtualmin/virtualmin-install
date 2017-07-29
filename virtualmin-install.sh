@@ -786,7 +786,7 @@ tput cnorm
 
 # Cleanup the tmp files
 if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
-  log_info "Cleaning up temporary files in $tmpdir."
+  log_debug "Cleaning up temporary files in $tempdir."
   find "$tempdir" -delete
 else
   log_error "Could not safely clean up temporary files because TMPDIR set to $tempdir."
@@ -800,7 +800,7 @@ echo
 if [ $errors -eq "0" ]; then
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready"
-  log_success "to configure on port 10000."
+  log_success "to configure at https://$name:10000."
 else
   log_warning "The following errors occurred during installation:"
   echo
