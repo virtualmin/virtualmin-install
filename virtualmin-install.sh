@@ -357,6 +357,7 @@ case "$package_type" in
   yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
   yum remove -y wbt-virtual-server-mobile
   yum remove -y webmin usermin awstats
+  yum check-update
   os_type="centos"
   ;;
   deb)
@@ -567,6 +568,7 @@ install_virtualmin_release () {
     install="/usr/bin/yum -y install"
     install_cmd="/usr/bin/yum"
     # XXX Dumb new thing in new yum versions?
+    run_ok "yum check-update" "Updating yum metadata"
     if [ "$os_major_version" -ge 7 ]; then
       run_ok "yum --quiet groups mark convert" "Updating yum Groups"
     fi
@@ -670,6 +672,7 @@ install_with_yum () {
     install_scl_php
   fi
 
+  run_ok "yum check-update" "Updating yum metadata for Virtualmin repos"
   # XXX This is so stupid. Why does yum insist on extra commands?
   if [ "$os_major_version" -ge 7 ]; then
     run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
