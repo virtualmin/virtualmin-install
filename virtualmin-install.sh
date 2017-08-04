@@ -500,7 +500,8 @@ if [ "$?" != "0" ]; then
 fi
 
 log_info "Started installation log in $log"
-log_info "Phase 1 of 3: Setup"
+log_debug "Phase 1 of 3: Setup"
+printf "Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
 
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
@@ -708,7 +709,6 @@ install_with_yum () {
 }
 
 install_virtualmin () {
-  log_info "Phase 2 of 3: Installation"
   case "$package_type" in
     rpm)
     install_with_yum
@@ -754,16 +754,11 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
 install_virtualmin_release
+log_debug "Phase 2 of 3: Installation"
+printf "Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
-  errors=$((errors + 1))
-fi
-log_info "Phase 3 of 3: Configuration"
-virtualmin-config-system --bundle "$BUNDLE"
-config_system_pid=$!
-if [ "$?" != "0" ]; then
-  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"
   errors=$((errors + 1))
 fi
 
@@ -772,6 +767,19 @@ fi
 run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\n"
+  errors=$((errors + 1))
+fi
+
+# Final step is configuration. Wait here for a moment, hopefully letting any
+# apt processes disappear before we start, as they're huge and memory is a
+# problem. XXX This is hacky. I'm not sure what's really causing random fails.
+sleep 1
+log_debug "Phase 3 of 3: Configuration"
+printf "Phase ${YELLOW}3{$NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
+virtualmin-config-system --bundle "$BUNDLE"
+config_system_pid=$!
+if [ "$?" != "0" ]; then
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"
   errors=$((errors + 1))
 fi
 
