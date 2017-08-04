@@ -82,8 +82,8 @@ while [ "$1" != "" ]; do
     ;;
     --setup|-s)
     shift
-    install_virtualmin_release
-    exit $?
+    mode="setup"
+    break
     ;;
     --disable)
     shift
@@ -657,6 +657,10 @@ esac
 
 return 0
 }
+if [ "$mode" = "setup" ]; then
+  install_virtualmin_release
+  exit $?
+fi
 
 # Install Functions
 install_with_apt () {
