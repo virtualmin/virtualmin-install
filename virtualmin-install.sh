@@ -343,7 +343,7 @@ is_installed () {
 # can run the installer again.
 uninstall () {
   # Very destructive, ask first.
-  printf "${REDBG}WARNING${NORMAL}"
+  printf "${REDBG}WARNING${NORMAL}\n"
   echo
   echo "This operation is very destructive. It removes nearly all of the packages"
   echo "installed by the Virtualmin installer. Never run this on a production system."
@@ -418,7 +418,7 @@ cat <<EOF
   If your OS/version is not listed above, installation ${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
-  ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
+    ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
 
 EOF
   printf " Continue? (y/n) "
@@ -498,6 +498,7 @@ if [ "$?" != "0" ]; then
 fi
 
 log_info "Started installation log in $log"
+log_info "Phase 1 of 3: Setup"
 
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
@@ -701,6 +702,7 @@ install_with_yum () {
 }
 
 install_virtualmin () {
+  log_info "Phase 2 of 3: Installation"
   case "$package_type" in
     rpm)
     install_with_yum
@@ -751,7 +753,7 @@ if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
   errors=$((errors + 1))
 fi
-log_info "Package installation completed. Beginning configuration..."
+log_info "Phase 3 of 3: Configuration"
 virtualmin-config-system --bundle "$BUNDLE"
 config_system_pid=$!
 if [ "$?" != "0" ]; then
