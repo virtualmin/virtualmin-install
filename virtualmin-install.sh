@@ -342,6 +342,17 @@ is_installed () {
 # anything.  It is primarily useful for cleaning up a botched install, so you
 # can run the installer again.
 uninstall () {
+  # Very destructive, ask first.
+  printf "${REDBG}WARNING${NORMAL}"
+  echo
+  echo "This operation is very destructive. It removes nearly all of the packages"
+  echo "installed by the Virtualmin installer. Never run this on a production system."
+  echo
+  printf " Continue? (y/n) "
+  if ! yesno; then
+    exit
+  fi
+
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
   if which rpm 1>/dev/null 2>&1; then package_type=rpm
