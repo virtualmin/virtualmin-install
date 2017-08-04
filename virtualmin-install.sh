@@ -369,6 +369,7 @@ case "$package_type" in
   yum remove -y wbt-virtual-server-mobile
   yum remove -y virtualmin-config perl-Term-Spinner-Color
   yum remove -y webmin usermin awstats
+  yum remove -y fail2ban
   yum clean all; yum clean all
   os_type="centos"
   ;;
@@ -377,6 +378,7 @@ case "$package_type" in
   dpkg --purge virtualmin-config libterm-spinner-color-perl
   dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
+  dpkg --purge fail2ban
   dpkg --purge webmin usermin
   os_type="debian"
   apt-get clean
@@ -622,7 +624,7 @@ install_virtualmin_release () {
       ;;
     esac
   fi
-  log_info "apt-get repos: ${repos}"
+  log_debug "apt-get repos: ${repos}"
   for repo in $repos; do
     printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
   done
@@ -770,6 +772,13 @@ if [ "$?" != "0" ]; then
   errors=$((errors + 1))
 fi
 
+# Reap any clingy processes (like spinner forks)
+# get the parent pids (as those are the problem)
+allpids="$(ps -o pid= --ppid $$) $allpids"
+for pid in $allpids; do
+  kill "$pid" 1>/dev/null 2>&1
+done
+
 # Final step is configuration. Wait here for a moment, hopefully letting any
 # apt processes disappear before we start, as they're huge and memory is a
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
@@ -800,12 +809,7 @@ case "$os_type" in
   ;;
 esac
 
-# Reap any clingy processes (like spinner forks)
-# get the parent pids (as those are the problem)
-allpids="$(ps -o pid= --ppid $$) $allpids"
-for pid in $allpids; do
-  kill "$pid" 1>/dev/null 2>&1
-done
+
 # kill the virtualmin config-system command, if it's still running
 kill "$config_system_pid" 1>/dev/null 2>&1
 # Make sure the cursor is back (if spinners misbehaved)
