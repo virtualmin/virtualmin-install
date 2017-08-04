@@ -775,7 +775,7 @@ fi
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
 log_debug "Phase 3 of 3: Configuration"
-printf "Phase ${YELLOW}3{$NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
+printf "Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
 virtualmin-config-system --bundle "$BUNDLE"
 config_system_pid=$!
 if [ "$?" != "0" ]; then
