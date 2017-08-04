@@ -82,7 +82,7 @@ while [ "$1" != "" ]; do
     ;;
     --setup|-s)
     shift
-    mode="setup"
+    setup_only=1
     break
     ;;
     --disable)
@@ -367,12 +367,14 @@ case "$package_type" in
   yum remove -y virtualmin-base
   yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
   yum remove -y wbt-virtual-server-mobile
+  yum remove -y virtualmin-config perl-Term-Spinner-Color
   yum remove -y webmin usermin awstats
   yum clean all; yum clean all
   os_type="centos"
   ;;
   deb)
   dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
+  dpkg --purge virtualmin-config libterm-spinner-color-perl
   dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
   dpkg --purge webmin usermin
@@ -657,7 +659,7 @@ esac
 
 return 0
 }
-if [ "$mode" = "setup" ]; then
+if [ ! -z "$setup_only" ]; then
   install_virtualmin_release
   exit $?
 fi
