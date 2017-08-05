@@ -511,6 +511,7 @@ if [ "$?" != "0" ]; then
 fi
 
 log_info "Started installation log in $log"
+echo
 log_debug "Phase 1 of 3: Setup"
 printf "Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
 
@@ -644,7 +645,7 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="/usr/bin/apt-get --config-file apt.conf.noninteractive -y install"
+  install="/usr/bin/apt-get --quiet --assume-no install"
   export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
@@ -765,6 +766,7 @@ install_scl_php () {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
 install_virtualmin_release
+echo
 log_debug "Phase 2 of 3: Installation"
 printf "Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
 install_virtualmin
@@ -792,6 +794,7 @@ done
 # apt processes disappear before we start, as they're huge and memory is a
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
+echo
 log_debug "Phase 3 of 3: Configuration"
 printf "Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
 virtualmin-config-system --bundle "$BUNDLE"
