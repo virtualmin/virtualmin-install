@@ -466,6 +466,15 @@ fi
 # XXX Should be a minimal option
 mode=full
 
+# Check memory
+if [ $mode = "full" ]; then
+  if ! memory_ok; then
+    log_fatal "Too little memory, and unable to create a swap file. Consider the --minimal"
+    log_fatal "install option, or adding memory or swap to your system."
+    exit 1
+  fi
+fi
+
 # Check for localhost in /etc/hosts
 grep localhost /etc/hosts >/dev/null
 if [ "$?" != 0 ]; then
