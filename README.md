@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/virtualmin/virtualmin-install.svg?branch=master)](https://travis-ci.org/virtualmin/virtualmin-install)
+
 # virtualmin-install
 Shell script to perform a Virtualmin GPL or Professional installation
 
