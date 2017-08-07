@@ -541,7 +541,7 @@ fi
 log_info "Started installation log in $log"
 echo
 log_debug "Phase 1 of 3: Setup"
-printf "Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
+printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
 
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
@@ -796,7 +796,7 @@ errors=$((0))
 install_virtualmin_release
 echo
 log_debug "Phase 2 of 3: Installation"
-printf "Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
+printf "${GREN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
@@ -824,7 +824,7 @@ done
 sleep 1
 echo
 log_debug "Phase 3 of 3: Configuration"
-printf "Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
+printf "${GREN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
@@ -858,6 +858,8 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm
 
+
+printf "${GREN}▣▣▣${NORMAL} Cleaning up\n"
 # Cleanup the tmp files
 if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
   log_debug "Cleaning up temporary files in $tempdir."
