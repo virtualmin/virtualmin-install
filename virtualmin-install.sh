@@ -42,7 +42,8 @@ CYAN="$(tput setaf 6)"
 NORMAL="$(tput sgr0)"
 
 # Set defaults
-BUNDLE='LAMP'
+bundle='LAMP' # Other option is LEMP
+mode='full' # Other option is minimal
 
 while [ "$1" != "" ]; do
   case $1 in
@@ -57,8 +58,9 @@ while [ "$1" != "" ]; do
     printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
     printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
     printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
-    printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation)\n"
-    printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (default: LAMP)\n"
+    printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
+    printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
+    printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\n"
     #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
     echo
     exit 0
@@ -85,6 +87,10 @@ while [ "$1" != "" ]; do
     setup_only=1
     break
     ;;
+    --minimal|-m)
+    shift
+    mode='minimal'
+    ;;
     --disable)
     shift
     case "$1" in
@@ -107,11 +113,11 @@ while [ "$1" != "" ]; do
     case "$1" in
       LAMP)
       shift
-      BUNDLE='LAMP'
+      bundle='LAMP'
       ;;
       LEMP)
       shift
-      BUNDLE='LEMP'
+      bundle='LEMP'
       ;;
       *)
       printf "Unknown bundle ${YELLOW}$1${NORMAL}: exiting\n"
@@ -219,14 +225,26 @@ debvmpackages="virtualmin-core"
 deps=
 sclgroup="'Software Collections PHP 7 Environment'"
 
-if [ "$BUNDLE" = 'LAMP' ]; then
-  rhgroup="'Virtualmin LAMP Stack'"
-  debdeps="postfix virtualmin-lamp-stack"
-  ubudeps="postfix virtualmin-lamp-stack"
-elif [ "$BUNDLE" = 'LEMP' ]; then
-  rhgroup="'Virtualmin LEMP Stack'"
-  debdeps="postfix virtualmin-lemp-stack"
-  ubudeps="postfix virtualmin-lemp-stack"
+if [ "$mode" = 'full' ]; then
+  if [ "$bundle" = 'LAMP' ]; then
+    rhgroup="'Virtualmin LAMP Stack'"
+    debdeps="postfix virtualmin-lamp-stack"
+    ubudeps="postfix virtualmin-lamp-stack"
+  elif [ "$bundle" = 'LEMP' ]; then
+    rhgroup="'Virtualmin LEMP Stack'"
+    debdeps="postfix virtualmin-lemp-stack"
+    ubudeps="postfix virtualmin-lemp-stack"
+  fi
+elif [ "$mode" = 'minimal' ]; then
+  if [ "$bundle" = 'LAMP' ]; then
+    rhgroup="'Virtualmin LAMP Stack Minimal'"
+    debdeps="postfix virtualmin-lamp-stack-minimal"
+    ubudeps="postfix virtualmin-lamp-stack-minimal"
+  elif [ "$bundle" = 'LEMP' ]; then
+    rhgroup="'Virtualmin LEMP Stack Minimal'"
+    debdeps="postfix virtualmin-lemp-stack-minimal"
+    ubudeps="postfix virtualmin-lemp-stack-minimal"
+  fi
 fi
 
 # Find temp directory
@@ -343,7 +361,7 @@ is_installed () {
 # can run the installer again.
 uninstall () {
   # Very destructive, ask first.
-  printf "${REDBG}WARNING${NORMAL}\n"
+  printf "                         ${REDBG}WARNING${NORMAL}\n"
   echo
   echo "This operation is very destructive. It removes nearly all of the packages"
   echo "installed by the Virtualmin installer. Never run this on a production system."
@@ -364,6 +382,8 @@ case "$package_type" in
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
   yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LEMP Stack"
+  yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack Minimal"
+  yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LEMP Stack Minimal"
   yum remove -y virtualmin-base
   yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
   yum remove -y wbt-virtual-server-mobile
@@ -375,6 +395,7 @@ case "$package_type" in
   ;;
   deb)
   dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
+  dpkg --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
   dpkg --purge virtualmin-config libterm-spinner-color-perl
   dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   dpkg --purge webmin-virtual-server-mobile
@@ -398,20 +419,22 @@ if [ "$mode" = "uninstall" ]; then
   uninstall
 fi
 
+# Calculate disk space requirements (this is a guess, for now)
+if [ "$mode" = 'minimal' ]; then
+  disk_space_required=400
+else
+  disk_space_required=500
+fi
+
 # Message to display in interactive mode
 install_msg() {
 cat <<EOF
 
   Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
 
-  The installation should be run on a freshly installed supported Operating
-  System. We recommend you use the latest supported version of your preferred
-  Linux distribution. Please read the Virtualmin Installation Documentation
-  before proceeding if your system is not a freshly installed and supported OS.
-
-  This script does not update or upgrade Virtualmin! Updates and upgrades can
-  be performed from within Virtualmin or via the system package manager.
-  License changes can be performed using "virtualmin change-license".
+  This script must be run on a freshly installed supported OS. It does not
+  perform updates or upgrades (use your system package manager) or license
+  changes (use the "virtualmin change-license" command).
 
   The systems currently supported by install.sh are:
 
@@ -419,12 +442,17 @@ EOF
 echo "${CYAN}$supported${NORMAL}"
 cat <<EOF
 
-  If your OS/version is not listed above, installation ${RED}will fail${NORMAL}. More
+  If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
     ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
 
+  The selected package bundle is ${CYAN}${bundle}${NORMAL} and the size of install is
+  ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} MB${NORMAL} of disk space.
+
+  Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
 EOF
+
   printf " Continue? (y/n) "
   if ! yesno; then
     exit
@@ -797,7 +825,10 @@ sleep 1
 echo
 log_debug "Phase 3 of 3: Configuration"
 printf "Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
-virtualmin-config-system --bundle "$BUNDLE"
+if [ "$mode" = "minimal" ]; then
+  bundle="Mini${bundle}"
+fi
+virtualmin-config-system --bundle "$bundle"
 config_system_pid=$!
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"

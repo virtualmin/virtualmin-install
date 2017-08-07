@@ -1,4 +1,4 @@
 before_install:
 - sudo apt-get update -qq
-- sudo apt-get install -qq perl shellcheck checkbashisms
+- sudo apt-get install -qq perl shellcheck devscripts
 script: prove
