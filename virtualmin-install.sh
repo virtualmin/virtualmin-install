@@ -229,11 +229,11 @@ if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
     debdeps="postfix virtualmin-lamp-stack"
-    ubudeps="postfix virtualmin-lamp-stack"
+    ubudeps="postfix fail2ban virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
     debdeps="postfix virtualmin-lemp-stack"
-    ubudeps="postfix virtualmin-lemp-stack"
+    ubudeps="postfix fail2ban virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
