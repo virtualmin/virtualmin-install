@@ -673,8 +673,8 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="/usr/bin/apt-get --quiet --assume-no install"
-  export DEBIAN_FRONTEND=noninteractive
+  install="/usr/bin/apt-get --quiet --assume-yes install"
+  #export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
   # Get the noninteractive apt-get configuration file (this is
@@ -796,7 +796,7 @@ errors=$((0))
 install_virtualmin_release
 echo
 log_debug "Phase 2 of 3: Installation"
-printf "${GREN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
+printf "${GREEN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
