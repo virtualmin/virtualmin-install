@@ -394,13 +394,13 @@ case "$package_type" in
   os_type="centos"
   ;;
   deb)
-  dpkg --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
-  dpkg --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
-  dpkg --purge virtualmin-config libterm-spinner-color-perl
-  dpkg --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
-  dpkg --purge webmin-virtual-server-mobile
-  dpkg --purge fail2ban
-  dpkg --purge webmin usermin
+  apt-get remove --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
+  apt-get remove --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
+  apt-get remove --purge virtualmin-config libterm-spinner-color-perl
+  apt-get remove --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
+  apt-get remove --purge webmin-virtual-server-mobile
+  apt-get remove --purge fail2ban
+  apt-get remove --purge webmin usermin
   os_type="debian"
   apt-get clean
   ;;
@@ -677,9 +677,6 @@ install_virtualmin_release () {
   #export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
-  # Get the noninteractive apt-get configuration file (this is
-  # stupid... -y ought to do all of this).
-  download "http://software.virtualmin.com/lib/apt.conf.noninteractive"
   sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
 
   # Install our keys
@@ -719,7 +716,7 @@ install_with_apt () {
   fi
 
   # Make sure the time is set properly
-  /usr/sbin/ntpdate-debian
+  /usr/sbin/ntpdate-debian 1>/dev/null 2>&1
 
   return 0
 }
@@ -824,7 +821,7 @@ done
 sleep 1
 echo
 log_debug "Phase 3 of 3: Configuration"
-printf "${GREN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
+printf "${GREEN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
@@ -859,7 +856,7 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 tput cnorm
 
 
-printf "${GREN}▣▣▣${NORMAL} Cleaning up\n"
+printf "${GREEN}▣▣▣${NORMAL} Cleaning up\n"
 # Cleanup the tmp files
 if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
   log_debug "Cleaning up temporary files in $tempdir."
