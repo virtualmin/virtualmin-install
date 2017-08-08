@@ -394,13 +394,15 @@ case "$package_type" in
   os_type="centos"
   ;;
   deb)
-  apt-get remove --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
-  apt-get remove --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
-  apt-get remove --purge virtualmin-config libterm-spinner-color-perl
-  apt-get remove --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
-  apt-get remove --purge webmin-virtual-server-mobile
-  apt-get remove --purge fail2ban
-  apt-get remove --purge webmin usermin
+  rm -rf /etc/fail2ban/jail.d/00-firewalld.conf
+  rm -f /etc/fail2ban/jail.local
+  apt-get remove --assume-yes --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
+  apt-get remove --assume-yes --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
+  apt-get remove --assume-yes --purge virtualmin-config libterm-spinner-color-perl
+  apt-get remove --assume-yes --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
+  apt-get remove --assume-yes --purge webmin-virtual-server-mobile
+  apt-get remove --assume-yes --purge fail2ban
+  apt-get remove --assume-yes --purge webmin usermin
   os_type="debian"
   apt-get clean
   ;;
