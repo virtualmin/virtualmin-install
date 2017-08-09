@@ -705,8 +705,8 @@ return 0
 }
 if [ ! -z "$setup_only" ]; then
   if install_virtualmin_release; then
-    log_success "Repository configuration successful. You can now install Virtualmin components using"
-    log_success "your OS package manager."
+    log_success "Repository configuration successful. You can now install Virtualmin"
+    log_success "components using your OS package manager."
   else
     log_error "Errors occurred during setup of Virtualmin software repositories. You may find more"
     log_error "information in ${RUN_LOG}."
