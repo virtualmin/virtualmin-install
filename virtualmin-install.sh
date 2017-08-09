@@ -85,6 +85,7 @@ while [ "$1" != "" ]; do
     --setup|-s)
     shift
     setup_only=1
+    mode='setup'
     break
     ;;
     --minimal|-m)
@@ -461,7 +462,7 @@ EOF
     exit
   fi
 }
-if [ "$skipyesno" -ne 1 ]; then
+if [ "$skipyesno" -ne 1 ] && [ "$setup_only" -ne 1 ]; then
   install_msg
 fi
 
@@ -490,15 +491,12 @@ EOF
     fi
   fi
 }
-if [ "$skipyesno" -ne 1 ]; then
+if [ "$skipyesno" -ne 1 ] && [ "$setup_only" -ne 1 ]; then
   already_installed_msg
 fi
 
-# XXX Should be a minimal option
-mode=full
-
 # Check memory
-if [ $mode = "full" ]; then
+if [ "$mode" = "full" ]; then
   if ! memory_ok; then
     log_fatal "Too little memory, and unable to create a swap file. Consider the --minimal"
     log_fatal "install option, or adding memory or swap to your system."
@@ -507,13 +505,15 @@ if [ $mode = "full" ]; then
 fi
 
 # Check for localhost in /etc/hosts
-grep localhost /etc/hosts >/dev/null
-if [ "$?" != 0 ]; then
-  log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
-  run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
-  if [ "$?" -ne 0 ]; then
-    log_error "Failed to configure a localhost entry in /etc/hosts."
-    log_error "This may cause problems, but we'll try to continue."
+if [ "$setup_only" -ne 1 ]; then
+  grep localhost /etc/hosts >/dev/null
+  if [ "$?" != 0 ]; then
+    log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
+    run_ok "echo 127.0.0.1 localhost >> /etc/hosts" "Editing /etc/hosts"
+    if [ "$?" -ne 0 ]; then
+      log_error "Failed to configure a localhost entry in /etc/hosts."
+      log_error "This may cause problems, but we'll try to continue."
+    fi
   fi
 fi
 
