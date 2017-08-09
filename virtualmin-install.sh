@@ -240,8 +240,8 @@ if [ "$mode" = 'full' ]; then
     ubudeps="postfix fail2ban virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
-    debdeps="postfix virtualmin-lemp-stack"
-    ubudeps="postfix fail2ban virtualmin-lemp-stack"
+    debdeps="postfix nginx-common nginx-full virtualmin-lemp-stack"
+    ubudeps="postfix nginx-common nginx-full fail2ban virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
@@ -411,6 +411,8 @@ case "$package_type" in
   apt-get remove --assume-yes --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
   apt-get remove --assume-yes --purge webmin-virtual-server-mobile
   apt-get remove --assume-yes --purge fail2ban
+  apt-get remove --assume-yes --purge apache2*
+  apt-get remove --assume-yes --purge nginx*
   apt-get remove --assume-yes --purge webmin usermin
   os_type="debian"
   apt-get clean
