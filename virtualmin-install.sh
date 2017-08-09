@@ -45,24 +45,28 @@ NORMAL="$(tput sgr0)"
 bundle='LAMP' # Other option is LEMP
 mode='full' # Other option is minimal
 
+usage () {
+  # shellcheck disable=SC2046
+  printf "Usage: %s %s [options]" "${CYAN}" $(basename "$0")
+  echo
+  echo "  If called without arguments, installs Virtualmin Professional."
+  echo
+  printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
+  printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
+  printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
+  printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
+  printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
+  printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
+  printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
+  printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\n"
+  #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
+  echo
+}
+
 while [ "$1" != "" ]; do
   case $1 in
     --help|-h)
-    # shellcheck disable=SC2046
-    printf "Usage: %s %s [options]" "${CYAN}" $(basename "$0")
-    echo
-    echo "  If called without arguments, installs Virtualmin Professional."
-    echo
-    printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
-    printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
-    printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
-    printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
-    printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
-    printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
-    printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
-    printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\n"
-    #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
-    echo
+    usage
     exit 0
     ;;
     --uninstall|-u)
@@ -127,6 +131,9 @@ while [ "$1" != "" ]; do
     esac
     ;;
     *)
+    echo "Unrecognized option."
+    usage
+    exit 1
     ;;
   esac
 done
