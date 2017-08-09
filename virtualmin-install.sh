@@ -462,6 +462,7 @@ cat <<EOF
   ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} MB${NORMAL} of disk space.
 
   Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
+
 EOF
 
   printf " Continue? (y/n) "
@@ -640,11 +641,7 @@ install_virtualmin_release () {
     if [ "$os_major_version" -ge 7 ]; then
       run_ok "yum --quiet groups mark convert" "Updating yum Groups"
     fi
-    if [ "$mode" = "full" ]; then
-      install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
-    else
-      install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory"
-    fi
+    install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
   fi
   download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
   run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
