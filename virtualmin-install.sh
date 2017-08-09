@@ -47,7 +47,7 @@ mode='full' # Other option is minimal
 
 usage () {
   # shellcheck disable=SC2046
-  printf "Usage: %s %s [options]" "${CYAN}" $(basename "$0")
+  printf "Usage: %s %s [options]\n" "${CYAN}" $(basename "$0")
   echo
   echo "  If called without arguments, installs Virtualmin Professional."
   echo
@@ -469,7 +469,7 @@ EOF
     exit
   fi
 }
-if [ "$skipyesno" -ne 1 ] && [ "$setup_only" -ne 1 ]; then
+if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
   install_msg
 fi
 
@@ -498,7 +498,7 @@ EOF
     fi
   fi
 }
-if [ "$skipyesno" -ne 1 ] && [ "$setup_only" -ne 1 ]; then
+if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
   already_installed_msg
 fi
 
@@ -512,7 +512,7 @@ if [ "$mode" = "full" ]; then
 fi
 
 # Check for localhost in /etc/hosts
-if [ "$setup_only" -ne 1 ]; then
+if [ -z "$setup_only" ]; then
   grep localhost /etc/hosts >/dev/null
   if [ "$?" != 0 ]; then
     log_warning "There is no localhost entry in /etc/hosts. This is required, so one will be added."
@@ -550,7 +550,7 @@ fi
 
 log_info "Started installation log in $log"
 echo
-if [ "$setup_only" -eq 1 ]; then
+if [ ! -z $setup_only ]; then
   log_debug "Phase 1 of 1: Setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\n"
 else
