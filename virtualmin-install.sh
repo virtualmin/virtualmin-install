@@ -543,8 +543,13 @@ fi
 
 log_info "Started installation log in $log"
 echo
-log_debug "Phase 1 of 3: Setup"
-printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
+if [ "$setup_only" -eq 1 ]; then
+  log_debug "Phase 1 of 1: Setup"
+  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\n"
+else
+  log_debug "Phase 1 of 3: Setup"
+  printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
+fi
 
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
@@ -699,7 +704,13 @@ esac
 return 0
 }
 if [ ! -z "$setup_only" ]; then
-  install_virtualmin_release
+  if install_virtualmin_release; then
+    log_success "Repository configuration successful. You can now install Virtualmin components using"
+    log_success "your OS package manager."
+  else
+    log_error "Errors occurred during setup of Virtualmin software repositories. You may find more"
+    log_error "information in ${RUN_LOG}."
+  fi
   exit $?
 fi
 
