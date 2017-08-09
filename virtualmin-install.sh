@@ -361,10 +361,11 @@ is_installed () {
 # can run the installer again.
 uninstall () {
   # Very destructive, ask first.
-  printf "                         ${REDBG}WARNING${NORMAL}\n"
   echo
-  echo "This operation is very destructive. It removes nearly all of the packages"
-  echo "installed by the Virtualmin installer. Never run this on a production system."
+  printf "  ${REDBG}WARNING${NORMAL}\n"
+  echo
+  echo "  This operation is very destructive. It removes nearly all of the packages"
+  echo "  installed by the Virtualmin installer. Never run this on a production system."
   echo
   printf " Continue? (y/n) "
   if ! yesno; then
@@ -469,7 +470,7 @@ already_installed_msg() {
   if is_installed; then
 cat <<EOF
 
-                             ${REDBG}WARNING${NORMAL}
+  ${REDBG}WARNING${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation failed,
   and can be ignored in that case.
@@ -716,7 +717,7 @@ install_with_apt () {
   fi
 
   # Make sure the time is set properly
-  /usr/sbin/ntpdate-debian 1>/dev/null 2>&1
+  /usr/sbin/ntpdate-debian 2>/dev/null 2>&1
 
   return 0
 }
@@ -767,7 +768,7 @@ install_epel_release () {
   if [ -z "$DISABLE_EPEL" ]; then
     download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-${os_major_version}.noarch.rpm"
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-${os_major_version}.noarch.rpm" "Installing EPEL release package"
-    rpm --quiet --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*"
+    rpm --quiet --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-*" 1>/dev/null 2>&1
   fi
 }
 
