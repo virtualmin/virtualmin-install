@@ -131,7 +131,7 @@ while [ "$1" != "" ]; do
     esac
     ;;
     *)
-    echo "Unrecognized option."
+    printf "Unrecognized option: $1\n\n"
     usage
     exit 1
     ;;
