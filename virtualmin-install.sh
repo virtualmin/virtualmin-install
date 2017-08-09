@@ -624,8 +624,6 @@ install_virtualmin_release () {
   else
     install="/usr/bin/yum -y install"
     install_cmd="/usr/bin/yum"
-    # XXX Dumb new thing in new yum versions?
-    run_ok "yum check-update" "Updating yum metadata"
     if [ "$os_major_version" -ge 7 ]; then
       run_ok "yum --quiet groups mark convert" "Updating yum Groups"
     fi
@@ -730,7 +728,6 @@ install_with_yum () {
     install_scl_php
   fi
 
-  run_ok "yum clean all; yum check-update" "Updating yum metadata for Virtualmin repos"
   # XXX This is so stupid. Why does yum insist on extra commands?
   if [ "$os_major_version" -ge 7 ]; then
     run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
