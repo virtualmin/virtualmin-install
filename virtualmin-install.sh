@@ -434,9 +434,9 @@ fi
 
 # Calculate disk space requirements (this is a guess, for now)
 if [ "$mode" = 'minimal' ]; then
-  disk_space_required=400
-else
   disk_space_required=500
+else
+  disk_space_required=650
 fi
 
 # Message to display in interactive mode
