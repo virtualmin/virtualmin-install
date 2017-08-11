@@ -54,7 +54,7 @@ usage () {
   printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
   printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
   printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
-  printf "  ${YELLOW}--hostname|-h${NORMAL} - Set fully qualified hostname\n"
+  printf "  ${YELLOW}--hostname|-n${NORMAL} - Set fully qualified hostname\n"
   printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
   printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
@@ -77,7 +77,7 @@ while [ "$1" != "" ]; do
     shift
     skipyesno=1
     ;;
-    --hostname|--host)
+    --hostname|-n)
     shift
     forcehostname=$1
     shift
@@ -113,7 +113,7 @@ while [ "$1" != "" ]; do
       ;;
     esac
     ;;
-    --bundle)
+    --bundle|-b)
     shift
     case "$1" in
       LAMP)
