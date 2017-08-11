@@ -702,6 +702,7 @@ install_virtualmin_release () {
   download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
   run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
   run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
+  run_ok "apt-get update" "Updating apt metadata"
   run_ok "apt-get -y --purge remove webmin-core" "Removing non-standard Webmin package, if installed"
   ;;
   *)
