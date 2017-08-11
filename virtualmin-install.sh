@@ -683,7 +683,7 @@ install_virtualmin_release () {
   for repo in $repos; do
     printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
   done
-  run_ok "apt-get update" "Downloading Virtualmin repository metadata"
+  run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
   run_ok "sed -ie '/backports/b; s/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
