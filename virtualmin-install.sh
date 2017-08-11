@@ -654,6 +654,7 @@ install_virtualmin_release () {
     deps="$ubudeps"
     case "$os_version" in
       14.04*)
+      run_ok "add-apt-repository ppa:ondrej/php" "Enabling PHP 7 PPA"
       repos="virtualmin-trusty virtualmin-universal"
       ;;
       16.04*)
