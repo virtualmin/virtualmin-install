@@ -732,7 +732,7 @@ install_with_apt () {
   # Install Webmin first, because it needs to be already done for the deps
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
-  if [ $bundle -eq 'LEMP' ]; then
+  if [ $bundle = 'LEMP' ]; then
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
   fi
   run_ok "$install ${debdeps}" "Installing OS packages that Virtualmin needs"
