@@ -668,6 +668,7 @@ install_virtualmin_release () {
       repos="virtualmin-wheezy virtualmin-universal"
       ;;
       8*)
+
       run_ok "apt-get install apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
       download 'https://packages.sury.org/php/apt.gpg'
       run_ok "cp apt.gpg /etc/apt/trusted.gpg.d/php.gpg" "Adding GPG key for PHP7 packages"
@@ -731,6 +732,9 @@ install_with_apt () {
   # Install Webmin first, because it needs to be already done for the deps
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
+  if [ $bundle -eq 'LEMP' ]; then
+    run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
+  fi
   run_ok "$install ${debdeps}" "Installing OS packages that Virtualmin needs"
   run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
   if [ $? -ne 0 ]; then
