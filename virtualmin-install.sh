@@ -237,11 +237,11 @@ if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
     debdeps="postfix virtualmin-lamp-stack"
-    ubudeps="postfix fail2ban virtualmin-lamp-stack"
+    ubudeps="postfix virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
     debdeps="postfix virtualmin-lemp-stack"
-    ubudeps="postfix fail2ban virtualmin-lemp-stack"
+    ubudeps="postfix virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
@@ -734,7 +734,7 @@ install_with_apt () {
   run_ok "$install usermin" "Installing Usermin"
   if [ $bundle = 'LEMP' ]; then
     # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban apache2; do
+    for s in fail2ban ipchains apache2; do
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
@@ -751,6 +751,12 @@ install_with_apt () {
     run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx and php packages before LAMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LAMP stack.'
   fi
+  # Create an override.conf to fix the stupidity in fail2ban.service
+  mkdir /etc/systemd/system/fail2ban.service.d
+  echo "[Unit]" > /etc/systemd/system/fail2ban.service.d/override.conf
+  echo "PartOf=" >> /etc/systemd/system/fail2ban.service.d/override.conf
+  echo "PartOf=firewalld.service" >> /etc/systemd/system/fail2ban.service.d/override.conf
+  systemctl reload-daemon
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
