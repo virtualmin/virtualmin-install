@@ -735,7 +735,9 @@ install_with_apt () {
   if [ $bundle = 'LEMP' ]; then
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
   fi
-  run_ok "$install ${debdeps}" "Installing OS packages that Virtualmin needs"
+  for d in ${depdeps}; do
+    run_ok "$install ${d}" "Installing $d"
+  done
   run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
