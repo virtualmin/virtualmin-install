@@ -734,7 +734,7 @@ install_with_apt () {
   run_ok "$install usermin" "Installing Usermin"
   if [ $bundle = 'LEMP' ]; then
     # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban firewalld apache2; do
+    for s in fail2ban apache2; do
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
@@ -744,7 +744,7 @@ install_with_apt () {
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   else
     # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban firewalld nginx; do
+    for s in fail2ban nginx; do
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
