@@ -240,8 +240,8 @@ if [ "$mode" = 'full' ]; then
     ubudeps="postfix fail2ban virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
-    debdeps="postfix nginx-common nginx-full virtualmin-lemp-stack"
-    ubudeps="postfix nginx-common nginx-full fail2ban virtualmin-lemp-stack"
+    debdeps="postfix virtualmin-lemp-stack"
+    ubudeps="postfix fail2ban virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
@@ -741,6 +741,8 @@ install_with_apt () {
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages before LEMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
   fi
+  run_ok "$install nginx-common" "Installing nginx-common"
+  sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
