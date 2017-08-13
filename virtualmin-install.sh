@@ -414,6 +414,7 @@ case "$package_type" in
   apt-get remove --assume-yes --purge apache2*
   apt-get remove --assume-yes --purge nginx*
   apt-get remove --assume-yes --purge webmin usermin
+  apt-get autoremove --assume-yes
   os_type="debian"
   apt-get clean
   ;;
@@ -732,12 +733,13 @@ install_with_apt () {
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
   if [ $bundle = 'LEMP' ]; then
+    # This is bloody awful. I can't believe how fragile dpkg is here.
     for s in fail2ban firewalld apache2; do
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
-    run_ok 'apt-get autoremove --assume-yes'
+    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages before LEMP installation.'
+    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
   fi
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
