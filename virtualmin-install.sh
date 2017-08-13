@@ -732,7 +732,12 @@ install_with_apt () {
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
   if [ $bundle = 'LEMP' ]; then
+    for s in fail2ban firewalld apache2; do
+      systemctl stop "$s" 2>>${RUN_LOG} 2>&1
+      systemctl disable "$s" 2>>${RUN_LOG} 2>&1
+    done
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
+    run_ok 'apt-get autoremove --assume-yes'
   fi
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
