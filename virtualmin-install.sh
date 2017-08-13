@@ -208,7 +208,7 @@ printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
 KEY=GPL
-VER=6.0.1
+VER=6.0.2
 vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
@@ -740,9 +740,9 @@ install_with_apt () {
     done
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages before LEMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
+    run_ok "$install nginx-common" "Installing nginx-common"
+    sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   fi
-  run_ok "$install nginx-common" "Installing nginx-common"
-  sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
