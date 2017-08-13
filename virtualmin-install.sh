@@ -756,7 +756,7 @@ install_with_apt () {
   echo "[Unit]" > /etc/systemd/system/fail2ban.service.d/override.conf
   echo "PartOf=" >> /etc/systemd/system/fail2ban.service.d/override.conf
   echo "PartOf=firewalld.service" >> /etc/systemd/system/fail2ban.service.d/override.conf
-  systemctl reload-daemon
+  systemctl daemon-reload
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
