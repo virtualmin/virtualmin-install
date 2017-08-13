@@ -208,7 +208,7 @@ printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
 KEY=GPL
-VER=6.0.0
+VER=6.0.1
 vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
