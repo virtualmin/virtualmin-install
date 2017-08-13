@@ -668,7 +668,6 @@ install_virtualmin_release () {
       repos="virtualmin-wheezy virtualmin-universal"
       ;;
       8*)
-
       run_ok "apt-get install apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
       download 'https://packages.sury.org/php/apt.gpg'
       run_ok "cp apt.gpg /etc/apt/trusted.gpg.d/php.gpg" "Adding GPG key for PHP7 packages"
@@ -735,7 +734,7 @@ install_with_apt () {
   if [ $bundle = 'LEMP' ]; then
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' "Removing apache2 and php packages before LEMP installation."
   fi
-  for d in ${depdeps}; do
+  for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
   run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
