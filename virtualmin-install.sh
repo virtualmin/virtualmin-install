@@ -208,7 +208,7 @@ printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
 KEY=GPL
-VER=6.0.2
+VER=6.0.3
 vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
@@ -234,24 +234,27 @@ deps=
 sclgroup="'Software Collections PHP 7 Environment'"
 
 if [ "$mode" = 'full' ]; then
+  # This has to be installed before anything else, so it can be disabled during
+  # install, and turned back on after. This is ridiculous.
+  debpredeps="fail2ban"
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
     debdeps="postfix virtualmin-lamp-stack"
     ubudeps="postfix virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
-    debdeps="postfix virtualmin-lemp-stack"
-    ubudeps="postfix virtualmin-lemp-stack"
+    debdeps="postfix php*-fpm virtualmin-lemp-stack"
+    ubudeps="postfix php*-fpm virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
-    debdeps="postfix virtualmin-lamp-stack-minimal"
-    ubudeps="postfix virtualmin-lamp-stack-minimal"
+    debdeps="postfix php*-fpm virtualmin-lamp-stack-minimal"
+    ubudeps="postfix php*-fpm virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
-    debdeps="postfix virtualmin-lemp-stack-minimal"
-    ubudeps="postfix virtualmin-lemp-stack-minimal"
+    debdeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
+    ubudeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
   fi
 fi
 
@@ -732,13 +735,16 @@ install_with_apt () {
   # Install Webmin first, because it needs to be already done for the deps
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
+  for d in $debpredeps; do
+    run_ok "$install $d" "Installing $d"
+  done
   if [ $bundle = 'LEMP' ]; then
     # This is bloody awful. I can't believe how fragile dpkg is here.
     for s in fail2ban ipchains apache2; do
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages before LEMP installation.'
+    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages (if installed) before LEMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
@@ -748,7 +754,7 @@ install_with_apt () {
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx and php packages before LAMP installation.'
+    run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx and php packages (if installed) before LAMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LAMP stack.'
   fi
   # Create an override.conf to fix the stupidity in fail2ban.service
