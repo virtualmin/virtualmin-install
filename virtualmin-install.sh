@@ -233,10 +233,11 @@ debvmpackages="virtualmin-core"
 deps=
 sclgroup="'Software Collections PHP 7 Environment'"
 
+# This has to be installed before anything else, so it can be disabled during
+# install, and turned back on after. This is ridiculous.
+debpredeps="fail2ban"
+
 if [ "$mode" = 'full' ]; then
-  # This has to be installed before anything else, so it can be disabled during
-  # install, and turned back on after. This is ridiculous.
-  debpredeps="fail2ban"
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
     debdeps="postfix virtualmin-lamp-stack"
@@ -744,7 +745,7 @@ install_with_apt () {
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 and php packages (if installed) before LEMP installation.'
+    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 (if installed) before LEMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
@@ -754,7 +755,7 @@ install_with_apt () {
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx and php packages (if installed) before LAMP installation.'
+    run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx (if installed) before LAMP installation.'
     run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LAMP stack.'
   fi
   # Create an override.conf to fix the stupidity in fail2ban.service
