@@ -673,7 +673,7 @@ install_virtualmin_release () {
       repos="virtualmin-wheezy virtualmin-universal"
       ;;
       8*)
-      run_ok "apt-get install apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
+      run_ok "apt-get install --assume-yes apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
       download 'https://packages.sury.org/php/apt.gpg'
       run_ok "cp apt.gpg /etc/apt/trusted.gpg.d/php.gpg" "Adding GPG key for PHP7 packages"
       echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
@@ -695,7 +695,7 @@ install_virtualmin_release () {
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-  install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
+  install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
   #export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
