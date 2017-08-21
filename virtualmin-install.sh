@@ -208,7 +208,7 @@ printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
 KEY=GPL
-VER=6.0.3
+VER=6.0.4
 vm_version=6
 echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
 echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
@@ -402,6 +402,7 @@ case "$package_type" in
   yum remove -y wbt-virtual-server-mobile
   yum remove -y virtualmin-config perl-Term-Spinner-Color
   yum remove -y webmin usermin awstats
+  yum remove -y nginx
   yum remove -y fail2ban
   yum clean all; yum clean all
   os_type="centos"
@@ -637,11 +638,7 @@ install_virtualmin_release () {
   if which dnf 1>/dev/null 2>&1; then
     install="dnf -y install"
     install_cmd="dnf"
-    if [ "$mode" = "full" ]; then
-      install_group="dnf -y group install --setopt=group_package_types=mandatory,default"
-    else
-      install_group="dnf -y group install --setopt=group_package_types=mandatory"
-    fi
+    install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
   else
     install="/usr/bin/yum -y install"
     install_cmd="/usr/bin/yum"
