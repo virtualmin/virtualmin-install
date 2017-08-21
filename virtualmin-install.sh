@@ -210,8 +210,7 @@ SERIAL=GPL
 KEY=GPL
 VER=6.0.4
 vm_version=6
-echo "$SERIAL" | grep "[^a-z^A-Z^0-9]" && echo "Serial number $SERIAL contains invalid characters." && exit
-echo "$KEY" | grep "[^a-z^A-Z^0-9]" && echo "License $KEY contains invalid characters." && exit
+serial_ok "$SERIAL" "$KEY"
 
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
