@@ -210,7 +210,6 @@ SERIAL=GPL
 KEY=GPL
 VER=6.0.4
 vm_version=6
-serial_ok "$SERIAL" "$KEY"
 
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
@@ -295,6 +294,8 @@ chmod +x slib.sh
 # shellcheck disable=SC1091
 . ./slib.sh
 
+# Check the serial number and key
+serial_ok "$SERIAL" "$KEY"
 # Setup slog
 # shellcheck disable=SC2034
 LOG_PATH="$log"
