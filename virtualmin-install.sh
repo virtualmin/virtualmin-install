@@ -248,8 +248,8 @@ if [ "$mode" = 'full' ]; then
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
-    debdeps="postfix php*-fpm virtualmin-lamp-stack-minimal"
-    ubudeps="postfix php*-fpm virtualmin-lamp-stack-minimal"
+    debdeps="postfix virtualmin-lamp-stack-minimal"
+    ubudeps="postfix virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
     debdeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
@@ -875,11 +875,11 @@ if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
 virtualmin-config-system --bundle "$bundle"
-config_system_pid=$!
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"
   errors=$((errors + 1))
 fi
+config_system_pid=$!
 
 # Functions that are used in the OS specific modifications section
 disable_selinux () {
