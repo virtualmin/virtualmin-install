@@ -3,7 +3,9 @@
 # virtualmin-install
 Shell script to perform a Virtualmin GPL or Professional installation
 
-**The version here in git is a beta release of the Virtualmin 6 installer. For the production quality version (which installs the stable Virtualmin 5, with most of the core Virtualmin 6 features, rather than Virtualmin 6 beta that is installed by this) go to [Virtualmin.com](https://www.virtualmin.com/download).**
+If you just want to install Virtualmin, go here and follow the instructions: [Virtualmin.com](https://www.virtualmin.com/download).
+
+This repo is for people who want to read the source, contribute, help make the installer support other distros or operating systems, or make a customized installer.
 
 # How it Works
 The script relies on our software repositories on software.virtualmin.com in order to function. You'll need internet access.
@@ -20,11 +22,11 @@ This is currently in flux as old systems are removed and new systems are added/t
 Currently, well-supported systems in the stable installer are:
 
   - CentOS/RHEL/Scientific 6 and 7
-  - Debian 7 and 8
+  - Debian 7, 8, and 9
   - Ubuntu 14.04 LTS, and 16.04 LTS
   
-The Virtualmin 6 pre-release only supports CentOS 7, Debian 8, and Ubuntu 16.04 (for the time being; older versions will be available in a few days).
-  
+We strongly recommend you use the latest version of your preferred supported distribution. The latest release gets the most active testing and bug fixing.
+
 Previously working, but probably moderately broken now (and missing repository support at software.virtualmin.com) includes SuSE and FreeBSD.
 
 # How to run it
