@@ -513,11 +513,15 @@ fi
 
 # Check memory
 if [ "$mode" = "full" ]; then
-  if ! memory_ok; then
-    log_fatal "Too little memory, and unable to create a swap file. Consider the --minimal"
-    log_fatal "install option, or adding memory or swap to your system."
-    exit 1
-  fi
+  minimum_memory=1048576
+else
+  # minimal mode probably needs less memory to succeed
+  minimum_memory=786432
+fi
+if ! memory_ok "$minimum_memory"; then
+  log_fatal "Too little memory, and unable to create a swap file. Consider adding swap"
+  log_fatal "or more RAM to your system."
+  exit 1
 fi
 
 # Check for localhost in /etc/hosts
