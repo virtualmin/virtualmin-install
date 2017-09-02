@@ -208,7 +208,7 @@ printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
 KEY=GPL
-VER=6.0.5
+VER=6.0.6
 vm_version=6
 
 arch="$(uname -m)"
