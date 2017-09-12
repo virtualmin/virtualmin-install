@@ -692,6 +692,10 @@ install_virtualmin_release () {
     esac
   fi
   log_debug "apt-get repos: ${repos}"
+  if [ -z "$repos" ]; then # Probably unstable with no version number
+    log_fatal "No repos available for this OS. Are you running unstable/testing?"
+    exit 1
+  fi
   for repo in $repos; do
     printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
   done
