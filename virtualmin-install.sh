@@ -204,6 +204,9 @@ while true; do
     apt-get -y -q install curl >> $log
   fi
 done
+if [ -z "$download" ]; then
+  echo "Tried to install downloader, but failed. Do you have working network and DNS?"
+fi
 printf "found %s\n" "$download" >> $log
 
 SERIAL=GPL
@@ -427,6 +430,9 @@ case "$package_type" in
   echo "I don't know how to uninstall on this operating system."
   ;;
 esac
+echo 'Removing nameserver 127.0.0.1 from /etc/resolv.conf'
+sed -i '/nameserver 127.0.0.1/g' /etc/resolv.conf
+echoo 'Removing virtualmin repo configuration'
 remove_virtualmin_release
 echo "Removing /etc/virtualmin-license, if it exists."
 rm /etc/virtualmin-license
@@ -709,7 +715,6 @@ install_virtualmin_release () {
   run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
   run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
   run_ok "apt-get update" "Updating apt metadata"
-  run_ok "apt-get -y --purge remove webmin-core" "Removing non-standard Webmin package, if installed"
   ;;
   *)
   log_error " Your OS is not currently supported by this installer."
