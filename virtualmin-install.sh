@@ -26,6 +26,12 @@
 #                experimental. And, nginx is still much less capable than
 #                Apache. Apache will NOT be installed/configured.
 
+# License and version
+SERIAL=GPL
+KEY=GPL
+VER=6.0.7
+vm_version=6
+
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
     Debian 7, 8, and 9, on i386 and amd64
@@ -208,11 +214,6 @@ if [ -z "$download" ]; then
   echo "Tried to install downloader, but failed. Do you have working network and DNS?"
 fi
 printf "found %s\n" "$download" >> $log
-
-SERIAL=GPL
-KEY=GPL
-VER=6.0.6
-vm_version=6
 
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
