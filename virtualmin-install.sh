@@ -15,17 +15,6 @@
 # A manual install might work for you though.
 # See here: http://www.virtualmin.com/documentation/installation/manual/
 
-# Some environment variables that control the installation:
-# DISABLE_EPEL - Install will not enable EPEL repository on CentOS/RHEL.
-#                Some features will not be available, in this case. Set it
-#                1 to instruct the script not to enable EPEL.
-# DISABLE_SCL  - Install will not enable the Software Collections Library
-#                on CentOS/RHEL. PHP7 will not be installed. Set it to 1
-#                to instruct the script not to enable SCL.
-# ENABLE_NGINX - Install will setup nginx, instead of Apache. This is
-#                experimental. And, nginx is still much less capable than
-#                Apache. Apache will NOT be installed/configured.
-
 # License and version
 SERIAL=GPL
 KEY=GPL
