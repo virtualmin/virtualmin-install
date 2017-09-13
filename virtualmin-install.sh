@@ -586,7 +586,7 @@ log_debug "install.sh version: $VER"
 # Check for a fully qualified hostname
 log_debug "Checking for fully qualified hostname..."
 name="$(hostname -f)"
-if [ ! -z "$forcehostname" ]; then set_hostname $forcehostname
+if [ ! -z "$forcehostname" ]; then set_hostname "$forcehostname"
 elif ! is_fully_qualified "$name"; then set_hostname
 fi
 
