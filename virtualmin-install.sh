@@ -54,7 +54,7 @@ usage () {
   printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
   printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\n"
-  #printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL|EPEL|PG]\n"
+  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL]\n"
   echo
 }
 
@@ -549,7 +549,7 @@ download() {
 }
 
 # Only root can run this
-id | grep "uid=0(" >/dev/null
+id | grep -i "uid=0(" >/dev/null
 if [ "$?" != "0" ]; then
   uname -a | grep -i CYGWIN >/dev/null
   if [ "$?" != "0" ]; then
@@ -923,9 +923,10 @@ if [ ! -z "$QUOTA_FAILED" ]; then
 fi
 echo
 if [ $errors -eq "0" ]; then
+  hostname=$(hostname -f)
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready"
-  log_success "to configure at https://$name:10000."
+  log_success "to configure at https://$hostname:10000."
 else
   log_warning "The following errors occurred during installation:"
   echo
