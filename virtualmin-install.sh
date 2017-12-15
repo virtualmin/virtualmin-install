@@ -631,7 +631,7 @@ install_virtualmin_release () {
     if [ -x /usr/sbin/setenforce ]; then
       log_debug "Disabling SELinux during installation..."
       if /usr/sbin/setenforce 0; then log_debug " setenforce 0 succeeded"
-    else log_warning "  setenforce 0 failed: $?"
+    else log_debug "  setenforce 0 failed: $?"
     fi
   fi
   package_type="rpm"
