@@ -184,7 +184,7 @@ while true; do
     download="/usr/bin/fetch"
     break
   elif [ "$curl_attempted" = 1 ]; then
-    printf "${RED}No HTPP client available. Could not install curl. Cannot continue.${NORMAL}"
+    printf "${RED}No HTTP client available. Could not install curl. Cannot continue.${NORMAL}"
     exit 1
   fi
 
