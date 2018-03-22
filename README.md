@@ -1,4 +1,3 @@
-[![Gratipay](https://img.shields.io/gratipay/project/Virtualmin.svg)](https://gratipay.com/Virtualmin/) 
 [![Build Status](https://travis-ci.org/virtualmin/virtualmin-install.svg?branch=master)](https://travis-ci.org/virtualmin/virtualmin-install)
 
 # virtualmin-install
