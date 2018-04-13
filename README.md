@@ -76,3 +76,41 @@ These are the tools the shell script uses to actually perform the installation a
 [virtualmin-lamp-stack-ubu: Metapackage for the LAMP stack on Ubuntu](https://github.com/virtualmin/virtualmin-lamp-stack-ubu)
 
 [virtualmin-core-deb: Metapackage for the Virtualmin core packages](https://github.com/virtualmin/virtualmin-core-deb)
+
+# Maintainers
+
+Our current list of [Maintainers](MAINTAINERS.md).
+
+# Contributors
+
+VirtualMin-Install exists thanks to [all the people who contribute](https://github.com/virtualmin/virtualmin-install/graphs/contributors).
+
+[How To Contribute](CONTRIBUTING.rst).
+
+<a href="https://github.com/virtualmin/virtualmin-install/graphs/contributors"><img src="https://opencollective.com/virtualmin-install/contributors.svg?width=890" /></a>
+
+
+# Backers
+
+Thank you to all our backers!   [Become a backer](https://opencollective.com/virtualmin-install#backer)
+
+<a href="https://opencollective.com/virtualmin-install#backers" target="_blank"><img src="https://opencollective.com/virtualmin-install/backers.svg?width=890"></a>
+
+
+# Sponsors
+
+Support Virtualmin-Install by becoming a sponsor. Your logo will show up here with a link to your website.
+
+[Become A Sponsor of Virtualmin-Install.](https://opencollective.com/virtualmin-install#sponsor)
+
+<a href="https://opencollective.com/virtualmin-install/sponsor/0/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/1/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/2/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/3/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/4/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/5/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/6/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/7/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/8/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/virtualmin-install/sponsor/9/website" target="_blank"><img src="https://opencollective.com/virtualmin-install/sponsor/9/avatar.svg"></a>
+
