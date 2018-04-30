@@ -13,7 +13,7 @@
 # exist, if the OS isn't listed.  Don't even bother trying it.
 #
 # A manual install might work for you though.
-# See here: http://www.virtualmin.com/documentation/installation/manual/
+# See here: https://www.virtualmin.com/documentation/installation/manual/
 
 # License and version
 SERIAL=GPL
@@ -282,7 +282,7 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download http://software.virtualmin.com/lib/slib.sh
+$download https://software.virtualmin.com/lib/slib.sh
 chmod +x slib.sh
 # shellcheck disable=SC1091
 . ./slib.sh
@@ -460,7 +460,7 @@ cat <<EOF
   If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
-    ${UNDERLINE}http://www.virtualmin.com/os-support${NORMAL}
+    ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
 
   The selected package bundle is ${CYAN}${bundle}${NORMAL} and the size of install is
   ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} MB${NORMAL} of disk space.
@@ -647,7 +647,7 @@ install_virtualmin_release () {
     fi
     install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
   fi
-  download "http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
+  download "https://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
   run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
   ;;
   debian | ubuntu)
@@ -687,7 +687,7 @@ install_virtualmin_release () {
     exit 1
   fi
   for repo in $repos; do
-    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
+    printf "deb https://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
   done
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
@@ -704,8 +704,8 @@ install_virtualmin_release () {
 
   # Install our keys
   log_debug "Installing Webmin and Virtualmin package signing keys..."
-  download "http://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
-  download "http://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
+  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
+  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
   run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
   run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
   run_ok "apt-get update" "Updating apt metadata"
@@ -764,7 +764,7 @@ install_with_apt () {
   run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
-    log_warning "http://www.virtualmin.com/os-support"
+    log_warning "https://www.virtualmin.com/os-support"
     fatal "Installation failed: $?"
   fi
 
