@@ -673,7 +673,7 @@ install_virtualmin_release () {
       run_ok "apt-get install --assume-yes apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
       download 'https://packages.sury.org/php/apt.gpg'
       run_ok "cp apt.gpg /etc/apt/trusted.gpg.d/php.gpg" "Adding GPG key for PHP7 packages"
-      echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
+      echo "deb http://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list
       repos="virtualmin-jessie virtualmin-universal"
       ;;
       9*)
@@ -687,7 +687,7 @@ install_virtualmin_release () {
     exit 1
   fi
   for repo in $repos; do
-    printf "deb https://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
+    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
   done
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
