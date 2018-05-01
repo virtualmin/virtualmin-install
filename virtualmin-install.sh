@@ -936,5 +936,4 @@ else
   tail -15 $RUN_LOG
 fi
 
-echo
 exit 0
