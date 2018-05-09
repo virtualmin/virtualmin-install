@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.10
+VER=6.0.11
 vm_version=6
 
 # Currently supported systems:
