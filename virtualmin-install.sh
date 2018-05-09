@@ -24,7 +24,7 @@ vm_version=6
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
     Debian 7, 8, and 9, on i386 and amd64
-    Ubuntu 14.04 LTS and 16.04 LTS, on i386 and amd64"
+    Ubuntu 14.04 LTS, 16.04 LTS, and 18.04 LTS, on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -42,19 +42,19 @@ mode='full' # Other option is minimal
 
 usage () {
   # shellcheck disable=SC2046
-  printf "Usage: %s %s [options]\n" "${CYAN}" $(basename "$0")
+  printf "Usage: %s %s [options]\\n" "${CYAN}" $(basename "$0")
   echo
   echo "  If called without arguments, installs Virtualmin Professional."
   echo
-  printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\n"
-  printf "  ${YELLOW}--help|-h${NORMAL} - This message\n"
-  printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\n"
-  printf "  ${YELLOW}--hostname|-n${NORMAL} - Set fully qualified hostname\n"
-  printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\n"
-  printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\n"
-  printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\n"
-  printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\n"
-  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL]\n"
+  printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\\n"
+  printf "  ${YELLOW}--help|-h${NORMAL} - This message\\n"
+  printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\\n"
+  printf "  ${YELLOW}--hostname|-n${NORMAL} - Set fully qualified hostname\\n"
+  printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\\n"
+  printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\\n"
+  printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\\n"
+  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL]\\n"
   echo
 }
 
@@ -103,7 +103,7 @@ while [ "$1" != "" ]; do
       DISABLE_EPEL=1
       ;;
       *)
-      printf "Unknown feature ${YELLOW}$1${NORMAL}: exiting\n"
+      printf "Unknown feature ${YELLOW}$1${NORMAL}: exiting\\n"
       exit 1
       ;;
     esac
@@ -120,13 +120,13 @@ while [ "$1" != "" ]; do
       bundle='LEMP'
       ;;
       *)
-      printf "Unknown bundle ${YELLOW}$1${NORMAL}: exiting\n"
+      printf "Unknown bundle ${YELLOW}$1${NORMAL}: exiting\\n"
       exit 1
       ;;
     esac
     ;;
     *)
-    printf "Unrecognized option: $1\n\n"
+    printf "Unrecognized option: $1\\n\\n"
     usage
     exit 1
     ;;
@@ -149,7 +149,7 @@ while true; do
       perl=/opt/csw/bin/perl
       break
     elif [ "$perl_attempted" = 1 ] ; then
-      printf "${RED}Perl could not be installed - Installation cannot continue.${NORMAL}\n"
+      printf "${RED}Perl could not be installed - Installation cannot continue.${NORMAL}\\n"
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
@@ -169,7 +169,7 @@ while true; do
     break
   fi
 done
-printf "found Perl at $perl\n" >> $log
+printf "found Perl at $perl\\n" >> $log
 
 # Check for wget or curl or fetch
 printf "Checking for HTTP client..." >> $log
@@ -184,7 +184,7 @@ while true; do
     download="/usr/bin/fetch"
     break
   elif [ "$curl_attempted" = 1 ]; then
-    printf "${RED}No HTTP client available. Could not install curl. Cannot continue.${NORMAL}"
+    printf "${RED}No HTTP client available. Could not install curl. Cannot continue.${NORMAL}\\n"
     exit 1
   fi
 
@@ -202,7 +202,7 @@ done
 if [ -z "$download" ]; then
   echo "Tried to install downloader, but failed. Do you have working network and DNS?"
 fi
-printf "found %s\n" "$download" >> $log
+printf "found %s\\n" "$download" >> $log
 
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
@@ -319,7 +319,7 @@ log_fatal() {
 fatal () {
   echo
   log_fatal "Fatal Error Occurred: $1"
-  printf "${RED}Cannot continue installation.${NORMAL}\n"
+  printf "${RED}Cannot continue installation.${NORMAL}\\n"
   remove_virtualmin_release
   if [ -x "$tempdir" ]; then
     log_warning "Removing temporary directory and files."
@@ -367,7 +367,7 @@ is_installed () {
 uninstall () {
   # Very destructive, ask first.
   echo
-  printf "  ${REDBG}WARNING${NORMAL}\n"
+  printf "  ${REDBG}WARNING${NORMAL}\\n"
   echo
   echo "  This operation is very destructive. It removes nearly all of the packages"
   echo "  installed by the Virtualmin installer. Never run this on a production system."
@@ -561,10 +561,10 @@ log_info "Started installation log in $log"
 echo
 if [ ! -z $setup_only ]; then
   log_debug "Phase 1 of 1: Setup"
-  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\n"
+  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
   log_debug "Phase 1 of 3: Setup"
-  printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\n"
+  printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\\n"
 fi
 
 # Print out some details that we gather before logging existed
@@ -601,30 +601,30 @@ install_virtualmin_release () {
     case "$os_type" in
       rhel|centos)
       if [ "$os_major_version" -lt 6 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       fedora)
       if [ "$os_version" -ne 25 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       ubuntu)
-      if [ "$os_version" != "14.04" ] && [ "$os_version" != "16.04" ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+      if [ "$os_version" != "14.04" ] && [ "$os_version" != "16.04" ] && [ "$os_version" != "18.04" ]; then
+        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       debian)
       if [ "$os_major_version" -lt 7 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\n"
+        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       *)
-      printf "${RED}This OS/version is not recognized. Can't continue.${NORMAL}\n"
+      printf "${RED}This OS/version is not recognized. Can't continue.${NORMAL}\\n"
       exit 1
       ;;
     esac
@@ -662,6 +662,9 @@ install_virtualmin_release () {
       16.04*)
       repos="virtualmin-xenial virtualmin-universal"
       ;;
+      18.04*)
+      repos="virtualmin-bionic virtualmin-universal"
+      ;;
     esac
   else
     deps="$debdeps"
@@ -687,12 +690,12 @@ install_virtualmin_release () {
     exit 1
   fi
   for repo in $repos; do
-    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\n" >> /etc/apt/sources.list
+    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\\n" >> /etc/apt/sources.list
   done
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
-  run_ok "sed -ie '/backports/b; s/#*[ ]*deb \(.*\) universe$/deb \1 universe/' /etc/apt/sources.list" \
+  run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
   "Enabling universe repositories, if not already available"
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
@@ -700,7 +703,7 @@ install_virtualmin_release () {
   #export DEBIAN_FRONTEND=noninteractive
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
-  sed -i "s/\(deb[[:space:]]file.*\)/#\1/" /etc/apt/sources.list
+  sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
 
   # Install our keys
   log_debug "Installing Webmin and Virtualmin package signing keys..."
@@ -845,10 +848,10 @@ errors=$((0))
 install_virtualmin_release
 echo
 log_debug "Phase 2 of 3: Installation"
-printf "${GREEN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\n"
+printf "${GREEN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
-  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\n"
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
   errors=$((errors + 1))
 fi
 
@@ -856,7 +859,7 @@ fi
 # our own version.  There's no good way to do this, but we'll
 run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
 if [ "$?" != "0" ]; then
-  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\n"
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
 fi
 
@@ -873,13 +876,13 @@ done
 sleep 1
 echo
 log_debug "Phase 3 of 3: Configuration"
-printf "${GREEN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\n"
+printf "${GREEN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\\n"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
 virtualmin-config-system --bundle "$bundle"
 if [ "$?" != "0" ]; then
-  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\n"
+  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
 fi
 config_system_pid=$!
@@ -908,7 +911,7 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 tput cnorm
 
 
-printf "${GREEN}▣▣▣${NORMAL} Cleaning up\n"
+printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
 # Cleanup the tmp files
 if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
   log_debug "Cleaning up temporary files in $tempdir."
