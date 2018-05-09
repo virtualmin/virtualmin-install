@@ -692,6 +692,13 @@ install_virtualmin_release () {
   for repo in $repos; do
     printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\\n" >> /etc/apt/sources.list
   done
+  # Install our keys
+  log_debug "Installing Webmin and Virtualmin package signing keys..."
+  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
+  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
+  run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
+  run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
+  run_ok "apt-get update" "Updating apt metadata"
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
@@ -704,14 +711,6 @@ install_virtualmin_release () {
   install_updates="$install $deps"
   run_ok "apt-get clean" "Cleaning out old metadata"
   sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
-
-  # Install our keys
-  log_debug "Installing Webmin and Virtualmin package signing keys..."
-  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-virtualmin-6"
-  download "https://software.virtualmin.com/lib/RPM-GPG-KEY-webmin"
-  run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
-  run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
-  run_ok "apt-get update" "Updating apt metadata"
   ;;
   *)
   log_error " Your OS is not currently supported by this installer."
