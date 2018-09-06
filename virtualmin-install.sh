@@ -18,13 +18,13 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.11
+VER=6.0.12
 vm_version=6
 
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6 and 7 on x86_64
     Debian 7, 8, and 9, on i386 and amd64
-    Ubuntu 14.04 LTS, 16.04 LTS, and 18.04 LTS, on i386 and amd64"
+    Ubuntu 14.04 LTS and 16.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
