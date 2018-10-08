@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.12
+VER=6.0.13
 vm_version=6
 
 # Currently supported systems:
@@ -702,8 +702,13 @@ install_virtualmin_release () {
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
-  run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
-  "Enabling universe repositories, if not already available"
+  if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then 
+    run_ok "add-apt-repository universe" \
+      "Enabling universe repositories, if not already available"
+  else
+    run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
+      "Enabling universe repositories, if not already available"
+  fi
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
   install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
