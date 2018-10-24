@@ -702,12 +702,14 @@ install_virtualmin_release () {
   run_ok "apt-get update" "Downloading repository metadata"
   # Make sure universe repos are available
   # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
-  if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then 
-    run_ok "add-apt-repository universe" \
-      "Enabling universe repositories, if not already available"
-  else
-    run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
-      "Enabling universe repositories, if not already available"
+  if [ $os_type = "ubuntu" ]; then
+    if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then 
+      run_ok "add-apt-repository universe" \
+        "Enabling universe repositories, if not already available"
+    else
+      run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
+        "Enabling universe repositories, if not already available"
+    fi
   fi
   # XXX Is this still enabled by default on Debian/Ubuntu systems?
   run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
