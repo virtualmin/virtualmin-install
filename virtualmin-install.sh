@@ -44,7 +44,7 @@ usage () {
   # shellcheck disable=SC2046
   printf "Usage: %s %s [options]\\n" "${CYAN}" $(basename "$0")
   echo
-  echo "  If called without arguments, installs Virtualmin Professional."
+  echo "  If called without arguments, installs Virtualmin."
   echo
   printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\\n"
   printf "  ${YELLOW}--help|-h${NORMAL} - This message\\n"
