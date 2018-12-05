@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.15
+VER=6.0.16
 vm_version=6
 
 # Currently supported systems:
@@ -898,7 +898,7 @@ disable_selinux () {
   seconfigfiles="/etc/selinux/config /etc/sysconfig/selinux"
   for i in $seconfigfiles; do
     if [ -e "$i" ]; then
-      perl -pi -e 's/^SELINUX=.*/SELINUX=disabled/" "$i"
+      perl -pi -e 's/^SELINUX=.*/SELINUX=disabled/' "$i"
     fi
   done
 }
