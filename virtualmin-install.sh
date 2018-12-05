@@ -898,7 +898,7 @@ disable_selinux () {
   seconfigfiles="/etc/selinux/config /etc/sysconfig/selinux"
   for i in $seconfigfiles; do
     if [ -e "$i" ]; then
-      sed -i "s/SELINUX=.*/SELINUX=disabled/" "$i"
+      perl -pi -e 's/^SELINUX=.*/SELINUX=disabled/" "$i"
     fi
   done
 }
