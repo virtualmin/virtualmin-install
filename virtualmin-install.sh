@@ -1,7 +1,7 @@
 #!/bin/sh
 # shellcheck disable=SC2059 disable=SC2181 disable=SC2154
 # virtualmin-install.sh
-# Copyright 2005-2018 Virtualmin, Inc.
+# Copyright 2005-2019 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and
 # lazy-ish.
@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.16
+VER=6.0.17
 vm_version=6
 
 # Currently supported systems:
@@ -174,11 +174,11 @@ printf "found Perl at $perl\\n" >> $log
 # Check for wget or curl or fetch
 printf "Checking for HTTP client..." >> $log
 while true; do
-  if [ -x "/usr/bin/curl" ]; then
-    download="/usr/bin/curl -f -s -L -O"
-    break
-  elif [ -x "/usr/bin/wget" ]; then
+  if [ -x "/usr/bin/wget" ]; then
     download="/usr/bin/wget -nv"
+    break
+  elif [ -x "/usr/bin/curl" ]; then
+    download="/usr/bin/curl -f -s -L -O"
     break
   elif [ -x "/usr/bin/fetch" ]; then
     download="/usr/bin/fetch"
