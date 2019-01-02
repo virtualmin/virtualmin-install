@@ -183,20 +183,20 @@ while true; do
   elif [ -x "/usr/bin/fetch" ]; then
     download="/usr/bin/fetch"
     break
-  elif [ "$curl_attempted" = 1 ]; then
-    printf "${RED}No HTTP client available. Could not install curl. Cannot continue.${NORMAL}\\n"
+  elif [ "$wget_attempted" = 1 ]; then
+    printf "${RED}No HTTP client available. Could not install wget. Cannot continue.${NORMAL}\\n"
     exit 1
   fi
 
   # Made it here without finding a downloader, so try to install one
-  curl_attempted=1
+  wget_attempted=1
   if [ -x /usr/bin/dnf ]; then
-    dnf -y install curl >> $log
+    dnf -y install wget >> $log
   elif [ -x /usr/bin/yum ]; then
-    yum -y install curl >> $log
+    yum -y install wget >> $log
   elif [ -x /usr/bin/apt-get ]; then
     apt-get update >> /dev/null
-    apt-get -y -q install curl >> $log
+    apt-get -y -q install wget >> $log
   fi
 done
 if [ -z "$download" ]; then
