@@ -23,7 +23,7 @@ Currently, well-supported systems in the stable installer are:
 
   - CentOS/RHEL/Scientific 6 and 7
   - Debian 7, 8, and 9
-  - Ubuntu 14.04 LTS, and 16.04 LTS
+  - Ubuntu 14.04 LTS, and 16.04 LTS, and 18.04 LTS
   
 We strongly recommend you use the latest version of your preferred supported distribution. The latest release gets the most active testing and bug fixing.
 
