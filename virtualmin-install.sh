@@ -951,8 +951,6 @@ else
   log_warning "The following errors occurred during installation:"
   echo
   printf "${errorlist}"
-  log_warning "The last few lines of the log file were:"
-  tail -15 $RUN_LOG
 fi
 
 exit 0
