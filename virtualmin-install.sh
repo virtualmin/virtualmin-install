@@ -204,6 +204,15 @@ if [ -z "$download" ]; then
 fi
 printf "found %s\\n" "$download" >> $log
 
+# Check for gpg, debian 10 doesn't install by default!?
+if [ -x /usr/bin/apt-get ]; then
+  if [ ! -x /usr/bin/gpg ]; then
+    printf "gpg not found, attempting to install..." >> $log
+    apt-get update >> /dev/null
+    apt-get -y -q install gnupg >> $log
+  fi
+fi
+
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
   arch="i386"
