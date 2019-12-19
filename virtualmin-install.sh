@@ -691,6 +691,9 @@ install_virtualmin_release () {
       9*)
       repos="virtualmin-stretch virtualmin-universal"
       ;;
+      10*)
+      repos="virtualmin-buster virtualmin-universal"
+      ;;
     esac
   fi
   log_debug "apt-get repos: ${repos}"
