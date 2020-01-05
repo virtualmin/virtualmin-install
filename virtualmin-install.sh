@@ -660,6 +660,9 @@ install_virtualmin_release () {
   fi
   download "https://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
   run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
+  # XXX This weirdly only seems necessary on CentOS 8, but harmless
+  # elsewhere.
+  rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
   ;;
   debian | ubuntu)
   package_type="deb"
