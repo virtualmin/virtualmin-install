@@ -801,7 +801,10 @@ install_with_yum () {
   # install extras from EPEL and SCL
   if [ "$os_type" = "centos" ] || [ "$os_type" = "rhel" ]; then
     install_epel_release
-    install_scl_php
+    if [ "$os_major_version" -lt 8 ]; then
+      # No SCL on CentOS 8
+      install_scl_php
+    fi
   fi
 
   # Some important packages are now hidden in PowerTools repo
