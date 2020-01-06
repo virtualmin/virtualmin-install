@@ -431,7 +431,7 @@ case "$package_type" in
 esac
 echo 'Removing nameserver 127.0.0.1 from /etc/resolv.conf'
 sed -i '/nameserver 127.0.0.1/g' /etc/resolv.conf
-echoo 'Removing virtualmin repo configuration'
+echo 'Removing virtualmin repo configuration'
 remove_virtualmin_release
 echo "Removing /etc/virtualmin-license, if it exists."
 rm /etc/virtualmin-license
