@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.20
+VER=6.1.1
 vm_version=6
 
 # Currently supported systems:
@@ -518,10 +518,10 @@ fi
 
 # Check memory
 if [ "$mode" = "full" ]; then
-  minimum_memory=1048576
+  minimum_memory=1610613
 else
   # minimal mode probably needs less memory to succeed
-  minimum_memory=786432
+  minimum_memory=1048576
 fi
 if ! memory_ok "$minimum_memory"; then
   log_fatal "Too little memory, and unable to create a swap file. Consider adding swap"
