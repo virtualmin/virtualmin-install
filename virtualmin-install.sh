@@ -18,11 +18,11 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.0.20
+VER=6.1.1
 vm_version=6
 
 # Currently supported systems:
-supported="    CentOS/RHEL Linux 6 and 7 on x86_64
+supported="    CentOS/RHEL Linux 6, 7, and 8 on x86_64
     Debian 8, 9, and 10 on i386 and amd64
     Ubuntu 16.04 LTS and 18.04 LTS on i386 and amd64"
 
@@ -268,7 +268,7 @@ fi
 # XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
 # is mounted noexec, this won't catch it.
 TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
-if [ ! -z "$TMPNOEXEC" ]; then
+if [ -n "$TMPNOEXEC" ]; then
   echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
   exit 1
 fi
@@ -431,7 +431,7 @@ case "$package_type" in
 esac
 echo 'Removing nameserver 127.0.0.1 from /etc/resolv.conf'
 sed -i '/nameserver 127.0.0.1/g' /etc/resolv.conf
-echoo 'Removing virtualmin repo configuration'
+echo 'Removing virtualmin repo configuration'
 remove_virtualmin_release
 echo "Removing /etc/virtualmin-license, if it exists."
 rm /etc/virtualmin-license
@@ -518,10 +518,10 @@ fi
 
 # Check memory
 if [ "$mode" = "full" ]; then
-  minimum_memory=1048576
+  minimum_memory=1610613
 else
   # minimal mode probably needs less memory to succeed
-  minimum_memory=786432
+  minimum_memory=1048576
 fi
 if ! memory_ok "$minimum_memory"; then
   log_fatal "Too little memory, and unable to create a swap file. Consider adding swap"
@@ -568,7 +568,7 @@ fi
 
 log_info "Started installation log in $log"
 echo
-if [ ! -z $setup_only ]; then
+if [ -n "$setup_only" ]; then
   log_debug "Phase 1 of 1: Setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
@@ -584,7 +584,7 @@ log_debug "install.sh version: $VER"
 # Check for a fully qualified hostname
 log_debug "Checking for fully qualified hostname..."
 name="$(hostname -f)"
-if [ ! -z "$forcehostname" ]; then set_hostname "$forcehostname"
+if [ -n "$forcehostname" ]; then set_hostname "$forcehostname"
 elif ! is_fully_qualified "$name"; then set_hostname
 fi
 
@@ -648,6 +648,7 @@ install_virtualmin_release () {
     install="dnf -y install"
     install_cmd="dnf"
     install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
+    install_config_manager="dnf config-manager"
   else
     install="/usr/bin/yum -y install"
     install_cmd="/usr/bin/yum"
@@ -655,9 +656,13 @@ install_virtualmin_release () {
       run_ok "yum --quiet groups mark convert" "Updating yum Groups"
     fi
     install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
+    install_config_manager="yum-config-manager"
   fi
   download "https://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
   run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
+  # XXX This weirdly only seems necessary on CentOS 8, but harmless
+  # elsewhere.
+  rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
   ;;
   debian | ubuntu)
   package_type="deb"
@@ -741,7 +746,7 @@ esac
 
 return 0
 }
-if [ ! -z "$setup_only" ]; then
+if [ -n "$setup_only" ]; then
   if install_virtualmin_release; then
     log_success "Repository configuration successful. You can now install Virtualmin"
     log_success "components using your OS package manager."
@@ -799,11 +804,19 @@ install_with_yum () {
   # install extras from EPEL and SCL
   if [ "$os_type" = "centos" ] || [ "$os_type" = "rhel" ]; then
     install_epel_release
-    install_scl_php
+    if [ "$os_major_version" -lt 8 ]; then
+      # No SCL on CentOS 8
+      install_scl_php
+    fi
+  fi
+
+  # Some important packages are now hidden in PowerTools repo
+  if [ "$os_major_version" -eq 8 ]; then
+    run_ok "$install_config_manager --set-enabled PowerTools" "Enabling PowerTools package repository"
   fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
-  if [ "$os_major_version" -ge 7 ]; then
+  if [ "$os_major_version" -eq 7 ]; then
     run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
     run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgroup for install"
   fi
@@ -848,13 +861,12 @@ install_epel_release () {
 install_scl_php () {
   if [ -z "$DISABLE_SCL" ]; then
     run_ok "$install yum-utils" "Installing yum-utils"
-    run_ok "yum-config-manager --enable extras >/dev/null" "Enabling extras repository"
+    run_ok "$install_config_manager --enable extras >/dev/null" "Enabling extras repository"
     run_ok "$install scl-utils" "Installing scl-utils"
     if [ "${os_type}" = "centos" ]; then
       run_ok "$install centos-release-scl" "Install Software Collections release package"
     elif [ "${os_type}" = "rhel" ]; then
-      # XXX Fix this for dnf (dnf config-manager, instead of yum-config-manager)
-      run_ok "yum-config-manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
+      run_ok "$install_config_manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
     fi
     run_ok "$install_group $sclgroup" "Installing PHP7"
   fi
@@ -938,7 +950,7 @@ else
   log_error "Could not safely clean up temporary files because TMPDIR set to $tempdir."
 fi
 
-if [ ! -z "$QUOTA_FAILED" ]; then
+if [ -n "$QUOTA_FAILED" ]; then
   log_warning "Quotas were not configurable. A reboot may be required. Or, if this is"
   log_warning "a VM, configuration may be required at the host level."
 fi
