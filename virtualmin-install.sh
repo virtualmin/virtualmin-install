@@ -1,7 +1,7 @@
 #!/bin/sh
 # shellcheck disable=SC2059 disable=SC2181 disable=SC2154
 # virtualmin-install.sh
-# Copyright 2005-2019 Virtualmin, Inc.
+# Copyright 2005-2020 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and
 # lazy-ish.
@@ -810,9 +810,11 @@ install_with_yum () {
     fi
   fi
 
-  # Some important packages are now hidden in PowerTools repo
+  # Some important packages are now hidden in PowerTools repo  (CENTOS ONLY)
   if [ "$os_major_version" -eq 8 ]; then
-    run_ok "$install_config_manager --set-enabled PowerTools" "Enabling PowerTools package repository"
+    if  test -f "/etc/centos-release"; then
+         run_ok "$install_config_manager --set-enabled PowerTools" "Enabling PowerTools package repository"
+    fi
   fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
