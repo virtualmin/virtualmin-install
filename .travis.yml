@@ -26,7 +26,7 @@ env:
 
 stages:
   - syntaxValidation
-  - installerValidation
+  - test
 
 services:
   - docker
@@ -42,10 +42,10 @@ jobs:
       env: OS_IMAGE=ubuntu:18.04
       script: prove
 
-    - stage: installerValidation
+    - stage: test
       name: Verify that installer run success on all grade A OSes
       before_install:
         - docker pull $OS_IMAGE
       script: 
-        - docker run -t --rm -v $(pwd):/src -w /src $OS_IMAGE ./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE
+        - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -w /src $OS_IMAGE ./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE
       
