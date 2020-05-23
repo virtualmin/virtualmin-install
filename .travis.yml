@@ -1,3 +1,5 @@
+language: perl
+
 env:
   - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=
   - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
