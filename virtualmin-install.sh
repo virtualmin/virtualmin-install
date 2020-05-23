@@ -325,6 +325,20 @@ log_fatal() {
   log_error "$1"
 }
 
+remove_virtualmin_release () {
+  # shellcheck disable=SC2154
+  case "$os_type" in
+    "fedora" | "centos" | "rhel" | "amazon"	)
+    run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
+    ;;
+    "debian" | "ubuntu" )
+    grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
+    mv "$tempdir"/sources.list /etc/apt/sources.list
+    rm -f /etc/apt/sources.list.d/virtualmin.list
+    ;;
+  esac
+}
+
 fatal () {
   echo
   log_fatal "Fatal Error Occurred: $1"
@@ -337,19 +351,6 @@ fatal () {
   log_fatal "If you are unsure of what went wrong, you may wish to review the log"
   log_fatal "in $log"
   exit 1
-}
-
-remove_virtualmin_release () {
-  # shellcheck disable=SC2154
-  case "$os_type" in
-    "fedora" | "centos" | "rhel" | "amazon"	)
-    run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
-    ;;
-    "debian" | "ubuntu" )
-    grep -v "virtualmin" /etc/apt/sources.list > "$tempdir"/sources.list
-    mv "$tempdir"/sources.list /etc/apt/sources.list
-    ;;
-  esac
 }
 
 success () {
@@ -706,8 +707,10 @@ install_virtualmin_release () {
     log_fatal "No repos available for this OS. Are you running unstable/testing?"
     exit 1
   fi
+  # Remove any existing repo config, in case it's a reinstall
+  remove_virtualmin_release
   for repo in $repos; do
-    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\\n" >> /etc/apt/sources.list
+    printf "deb http://${LOGIN}software.virtualmin.com/vm/${vm_version}/${repopath}apt ${repo} main\\n" >> /etc/apt/sources.list.d/virtualmin.list
   done
   # Install our keys
   log_debug "Installing Webmin and Virtualmin package signing keys..."
