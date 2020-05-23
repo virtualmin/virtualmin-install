@@ -36,7 +36,7 @@ services:
 before_install:
   - docker pull $OS_IMAGE
 script: 
-  - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -w /src $OS_IMAGE ./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE
+  - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -w /src $OS_IMAGE /bin/sh -c "./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE"
 
 jobs:
   include:
