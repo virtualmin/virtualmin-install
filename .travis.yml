@@ -1,5 +1,7 @@
 language: perl
 
+dist: trusty
+
 env:
   - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=
   - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
@@ -42,7 +44,6 @@ jobs:
   include:
     - stage: syntaxValidation
       name: Validate bash file syntax
-      dist: trusty
       before_install:
       - sudo apt-get update -qq
       - sudo apt-get install -qq perl shellcheck devscripts
