@@ -31,6 +31,11 @@ stages:
 services:
   - docker
 
+before_install:
+  - docker pull $OS_IMAGE
+script: 
+  - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -w /src $OS_IMAGE ./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE
+
 jobs:
   include:
     - stage: syntaxValidation
@@ -41,11 +46,3 @@ jobs:
       - sudo apt-get install -qq perl shellcheck devscripts
       env: OS_IMAGE=ubuntu:18.04
       script: prove
-
-    - stage: test
-      name: Verify that installer run success on all grade A OSes
-      before_install:
-        - docker pull $OS_IMAGE
-      script: 
-        - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -w /src $OS_IMAGE ./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE
-      
