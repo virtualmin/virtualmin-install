@@ -18,13 +18,13 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.1.1
+VER=6.2.0
 vm_version=6
 
 # Currently supported systems:
 supported="    CentOS/RHEL Linux 6, 7, and 8 on x86_64
     Debian 8, 9, and 10 on i386 and amd64
-    Ubuntu 16.04 LTS and 18.04 LTS on i386 and amd64"
+    Ubuntu 16.04 LTS, 18.04 LTS, and 20.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -622,13 +622,13 @@ install_virtualmin_release () {
       fi
       ;;
       ubuntu)
-      if [ "$os_version" != "14.04" ] && [ "$os_version" != "16.04" ] && [ "$os_version" != "18.04" ]; then
+      if [ "$os_version" != "16.04" ] && [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       debian)
-      if [ "$os_major_version" -lt 7 ]; then
+      if [ "$os_major_version" -lt 9 ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -670,23 +670,19 @@ install_virtualmin_release () {
   if [ "$os_type" = "ubuntu" ]; then
     deps="$ubudeps"
     case "$os_version" in
-      14.04*)
-      run_ok "add-apt-repository -y ppa:ondrej/php" "Enabling PHP 7 PPA"
-      repos="virtualmin-trusty virtualmin-universal"
-      ;;
       16.04*)
       repos="virtualmin-xenial virtualmin-universal"
       ;;
       18.04*)
       repos="virtualmin-bionic virtualmin-universal"
       ;;
+      20.04*)
+      repos="virtualmin-focal virtualmin-universal"
+      ;;
     esac
   else
     deps="$debdeps"
     case "$os_version" in
-      7*)
-      repos="virtualmin-wheezy virtualmin-universal"
-      ;;
       8*)
       run_ok "apt-get install --assume-yes apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
       download 'https://packages.sury.org/php/apt.gpg'
