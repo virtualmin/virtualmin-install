@@ -650,6 +650,9 @@ install_virtualmin_release () {
     install_cmd="dnf"
     install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
     install_config_manager="dnf config-manager"
+    if ! $install_config_manager 1>/dev/null 2>&1; then
+      run_ok "$install dnf-plugins-core"
+    fi
   else
     install="/usr/bin/yum -y install"
     install_cmd="/usr/bin/yum"
