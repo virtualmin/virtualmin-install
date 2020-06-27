@@ -21,7 +21,7 @@ This is currently in flux as old systems are removed and new systems are added/t
 
 Currently, well-supported systems in the stable installer are:
 
-  - CentOS/RHEL/Scientific 6 and 7
+  - CentOS/RHEL/Scientific 6, 7, and 8
   - Debian 7, 8, and 9
   - Ubuntu 14.04 LTS, and 16.04 LTS, and 18.04 LTS
   
