@@ -774,7 +774,7 @@ install_with_apt () {
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
     run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 (if installed) before LEMP installation.'
-    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LEMP stack.'
+    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could conflict with LEMP stack.'
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   else
