@@ -784,7 +784,7 @@ install_with_apt () {
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
     run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx (if installed) before LAMP installation.'
-    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could confict with LAMP stack.'
+    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could conflict with LAMP stack.'
   fi
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
