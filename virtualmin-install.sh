@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.2.0
+VER=6.2.1
 vm_version=6
 
 # Currently supported systems:
@@ -328,7 +328,7 @@ log_fatal() {
 remove_virtualmin_release () {
   # shellcheck disable=SC2154
   case "$os_type" in
-    "fedora" | "centos" | "rhel" | "amazon"	)
+    "fedora" | "centos" | "rhel" | "amazon" )
     run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
     ;;
     "debian" | "ubuntu" )
@@ -592,7 +592,7 @@ fi
 # Insert the serial number and password into /etc/virtualmin-license
 log_debug "Installing serial number and license key into /etc/virtualmin-license"
 echo "SerialNumber=$SERIAL" > /etc/virtualmin-license
-echo "LicenseKey=$KEY"	>> /etc/virtualmin-license
+echo "LicenseKey=$KEY" >> /etc/virtualmin-license
 chmod 700 /etc/virtualmin-license
 cd ..
 
@@ -814,7 +814,13 @@ install_with_yum () {
 
   # Some important packages are now hidden in PowerTools repo
   if [ "$os_major_version" -eq 8 ]; then
-    run_ok "$install_config_manager --set-enabled PowerTools" "Enabling PowerTools package repository"
+    # Get exact PowerTools repo name
+    powertools="PowerTools"
+    centos_stream=$(dnf repolist all | grep "^powertools")
+      if [ ! -z "$centos_stream" ]; then
+        powertools="powertools"
+      fi
+    run_ok "$install_config_manager --set-enabled $powertools" "Enabling PowerTools package repository"
   fi
 
   # XXX This is so stupid. Why does yum insist on extra commands?
