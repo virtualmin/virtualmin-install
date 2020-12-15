@@ -18,12 +18,12 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.2.1
+VER=6.2.2
 vm_version=6
 
 # Currently supported systems:
-supported="    CentOS/RHEL Linux 6, 7, and 8 on x86_64
-    Debian 8, 9, and 10 on i386 and amd64
+supported="    CentOS/RHEL Linux 7, and 8 on x86_64
+    Debian 9, and 10 on i386 and amd64
     Ubuntu 16.04 LTS, 18.04 LTS, and 20.04 LTS on i386 and amd64"
 
 log=/root/virtualmin-install.log
@@ -154,7 +154,7 @@ while true; do
     fi
     # couldn't find Perl, so we need to try to install it
     echo 'Perl was not found on your system - Virtualmin requires it to run.'
-    echo 'Attempting to install it now.'
+    echo 'Attempting to install it now...'
     if [ -x /usr/bin/dnf ]; then
       dnf -y install perl >> $log
     elif [ -x /usr/bin/yum ]; then
@@ -610,13 +610,13 @@ install_virtualmin_release () {
     rhel|centos|fedora|amazon)
     case "$os_type" in
       rhel|centos)
-      if [ "$os_major_version" -lt 6 ]; then
+      if [ "$os_major_version" -lt 7 ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
       fedora)
-      if [ "$os_version" -ne 25 ]; then
+      if [ "$os_version" -lt 33 ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -803,8 +803,16 @@ install_with_apt () {
 }
 
 install_with_yum () {
+  # RHEL 8 specific setup
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "rhel" ]; then
+    # Important Perl packages are now hidden in CodeReady repo
+    run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
+    run_ok "$install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
+  # RHEL 7 specific setup
+  elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
+    run_ok "$install https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # install extras from EPEL and SCL
-  if [ "$os_type" = "centos" ] || [ "$os_type" = "rhel" ]; then
+  elif [ "$os_type" = "centos" ]; then
     install_epel_release
     if [ "$os_major_version" -lt 8 ]; then
       # No SCL on CentOS 8
@@ -812,9 +820,9 @@ install_with_yum () {
     fi
   fi
 
-  # Some important packages are now hidden in PowerTools repo
-  if [ "$os_major_version" -eq 8 ]; then
-    # Get exact PowerTools repo name
+  # Important Perl packages are now hidden in PowerTools repo
+  if [ "$os_major_version" -eq 8 ] && [ "$os_type" = "centos" ]; then
+    # Detect PowerTools repo name
     powertools="PowerTools"
     centos_stream=$(dnf repolist all | grep "^powertools")
       if [ ! -z "$centos_stream" ]; then
