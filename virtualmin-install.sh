@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=6.2.3
+VER=6.2.4
 vm_version=6
 
 # Currently supported systems:
@@ -807,7 +807,12 @@ install_with_yum () {
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "rhel" ]; then
     # Important Perl packages are now hidden in CodeReady repo
     run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
-    run_ok "$install https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
+  # RHEL 7 specific setup
+  elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # install extras from EPEL and SCL
   elif [ "$os_type" = "centos" ]; then
     install_epel_release
