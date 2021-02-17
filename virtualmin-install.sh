@@ -773,8 +773,8 @@ install_with_apt () {
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge apache2* php*' 'Removing apache2 (if installed) before LEMP installation.'
-    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could conflict with LEMP stack.'
+    apt-get remove --assume-yes --purge apache2* php*
+    apt-get autoremove --assume-yes
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   else
@@ -783,8 +783,8 @@ install_with_apt () {
       systemctl stop "$s">>${RUN_LOG} 2>&1
       systemctl disable "$s">>${RUN_LOG} 2>&1
     done
-    run_ok 'apt-get remove --assume-yes --purge nginx* php*' 'Removing nginx (if installed) before LAMP installation.'
-    run_ok 'apt-get autoremove --assume-yes' 'Removing unneeded packages that could conflict with LAMP stack.'
+    apt-get remove --assume-yes --purge nginx* php*
+    apt-get autoremove --assume-yes
   fi
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
