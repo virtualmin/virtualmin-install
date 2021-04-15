@@ -977,7 +977,7 @@ if [ $errors -eq "0" ]; then
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready"
   log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
-  log_success "You'll receive a security warning in your browser on your first visit."
+  log_success "You may receive a security warning in your browser on your first visit."
 else
   log_warning "The following errors occurred during installation:"
   echo
