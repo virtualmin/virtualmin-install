@@ -806,8 +806,8 @@ install_with_apt() {
       systemctl stop "$s" >>${RUN_LOG} 2>&1
       systemctl disable "$s" >>${RUN_LOG} 2>&1
     done
-    apt-get remove --assume-yes --purge apache2* php*
-    apt-get autoremove --assume-yes
+    apt-get remove --assume-yes --purge apache2* php* >>${RUN_LOG} 2>&1
+    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
   else
@@ -816,8 +816,8 @@ install_with_apt() {
       systemctl stop "$s" >>${RUN_LOG} 2>&1
       systemctl disable "$s" >>${RUN_LOG} 2>&1
     done
-    apt-get remove --assume-yes --purge nginx* php*
-    apt-get autoremove --assume-yes
+    apt-get remove --assume-yes --purge nginx* php* >>${RUN_LOG} 2>&1
+    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
   fi
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
