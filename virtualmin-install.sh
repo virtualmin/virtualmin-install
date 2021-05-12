@@ -748,7 +748,7 @@ install_virtualmin_release() {
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin"
     run_ok "apt-key add RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
     run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
-    run_ok "apt-get update" "Updating apt metadata"
+    run_ok "apt-get update" "Updating APT metadata"
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
     # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
