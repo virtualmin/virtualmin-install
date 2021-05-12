@@ -830,7 +830,7 @@ install_with_apt() {
   fi
 
   # Make sure the time is set properly
-  /usr/sbin/ntpdate-debian 2>/dev/null 2>&1
+  /usr/sbin/ntpdate-debian >>${RUN_LOG} 2>&1
 
   return 0
 }
