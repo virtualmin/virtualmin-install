@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-beta2
+VER=7.0.0-beta3
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -294,9 +294,9 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >/dev/null 2>&1
+$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
 if [ $? -ne 0 ]; then
-  echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+  echo "${RED}Error:${NORMAL} Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
   exit 1
 fi
 chmod +x slib.sh
@@ -744,9 +744,9 @@ install_virtualmin_release() {
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys..."
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-6"
+    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version"
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin"
-    run_ok "apt-key add RPM-GPG-KEY-virtualmin-6" "Installing Virtualmin 6 key"
+    run_ok "apt-key add RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
     run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
     run_ok "apt-get update" "Updating apt metadata"
     run_ok "apt-get update" "Downloading repository metadata"
