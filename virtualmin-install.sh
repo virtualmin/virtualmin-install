@@ -735,7 +735,7 @@ install_virtualmin_release() {
       if [ -d "$apt_auth_dir" ] && [ -n "$LOGIN" ]; then
         printf "deb https://$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
       else
-        printf "deb http://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
+        printf "deb https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
       fi
     done
     if [ -d "$apt_auth_dir" ] && [ -n "$LOGIN" ]; then
