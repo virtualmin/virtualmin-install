@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-beta3
+VER=7.0.0-beta4
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -335,7 +335,7 @@ log_fatal() {
 remove_virtualmin_release() {
   # shellcheck disable=SC2154
   case "$os_type" in
-  "fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux")
+  "fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
     run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
     ;;
   "debian" | "ubuntu")
@@ -622,7 +622,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version}..."
   case "$os_type" in
-  rhel | centos | rocky | almalinux | fedora | amazon)
+  rhel | centos | rocky | almalinux | ol | fedora | amazon)
     case "$os_type" in
     rhel | centos)
       if [ "$os_major_version" -lt 7 ]; then
@@ -630,7 +630,7 @@ install_virtualmin_release() {
         exit 1
       fi
       ;;
-    rocky | almalinux)
+    rocky | almalinux | ol)
       if [ "$os_major_version" -lt 8 ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
@@ -673,7 +673,11 @@ install_virtualmin_release() {
       install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
+    os_type_repo="$os_type"
+    if [ "$os_type" = "ol" ]; then
+      os_type_repo='rhel'
+    fi
+    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
     run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
     # XXX This weirdly only seems necessary on CentOS 8, but harmless
     # elsewhere.
@@ -848,11 +852,13 @@ install_with_yum() {
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # install extras from EPEL and SCL
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
-    install_epel_release
+    install_epel_release "epel-release"
     if [ "$os_major_version" -lt 8 ]; then
       # No SCL on CentOS 8
       install_scl_php
     fi
+  elif [ "$os_type" = "ol" ]; then
+    install_epel_release "oracle-epel-release-el$os_major_version"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
@@ -865,6 +871,11 @@ install_with_yum() {
       powertools="PowerTools"
     fi
     run_ok "$install_config_manager --set-enabled $powertools" "Enabling PowerTools package repository"
+  fi
+
+  # Important Perl packages are hidden in ol8_codeready_builder repo in Oracle
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "ol" ]; then
+    run_ok "$install_config_manager --set-enabled ol${os_major_version}_codeready_builder" "Oracle Linux $os_major_version CodeReady Builder"
   fi
 
   # XXX This is so stupid. Why does yum insists on extra commands?
@@ -904,7 +915,7 @@ install_virtualmin() {
 
 install_epel_release() {
   if [ -z "$DISABLE_EPEL" ]; then
-    run_ok "$install epel-release" "Installing EPEL release package"
+    run_ok "$install $1" "Installing EPEL release package"
   fi
 }
 
@@ -979,7 +990,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux")
+"fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
   disable_selinux
   ;;
 esac
