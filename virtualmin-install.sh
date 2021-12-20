@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-beta4
+VER=7.0.0-beta5
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -26,7 +26,7 @@ upgrade_virtualmin_host=software.virtualmin.com
 supported="    CentOS/RHEL Linux 7 and 8 on x86_64
     Rocky and Alma Linux 8 on x86_64
     Ubuntu 20.04 LTS on i386 and amd64
-    Debian 10 on i386 and amd64"
+    Debian 10 and 11 on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -712,18 +712,14 @@ install_virtualmin_release() {
     else
       deps="$debdeps"
       case "$os_version" in
-      8*)
-        run_ok "apt-get install --assume-yes apt-transport-https lsb-release ca-certificates" "Installing extra dependencies for Debian 8"
-        download 'https://packages.sury.org/php/apt.gpg'
-        run_ok "cp apt.gpg /etc/apt/trusted.gpg.d/php.gpg" "Adding GPG key for PHP7 packages"
-        echo "deb http://packages.sury.org/php/ $(lsb_release -sc) main" >/etc/apt/sources.list.d/php.list
-        repos="virtualmin-jessie virtualmin-universal"
-        ;;
       9*)
         repos="virtualmin-stretch virtualmin-universal"
         ;;
       10*)
         repos="virtualmin-buster virtualmin-universal"
+        ;;
+      11*)
+        repos="virtualmin-bullseye virtualmin-universal"
         ;;
       esac
     fi
