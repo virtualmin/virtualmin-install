@@ -865,7 +865,7 @@ install_with_yum() {
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
-  if [ "$os_major_version" -eq 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
     # Detect PowerTools repo name
     powertools=$(dnf repolist all | grep "^powertools")
     if [ ! -z "$powertools" ]; then
