@@ -18,15 +18,19 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-beta5
+VER=7.0.0-beta6
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
 # Currently supported systems:
-supported="    CentOS/RHEL Linux 7 and 8 on x86_64
-    Rocky and Alma Linux 8 on x86_64
-    Ubuntu 20.04 LTS on i386 and amd64
-    Debian 10 and 11 on i386 and amd64"
+supported="    Red Hat Enterprise Linux derivatives
+      - Alma Linux and Rocky 8 on x86_64
+      - CentOS 7 and CentOS Stream 8 and 9 on x86_64
+      - RHEL Linux 7 and 8 on x86_64
+
+    Debian Linux derivatives
+      - Ubuntu 20.04 LTS and 22.04 LTS (beta) on i386 and amd64
+      - Debian 10 and 11 on i386 and amd64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -472,7 +476,7 @@ install_msg() {
   perform updates or upgrades (use your system package manager) or license
   changes (use the "virtualmin change-license" command).
 
-  The systems currently supported by install.sh are:
+  The systems currently supported by install script are:
 
 EOF
   echo "${CYAN}$supported${NORMAL}"
@@ -686,7 +690,7 @@ install_virtualmin_release() {
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ]; then
+      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
         printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -707,6 +711,9 @@ install_virtualmin_release() {
         ;;
       20.04*)
         repos="virtualmin-focal virtualmin-universal"
+        ;;
+      22.04*)
+        repos="virtualmin-jammy virtualmin-universal"
         ;;
       esac
     else
