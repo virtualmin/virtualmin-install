@@ -868,12 +868,22 @@ install_with_yum() {
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
     # Detect PowerTools repo name
     powertools=$(dnf repolist all | grep "^powertools")
+    powertoolsname="PowerTools"
     if [ ! -z "$powertools" ]; then
       powertools="powertools"
     else
       powertools="PowerTools"
     fi
-    run_ok "$install_config_manager --set-enabled $powertools" "Enabling PowerTools package repository"
+
+    # CentOS 9 Stream changed the name to CBR
+    if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos" ]; then
+      powertools=$(dnf repolist all | grep "^crb")
+      if [ ! -z "$powertools" ]; then
+        powertools="crb"
+        powertoolsname="CRB"
+      fi
+    fi
+    run_ok "$install_config_manager --set-enabled $powertools" "Enabling $powertoolsname package repository"
   fi
 
   # Important Perl packages are hidden in ol8_codeready_builder repo in Oracle
