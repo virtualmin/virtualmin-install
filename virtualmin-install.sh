@@ -150,7 +150,7 @@ if [ "$TIME" -lt 1632960000 ]; then
 fi
 
 echo "Running Virtualmin pre-installation setup:"
-echo "  Checking for system packages upgrades .."
+echo "  Applying system packages upgrades .."
 
 # Update all system packages first
 printf "Running system packages upgrades ..\\n" >>$log
