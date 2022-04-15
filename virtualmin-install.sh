@@ -739,13 +739,9 @@ install_virtualmin_release() {
     remove_virtualmin_release
     apt_auth_dir='/etc/apt/auth.conf.d'
     for repo in $repos; do
-      if [ -d "$apt_auth_dir" ] && [ -n "$LOGIN" ]; then
-        printf "deb https://$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
-      else
-        printf "deb https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
-      fi
+      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
     done
-    if [ -d "$apt_auth_dir" ] && [ -n "$LOGIN" ]; then
+    if [ -n "$LOGIN" ]; then
       printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >>"$apt_auth_dir/virtualmin.conf"
     fi
 
@@ -753,8 +749,9 @@ install_virtualmin_release() {
     log_debug "Installing Webmin and Virtualmin package signing keys..."
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version"
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin"
-    run_ok "apt-key add RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
-    run_ok "apt-key add RPM-GPG-KEY-webmin" "Installing Webmin key"
+    run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/debian-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
+    run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/debian-webmin.gpg" "Installing Webmin key"
+
     run_ok "apt-get update" "Updating APT metadata"
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
