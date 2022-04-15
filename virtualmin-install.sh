@@ -424,7 +424,6 @@ uninstall() {
     yum remove -y nginx
     yum remove -y fail2ban
     yum clean all
-    yum clean all
     os_type="centos"
     ;;
   deb)
@@ -754,7 +753,6 @@ install_virtualmin_release() {
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/debian-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
     run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/debian-webmin.gpg" "Installing Webmin key"
 
-    run_ok "apt-get update" "Updating APT metadata"
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
     # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
@@ -772,8 +770,11 @@ install_virtualmin_release() {
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
-    run_ok "apt-get clean" "Cleaning out old metadata"
+    run_ok "apt-get clean" "Cleaning up software repo metadata"
     sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
+    if [ -z "$setup_only" ]; then
+      run_ok "apt-get upgrade -y" "Upgrading installed system packages"
+    fi
     ;;
   *)
     log_error " Your OS is not currently supported by this installer."
@@ -902,6 +903,7 @@ install_with_yum() {
   fi
 
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
+  run_ok "$install_cmd update -y" "Upgrading installed system packages"
 
   return 0
 }
