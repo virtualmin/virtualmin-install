@@ -347,6 +347,8 @@ remove_virtualmin_release() {
     mv "$tempdir"/sources.list /etc/apt/sources.list
     rm -f /etc/apt/sources.list.d/virtualmin.list
     rm -f /etc/apt/auth.conf.d/virtualmin.conf
+    rm -f /usr/share/keyrings/debian-virtualmin-*
+    rm -f /usr/share/keyrings/debian-webmin.gpg
     ;;
   esac
 }
