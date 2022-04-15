@@ -192,7 +192,7 @@ while true; do
     download="/usr/bin/fetch"
     break
   elif [ "$wget_attempted" = 1 ]; then
-    printf "${RED}No HTTP client available. Could not install wget. Cannot continue.${NORMAL}\\n"
+    printf ".. ${RED}no HTTP client available. Could not install wget. Cannot continue.${NORMAL}\\n"
     exit 1
   fi
 
@@ -210,12 +210,12 @@ done
 if [ -z "$download" ]; then
   echo "Tried to install downloader, but failed. Do you have working network and DNS?"
 fi
-printf "found %s\\n" "$download" >>$log
+printf " found %s\\n" "$download" >>$log
 
 # Check for gpg, debian 10 doesn't install by default!?
 if [ -x /usr/bin/apt-get ]; then
   if [ ! -x /usr/bin/gpg ]; then
-    printf "gpg not found, attempting to install..." >>$log
+    printf "GPG not found, attempting to install .." >>$log
     apt-get update >>/dev/null
     apt-get -y -q install gnupg >>$log
   fi
@@ -237,6 +237,7 @@ fi
 
 # Virtualmin-provided packages
 vmgroup="'Virtualmin Core'"
+vmgrouptext="Virtualmin provided"
 debvmpackages="virtualmin-core"
 deps=
 sclgroup="'Software Collections PHP 7.2 Environment'"
@@ -248,20 +249,24 @@ debpredeps="fail2ban"
 if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
+    rhgrouptext="Virtualmin LAMP stack"
     debdeps="postfix virtualmin-lamp-stack"
     ubudeps="postfix virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
+    rhgrouptext="Virtualmin LEMP stack"
     debdeps="postfix php*-fpm virtualmin-lemp-stack"
     ubudeps="postfix php*-fpm virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
+    rhgrouptext="Virtualmin LAMP stack minimal"
     debdeps="postfix virtualmin-lamp-stack-minimal"
     ubudeps="postfix virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
+    rhgrouptext="Virtualmin LEMP stack minimal'"
     debdeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
     ubudeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
   fi
@@ -277,7 +282,7 @@ fi
 # is mounted noexec, this won't catch it.
 TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
 if [ -n "$TMPNOEXEC" ]; then
-  echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Installation cannot continue."
+  echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Cannot continue."
   exit 1
 fi
 
@@ -602,7 +607,7 @@ log_debug "Product: Virtualmin $PRODUCT"
 log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
-log_debug "Checking for fully qualified hostname..."
+log_debug "Checking for fully qualified hostname .."
 name="$(hostname -f)"
 if [ -n "$forcehostname" ]; then
   set_hostname "$forcehostname"
@@ -626,7 +631,7 @@ log_debug "Operating system major:   $os_major_version"
 
 install_virtualmin_release() {
   # Grab virtualmin-release from the server
-  log_debug "Configuring package manager for ${os_real} ${os_version}..."
+  log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
   rhel | centos | rocky | almalinux | ol | fedora | amazon)
     case "$os_type" in
@@ -649,12 +654,12 @@ install_virtualmin_release() {
       fi
       ;;
     *)
-      printf "${RED}This OS/version is not recognized. Can't continue.${NORMAL}\\n"
+      printf "${RED}This OS/version is not recognized. Cannot continue.${NORMAL}\\n"
       exit 1
       ;;
     esac
     if [ -x /usr/sbin/setenforce ]; then
-      log_debug "Disabling SELinux during installation..."
+      log_debug "Disabling SELinux during installation .."
       if /usr/sbin/setenforce 0 1>/dev/null 2>&1; then
         log_debug " setenforce 0 succeeded"
       else
@@ -748,7 +753,7 @@ install_virtualmin_release() {
     fi
 
     # Install our keys
-    log_debug "Installing Webmin and Virtualmin package signing keys..."
+    log_debug "Installing Webmin and Virtualmin package signing keys .."
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version"
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin"
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/debian-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
@@ -965,7 +970,7 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing updates to Virtualmin-related packages"
+run_ok "$install_updates" "Installing updates to Virtualmin related packages"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
