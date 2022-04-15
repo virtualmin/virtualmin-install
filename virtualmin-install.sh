@@ -42,7 +42,6 @@ YELLOW="$(tput setaf 3)"
 CYAN="$(tput setaf 6)"
 BLACK="$(tput setaf 16)"
 NORMAL="$(tput sgr0)"
-GREEN=$(tput setaf 2)
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -141,8 +140,31 @@ while [ "$1" != "" ]; do
   esac
 done
 
+# Check if current time is not older than September 30, 2021,
+# which is the expiration date of IdentTrust DST Root CA X3
+TIME=`date +%s`
+if [ "$TIME" -lt 1632960000 ]; then
+  TIMESTR=`date`
+  echo "$0: current system time ${YELLOW}$TIMESTR${NORMAL} is incorrect! It must be fixed manually to continue."
+  exit
+fi
+
+echo "Running Virtualmin pre-installation setup:"
+echo "  Checking for system packages upgrades .."
+
+# Update all system packages first
+printf "Running system packages upgrades ..\\n" >>$log
+if [ -x /usr/bin/dnf ]; then
+  dnf -y update >>$log
+elif [ -x /usr/bin/yum ]; then
+  yum -y update >>$log
+elif [ -x /usr/bin/apt-get ]; then
+  apt-get -y upgrade >>$log
+fi
+echo "  .. done"
+
 # Make sure Perl is installed
-printf "Checking for Perl..." >>$log
+printf "Checking for Perl ..\\n" >>$log
 # loop until we've got a Perl or until we can't try any more
 while true; do
   perl="$(which perl 2>/dev/null)"
@@ -157,12 +179,11 @@ while true; do
       perl=/opt/csw/bin/perl
       break
     elif [ "$perl_attempted" = 1 ]; then
-      printf "${RED}Perl could not be installed - Installation cannot continue.${NORMAL}\\n"
+      printf ".. ${RED}Perl could not be installed. Cannot continue.${NORMAL}\\n"
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
-    echo "${GREEN}Virtualmin${NORMAL} requires ${CYAN}Perl${NORMAL} to run."
-    echo "Attempting to install it now. Please wait .."
+    echo "  Attempting to install Perl .."
     if [ -x /usr/bin/dnf ]; then
       dnf -y install perl >>$log
     elif [ -x /usr/bin/yum ]; then
@@ -177,10 +198,13 @@ while true; do
     break
   fi
 done
-printf "found Perl at $perl\\n" >>$log
+if [ "$perl_attempted" = 1 ]; then
+  echo "  .. done"
+fi
+printf ".. found Perl at $perl\\n" >>$log
 
 # Check for wget or curl or fetch
-printf "Checking for HTTP client..." >>$log
+printf "Checking for HTTP client .." >>$log
 while true; do
   if [ -x "/usr/bin/wget" ]; then
     download="/usr/bin/wget -nv"
@@ -778,9 +802,6 @@ install_virtualmin_release() {
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
     sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
-    if [ -z "$setup_only" ]; then
-      run_ok "apt-get upgrade -y" "Upgrading installed system packages"
-    fi
     ;;
   *)
     log_error " Your OS is not currently supported by this installer."
@@ -892,9 +913,6 @@ install_with_yum() {
     run_ok "$install_config_manager --set-enabled $powertools" "Enabling $powertoolsname package repository"
   fi
 
-  # Clear cache and install system packages upgrades first
-  run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
-  run_ok "$install_cmd update -y" "Upgrading installed system packages"
 
   # Important Perl packages are hidden in ol8_codeready_builder repo in Oracle
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "ol" ]; then
@@ -903,9 +921,13 @@ install_with_yum() {
 
   # XXX This is so stupid. Why does yum insists on extra commands?
   if [ "$os_major_version" -eq 7 ]; then
-    run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgroup for install"
-    run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgroup for install"
+    run_ok "yum --quiet groups mark install $rhgroup" "Marking $rhgrouptext for install"
+    run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgrouptext for install"
   fi
+  
+  # Clear cache and install system packages upgrades first
+  run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
+
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
   run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
   if [ $? -ne 0 ]; then
