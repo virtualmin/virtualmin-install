@@ -569,9 +569,9 @@ download() {
   # Especially make sure failure gets logged right.
   # awk magic prints the filename, rather than whole URL
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
-  run_ok "$download $1" "Downloading $download_file"
+  run_ok "$download $1" "Downloading Virtualmin release package"
   if [ $? -ne 0 ]; then
-    fatal "Failed to download $1. Cannot continue. Check your network connection and DNS settings."
+    fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings."
   else
     return 0
   fi
@@ -654,7 +654,7 @@ install_virtualmin_release() {
     esac
     if [ -x /usr/sbin/setenforce ]; then
       log_debug "Disabling SELinux during installation..."
-      if /usr/sbin/setenforce 0; then
+      if /usr/sbin/setenforce 0 1>/dev/null 2>&1; then
         log_debug " setenforce 0 succeeded"
       else
         log_debug "  setenforce 0 failed: $?"
@@ -667,7 +667,7 @@ install_virtualmin_release() {
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
       if ! $install_config_manager 1>/dev/null 2>&1; then
-        run_ok "$install dnf-plugins-core"
+        run_ok "$install dnf-plugins-core" "Installing core plugins for package manager"
       fi
     else
       install="/usr/bin/yum -y install"
@@ -683,7 +683,7 @@ install_virtualmin_release() {
       os_type_repo='rhel'
     fi
     download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
-    run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing virtualmin-release package"
+    run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
     # XXX This weirdly only seems necessary on CentOS 8, but harmless
     # elsewhere.
     rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
