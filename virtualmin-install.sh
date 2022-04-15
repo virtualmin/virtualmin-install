@@ -829,7 +829,7 @@ install_with_apt() {
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
-  run_ok "$install ${debvmpackages}" "Installing Virtualmin and plugins"
+  run_ok "$install ${debvmpackages}" "Installing Virtualmin and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
@@ -886,6 +886,10 @@ install_with_yum() {
     run_ok "$install_config_manager --set-enabled $powertools" "Enabling $powertoolsname package repository"
   fi
 
+  # Clear cache and install system packages upgrades first
+  run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
+  run_ok "$install_cmd update -y" "Upgrading installed system packages"
+
   # Important Perl packages are hidden in ol8_codeready_builder repo in Oracle
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "ol" ]; then
     run_ok "$install_config_manager --set-enabled ol${os_major_version}_codeready_builder" "Oracle Linux $os_major_version CodeReady Builder"
@@ -902,8 +906,6 @@ install_with_yum() {
     fatal "Installation failed: $?"
   fi
 
-  run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
-  run_ok "$install_cmd update -y" "Upgrading installed system packages"
 
   return 0
 }
@@ -936,14 +938,14 @@ install_epel_release() {
 install_scl_php() {
   if [ -z "$DISABLE_SCL" ]; then
     run_ok "$install yum-utils" "Installing yum-utils"
-    run_ok "$install_config_manager --enable extras >/dev/null" "Enabling extras repository"
-    run_ok "$install scl-utils" "Installing scl-utils"
+    run_ok "$install_config_manager --enable extras >/dev/null" "Enabling Extras package repository"
+    run_ok "$install scl-utils" "Installing utilities for alternative packaging"
     if [ "${os_type}" = "centos" ]; then
-      run_ok "$install centos-release-scl" "Install Software Collections release package"
+      run_ok "$install centos-release-scl" "Installing SCL release package"
     elif [ "${os_type}" = "rhel" ]; then
-      run_ok "$install_config_manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling Server Software Collection"
+      run_ok "$install_config_manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling SCL package repository"
     fi
-    run_ok "$install_group $sclgroup" "Installing PHP7"
+    run_ok "$install_group $sclgroup" "Installing PHP 7"
   fi
 }
 
