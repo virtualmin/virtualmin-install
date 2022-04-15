@@ -42,6 +42,7 @@ YELLOW="$(tput setaf 3)"
 CYAN="$(tput setaf 6)"
 BLACK="$(tput setaf 16)"
 NORMAL="$(tput sgr0)"
+GREEN=$(tput setaf 2)
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -149,7 +150,7 @@ if [ "$TIME" -lt 1632960000 ]; then
   exit
 fi
 
-echo "Running Virtualmin pre-installation setup:"
+echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
 echo "  Applying system packages upgrades .."
 
 # Update all system packages first
