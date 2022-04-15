@@ -42,6 +42,7 @@ YELLOW="$(tput setaf 3)"
 CYAN="$(tput setaf 6)"
 BLACK="$(tput setaf 16)"
 NORMAL="$(tput sgr0)"
+GREEN=$(tput setaf 2)
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -160,8 +161,8 @@ while true; do
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
-    echo 'Perl was not found on your system - Virtualmin requires it to run.'
-    echo 'Attempting to install it now...'
+    echo "${GREEN}Virtualmin${NORMAL} requires ${CYAN}Perl${NORMAL} to run."
+    echo "Attempting to install it now. Please wait .."
     if [ -x /usr/bin/dnf ]; then
       dnf -y install perl >>$log
     elif [ -x /usr/bin/yum ]; then
