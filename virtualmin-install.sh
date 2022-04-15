@@ -937,7 +937,7 @@ install_epel_release() {
 
 install_scl_php() {
   if [ -z "$DISABLE_SCL" ]; then
-    run_ok "$install yum-utils" "Installing yum-utils"
+    run_ok "$install yum-utils" "Installing core plugins for package manager"
     run_ok "$install_config_manager --enable extras >/dev/null" "Enabling Extras package repository"
     run_ok "$install scl-utils" "Installing utilities for alternative packaging"
     if [ "${os_type}" = "centos" ]; then
