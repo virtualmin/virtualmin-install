@@ -999,7 +999,7 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing updates to Virtualmin related packages"
+run_ok "$install_updates" "Installing Virtualmin related packages updates"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
