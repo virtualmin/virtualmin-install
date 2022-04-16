@@ -62,7 +62,7 @@ usage() {
   printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\\n"
   printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\\n"
-  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [SCL]\\n"
+  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [EPEL]\\n"
   echo
 }
 
@@ -102,10 +102,6 @@ while [ "$1" != "" ]; do
   --disable)
     shift
     case "$1" in
-    SCL)
-      shift
-      DISABLE_SCL=1
-      ;;
     EPEL)
       shift
       DISABLE_EPEL=1
@@ -891,12 +887,6 @@ install_with_yum() {
     if [ -z "$DISABLE_EPEL" ]; then
       run_ok "$install epel-release" "Installing EPEL release package"
     fi
-
-    ## XXX
-    if [ "$os_major_version" -lt 8 ]; then
-      # No SCL on CentOS 8
-      install_scl_php
-    fi
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
     if [ -z "$DISABLE_EPEL" ]; then
@@ -967,20 +957,6 @@ install_virtualmin() {
     return 0
   else
     return $?
-  fi
-}
-
-install_scl_php() {
-  if [ -z "$DISABLE_SCL" ]; then
-    run_ok "$install yum-utils" "Installing core plugins for package manager"
-    run_ok "$install_config_manager --enable extras >/dev/null" "Enabling Extras package repository"
-    run_ok "$install scl-utils" "Installing utilities for alternative packaging"
-    if [ "${os_type}" = "centos" ]; then
-      run_ok "$install centos-release-scl" "Installing SCL release package"
-    elif [ "${os_type}" = "rhel" ]; then
-      run_ok "$install_config_manager --enable rhel-server-rhscl-${os_major_version}-rpms" "Enabling SCL package repository"
-    fi
-    run_ok "$install_group $sclgroup" "Installing PHP 7"
   fi
 }
 
