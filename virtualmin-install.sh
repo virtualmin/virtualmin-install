@@ -62,7 +62,6 @@ usage() {
   printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\\n"
   printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\\n"
-  printf "  ${YELLOW}--disable <feature>${NORMAL} - Disable feature [EPEL]\\n"
   echo
 }
 
@@ -98,19 +97,6 @@ while [ "$1" != "" ]; do
   --minimal | -m)
     shift
     mode='minimal'
-    ;;
-  --disable)
-    shift
-    case "$1" in
-    EPEL)
-      shift
-      DISABLE_EPEL=1
-      ;;
-    *)
-      printf "Unknown feature ${YELLOW}$1${NORMAL}: exiting\\n"
-      exit 1
-      ;;
-    esac
     ;;
   --bundle | -b)
     shift
@@ -871,27 +857,19 @@ install_with_yum() {
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "rhel" ]; then
     # Important Perl packages are now hidden in CodeReady repo
     run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
-    # Install EPEL unless disabled
-    if [ -z "$DISABLE_EPEL" ]; then
-      download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
-      run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
-    fi
+    # Install EPEL
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on RHEL 7
   elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
-    if [ -z "$DISABLE_EPEL" ]; then
-      download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-      run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
-    fi
-  # Install EPEL on CentOS/Alma/Rocky 7+
-  elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
-    if [ -z "$DISABLE_EPEL" ]; then
-      run_ok "$install epel-release" "Installing EPEL release package"
-    fi
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
+  # Install EPEL on CentOS/Alma/Rocky
+  elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
+    run_ok "$install epel-release" "Installing EPEL release package"
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
-    if [ -z "$DISABLE_EPEL" ]; then
-      run_ok "$install oracle-epel-release-el$os_major_version" "Installing EPEL release package"
-    fi
+    run_ok "$install oracle-epel-release-el$os_major_version" "Installing EPEL release package"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
