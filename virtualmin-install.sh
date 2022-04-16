@@ -871,25 +871,37 @@ install_with_apt() {
 }
 
 install_with_yum() {
-  # RHEL 8 specific setup
+  # Enable CodeReady and EPEL on RHEL 8+
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "rhel" ]; then
     # Important Perl packages are now hidden in CodeReady repo
     run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
-    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
-  # RHEL 7 specific setup
+    # Install EPEL unless disabled
+    if [ -z "$DISABLE_EPEL" ]; then
+      download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
+      run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
+    fi
+  # Install EPEL on RHEL 7
   elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
-    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
-  # install extras from EPEL and SCL
+    if [ -z "$DISABLE_EPEL" ]; then
+      download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+      run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
+    fi
+  # Install EPEL on CentOS/Alma/Rocky 7+
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
-    install_epel_release "epel-release"
+    if [ -z "$DISABLE_EPEL" ]; then
+      run_ok "$install epel-release" "Installing EPEL release package"
+    fi
+
+    ## XXX
     if [ "$os_major_version" -lt 8 ]; then
       # No SCL on CentOS 8
       install_scl_php
     fi
+  # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
-    install_epel_release "oracle-epel-release-el$os_major_version"
+    if [ -z "$DISABLE_EPEL" ]; then
+      run_ok "$install oracle-epel-release-el$os_major_version" "Installing EPEL release package"
+    fi
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
@@ -955,12 +967,6 @@ install_virtualmin() {
     return 0
   else
     return $?
-  fi
-}
-
-install_epel_release() {
-  if [ -z "$DISABLE_EPEL" ]; then
-    run_ok "$install $1" "Installing EPEL release package"
   fi
 }
 
