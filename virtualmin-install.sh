@@ -24,13 +24,13 @@ upgrade_virtualmin_host=software.virtualmin.com
 
 # Currently supported systems:
 supported="    Red Hat Enterprise Linux derivatives
-      - Alma Linux and Rocky 8 on x86_64
-      - CentOS 7 and CentOS Stream 8 and 9 on x86_64
-      - RHEL Linux 7 and 8 on x86_64
+      - Alma Linux and Rocky 8 on x86_64 and aarch64
+      - CentOS 7 and CentOS Stream 8 and 9 on x86_64 and aarch64
+      - RHEL Linux 7 and 8 on x86_64 and aarch64
 
     Debian Linux derivatives
-      - Ubuntu 20.04 LTS and 22.04 LTS (beta) on i386 and amd64
-      - Debian 10 and 11 on i386 and amd64"
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386, amd64 and arm64
+      - Debian 10 and 11 on i386, amd64 and arm64"
 
 log=/root/virtualmin-install.log
 skipyesno=0
@@ -246,6 +246,9 @@ fi
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
   arch="i386"
+fi
+if [ "$arch" = "arm64" ] || [ "$arch" = "aarch64" ]; then
+  arch="arm64"
 fi
 if [ "$SERIAL" = "GPL" ]; then
   LOGIN=""
