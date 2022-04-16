@@ -123,19 +123,34 @@ while [ "$1" != "" ]; do
   esac
 done
 
-# Check if current time is not older than September 30, 2021,
-# which is the expiration date of IdentTrust DST Root CA X3
+echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
+
+# Check if current time
+# is not older than
+# April 2, 2022
+TIMEBASE=1648888888
 TIME=`date +%s`
-if [ "$TIME" -lt 1632960000 ]; then
-  TIMESTR=`date`
-  echo "$0: current system time ${YELLOW}$TIMESTR${NORMAL} is incorrect! It must be fixed manually to continue."
-  exit
+if [ "$TIME" -lt "$TIMEBASE" ]; then
+  echo "  Syncing system time .."
+
+  # Try to sync time automatically first
+  if systemctl restart chronyd 1>/dev/null 2>&1; then
+    sleep 15
+  elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+    sleep 15
+  fi
+
+  # Check again after all
+  TIME=`date +%s`
+  if [ "$TIME" -lt "$TIMEBASE" ]; then
+    echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
+    exit
+  fi
+  echo "  .. done"
 fi
 
-echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
-echo "  Applying system packages upgrades .."
-
 # Update all system packages first
+echo "  Checking and installing system packages updates, if any .."
 printf "Running system packages upgrades ..\\n" >>$log
 if [ -x /usr/bin/dnf ]; then
   dnf -y update >>$log 2>&1
