@@ -152,11 +152,11 @@ echo "  Applying system packages upgrades .."
 # Update all system packages first
 printf "Running system packages upgrades ..\\n" >>$log
 if [ -x /usr/bin/dnf ]; then
-  dnf -y update >>$log
+  dnf -y update >>$log 2>&1
 elif [ -x /usr/bin/yum ]; then
-  yum -y update >>$log
+  yum -y update >>$log 2>&1
 elif [ -x /usr/bin/apt-get ]; then
-  apt-get -y upgrade >>$log
+  apt-get -y upgrade >>$log 2>&1
 fi
 echo "  .. done"
 
