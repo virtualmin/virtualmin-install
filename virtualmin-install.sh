@@ -54,14 +54,14 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin."
   echo
-  printf "  ${YELLOW}--uninstall|-u${NORMAL} - Removes all Virtualmin packages (do not use on a production system)\\n"
-  printf "  ${YELLOW}--help|-h${NORMAL} - This message\\n"
-  printf "  ${YELLOW}--force|-f${NORMAL} - Skip confirmation message\\n"
-  printf "  ${YELLOW}--hostname|-n${NORMAL} - Set fully qualified hostname\\n"
-  printf "  ${YELLOW}--verbose|-v${NORMAL} - Verbose\\n"
-  printf "  ${YELLOW}--setup|-s${NORMAL} - Setup software repositories and exit (no installation or configuration)\\n"
-  printf "  ${YELLOW}--minimal|-m${NORMAL} - Install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  ${YELLOW}--bundle|-b <name>${NORMAL} - Choose bundle to install (LAMP or LEMP, defaults to LAMP)\\n"
+  printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
+  printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
+  printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
+  printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
+  printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
+  printf "  ${YELLOW}--verbose|-v${NORMAL}            increase verbosity\\n"
+  printf "  ${YELLOW}--uninstall|-u${NORMAL}          removes all Virtualmin packages (do not use on a production system)\\n"
   echo
 }
 
