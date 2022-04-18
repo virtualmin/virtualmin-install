@@ -29,7 +29,7 @@ supported="    Red Hat Enterprise Linux derivatives
       - RHEL Linux 7 and 8 on x86_64
 
     Debian Linux derivatives
-      - Ubuntu 20.04 LTS and 22.04 LTS (beta) on i386 and amd64
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
       - Debian 10 and 11 on i386 and amd64"
 
 log=/root/virtualmin-install.log
