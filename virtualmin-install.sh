@@ -25,7 +25,7 @@ upgrade_virtualmin_host=software.virtualmin.com
 # Currently supported systems:
 supported="    Red Hat Enterprise Linux derivatives
       - Alma Linux and Rocky 8 on x86_64
-      - CentOS 7 and CentOS Stream 8 and 9 on x86_64
+      - CentOS 7 and 8 on x86_64
       - RHEL Linux 7 and 8 on x86_64
 
     Debian Linux derivatives
