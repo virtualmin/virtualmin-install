@@ -767,12 +767,16 @@ install_virtualmin_release() {
     # Remove any existing repo config, in case it's a reinstall
     remove_virtualmin_release
     apt_auth_dir='/etc/apt/auth.conf.d'
-    for repo in $repos; do
-      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
-    done
-    if [ -n "$LOGIN" ]; then
-      printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >>"$apt_auth_dir/virtualmin.conf"
+    LOGINREAL=$LOGIN
+    if [ -x "$apt_auth_dir" ]; then
+      if [ -n "$LOGIN" ]; then
+        LOGINREAL=""
+        printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >>"$apt_auth_dir/virtualmin.conf"
+      fi
     fi
+    for repo in $repos; do
+      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
+    done
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
