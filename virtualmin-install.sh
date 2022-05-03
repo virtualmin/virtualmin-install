@@ -597,7 +597,7 @@ download() {
   # Especially make sure failure gets logged right.
   # awk magic prints the filename, rather than whole URL
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
-  run_ok "$download $1" "Downloading Virtualmin release package"
+  run_ok "$download $1" "$2"
   if [ $? -ne 0 ]; then
     fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings."
   else
@@ -710,7 +710,7 @@ install_virtualmin_release() {
     if [ "$os_type" = "ol" ]; then
       os_type_repo='rhel'
     fi
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm"
+    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
     run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
     # XXX This weirdly only seems necessary on CentOS 8, but harmless
     # elsewhere.
@@ -776,9 +776,9 @@ install_virtualmin_release() {
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version"
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin"
+    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/debian-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
+    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
     run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/debian-webmin.gpg" "Installing Webmin key"
 
     run_ok "apt-get update" "Downloading repository metadata"
