@@ -123,46 +123,48 @@ while [ "$1" != "" ]; do
   esac
 done
 
-echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
+if [ -z "$setup_only" ]; then
+  echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
 
-# Check if current time
-# is not older than
-# April 2, 2022
-TIMEBASE=1648888888
-TIME=`date +%s`
-if [ "$TIME" -lt "$TIMEBASE" ]; then
-  echo "  Syncing system time .."
-
-  # Try to sync time automatically first
-  if systemctl restart chronyd 1>/dev/null 2>&1; then
-    sleep 15
-  elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
-    sleep 15
-  fi
-
-  # Check again after all
+  # Check if current time
+  # is not older than
+  # April 2, 2022
+  TIMEBASE=1648888888
   TIME=`date +%s`
   if [ "$TIME" -lt "$TIMEBASE" ]; then
-    echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
-    exit
+    echo "  Syncing system time .."
+
+    # Try to sync time automatically first
+    if systemctl restart chronyd 1>/dev/null 2>&1; then
+      sleep 15
+    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+      sleep 15
+    fi
+
+    # Check again after all
+    TIME=`date +%s`
+    if [ "$TIME" -lt "$TIMEBASE" ]; then
+      echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
+      exit
+    fi
+    echo "  .. done"
+  fi
+
+  # Update all system packages first
+  echo "  Checking and installing system packages updates, if any .."
+  printf "Running system packages upgrades ..\\n" >>$log
+  if [ -x /usr/bin/dnf ]; then
+    dnf -y update >>$log 2>&1
+  elif [ -x /usr/bin/yum ]; then
+    yum -y update >>$log 2>&1
+  elif [ -x /usr/bin/apt-get ]; then
+    apt-get -y upgrade >>$log 2>&1
   fi
   echo "  .. done"
-fi
 
-# Update all system packages first
-echo "  Checking and installing system packages updates, if any .."
-printf "Running system packages upgrades ..\\n" >>$log
-if [ -x /usr/bin/dnf ]; then
-  dnf -y update >>$log 2>&1
-elif [ -x /usr/bin/yum ]; then
-  yum -y update >>$log 2>&1
-elif [ -x /usr/bin/apt-get ]; then
-  apt-get -y upgrade >>$log 2>&1
+  # Make sure Perl is installed
+  printf "Checking for Perl ..\\n" >>$log
 fi
-echo "  .. done"
-
-# Make sure Perl is installed
-printf "Checking for Perl ..\\n" >>$log
 # loop until we've got a Perl or until we can't try any more
 while true; do
   perl="$(which perl 2>/dev/null)"
@@ -177,11 +179,13 @@ while true; do
       perl=/opt/csw/bin/perl
       break
     elif [ "$perl_attempted" = 1 ]; then
-      printf ".. ${RED}Perl could not be installed. Cannot continue.${NORMAL}\\n"
+      printf "Perl ${RED}could not${NORMAL} be installed. Cannot continue.\\n"
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
-    echo "  Attempting to install Perl .."
+    if [ -z "$setup_only" ]; then
+      echo "  Attempting to install Perl .."
+    fi
     if [ -x /usr/bin/dnf ]; then
       dnf -y install perl >>$log
     elif [ -x /usr/bin/yum ]; then
@@ -196,8 +200,10 @@ while true; do
     break
   fi
 done
-if [ "$perl_attempted" = 1 ]; then
-  echo "  .. done"
+if [ -z "$setup_only" ]; then
+  if [ "$perl_attempted" = 1 ]; then
+    echo "  .. done"
+  fi
 fi
 printf ".. found Perl at $perl\\n" >>$log
 
@@ -614,11 +620,11 @@ if [ "$?" != "0" ]; then
   fi
 fi
 
-log_info "Started installation log in $log"
 if [ -n "$setup_only" ]; then
-  log_debug "Phase 1 of 1: Setup"
+  log_info "Started Virtualmin $vm_version software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
+  log_info "Started installation log in $log"
   log_debug "Phase 1 of 3: Setup"
   printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\\n"
 fi
