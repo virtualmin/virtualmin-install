@@ -129,7 +129,7 @@ if [ -z "$setup_only" ]; then
   # Check if current time
   # is not older than
   # April 2, 2022
-  TIMEBASE=1648888888
+  TIMEBASE=1651363200
   TIME=`date +%s`
   if [ "$TIME" -lt "$TIMEBASE" ]; then
     echo "  Syncing system time .."
