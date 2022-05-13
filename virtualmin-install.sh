@@ -32,6 +32,11 @@ supported="    Red Hat Enterprise Linux derivatives
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
       - Debian 10 and 11 on i386 and amd64"
 
+unstable_supported="    Grade B systems
+      Red Hat Enterprise Linux derivatives
+        - Fedora Server 36 and above
+        - Oracle Linux 8"
+
 log=/root/virtualmin-install.log
 skipyesno=0
 
@@ -57,6 +62,7 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for grade B systems\\n"
   printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
   printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
   printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
@@ -376,8 +382,10 @@ log_fatal() {
 remove_virtualmin_release() {
   # shellcheck disable=SC2154
   case "$os_type" in
-  "fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
-    run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
+  "fedora" | "centos" | "rhel" | "rocky" | "almalinux" | "ol")
+    rm -f /etc/yum.repos.d/virtualmin.repo
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
     ;;
   "debian" | "ubuntu")
     grep -v "virtualmin" /etc/apt/sources.list >"$tempdir"/sources.list
@@ -518,6 +526,10 @@ install_msg() {
 
 EOF
   echo "${CYAN}$supported${NORMAL}"
+  if [ -n "$unstable" ]; then
+      echo
+      echo "${YELLOW}$unstable_supported${NORMAL}"
+  fi
   cat <<EOF
 
   If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
@@ -675,23 +687,23 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | rocky | almalinux | ol | fedora | amazon)
+  rhel | centos | rocky | almalinux | ol | fedora)
     case "$os_type" in
     rhel | centos)
       if [ "$os_major_version" -lt 7 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     rocky | almalinux | ol)
-      if [ "$os_major_version" -lt 8 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+      if [ "$os_major_version" -lt 8 ] || ([ -z "$unstable" ] && [ "$os_type" = "ol" ]); then
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     fedora)
-      if [ "$os_version" -lt 33 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+      if [ "$os_version" -lt 36 ] || ([ -z "$unstable" ] && [ "$os_type" = "fedora" ]); then
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
@@ -726,61 +738,64 @@ install_virtualmin_release() {
       install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
-    os_type_repo="$os_type"
+    
+    # Setup repos
+    rhel_derivative_repo_file="/etc/yum.repos.d/virtualmin.repo"
+    rhel_derivative_variant="$os_type"
+    rhel_derivative_base_version="$os_major_version"
+
+    # Oracle mod
     if [ "$os_type" = "ol" ]; then
-      os_type_repo='rhel'
+      rhel_derivative_variant='rhel'
     fi
+
+    # Fedora mod
     if [ "$os_type" = "fedora" ]; then
-      fedora_repo="/etc/yum.repos.d/virtualmin.repo"
-      fedora_rhel_variant="rhel"
-      fedora_rhel_base=8
+      rhel_derivative_variant="rhel"
+      rhel_derivative_base_version=8
+      excluded="jailkit"
       
-      log_debug "Setting up $os_real Virtualmin repositories .."
-      printf "[virtualmin]\\n" >$fedora_repo
-      printf "name=$os_real Virtualmin \$releasever - \$basearch\\n" >>$fedora_repo
-      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${fedora_rhel_variant}/$fedora_rhel_base/\$basearch/\\n" >>$fedora_repo
-      printf "enabled=1\\n" >>$fedora_repo
-      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
-      printf "gpgcheck=1\\n" >>$fedora_repo
-      printf "exclude=jailkit\\n" >>$fedora_repo
-      printf "\\n" >>$fedora_repo
-      printf "[virtualmin-neutral]\\n" >>$fedora_repo
-      printf "name=$os_real Virtualmin Neutral \$releasever\\n" >>$fedora_repo
-      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$fedora_repo
-      printf "enabled=1\\n" >>$fedora_repo
-      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
-      printf "gpgcheck=1\\n" >>$fedora_repo
-      run_ok "echo >>$fedora_repo" "Setting up Virtualmin repositories"
-
-      log_debug "Installing Webmin and Virtualmin package signing keys .."
-      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-      run_ok "rpm --import RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
-      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
-      run_ok "rpm --import RPM-GPG-KEY-webmin" "Installing Webmin key"
-
       log_debug "Installing Fedora specific packages .."
       run_ok "$install cronie" "Installing Fedora specific packages"
-
-    else
-      download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
-      run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
-      
-      # Import installed keys
-      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version"
-      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-webmin"
     fi
+    
+    # Configure repo file  
+    log_debug "Setting up $os_real Virtualmin repositories .."
+    printf "[virtualmin]\\n" >$rhel_derivative_repo_file
+    printf "name=Virtualmin for $os_real \$releasever - \$basearch\\n" >>$rhel_derivative_repo_file
+    printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${rhel_derivative_variant}/$rhel_derivative_base_version/\$basearch/\\n" >>$rhel_derivative_repo_file
+    printf "enabled=1\\n" >>$rhel_derivative_repo_file
+    printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
+    printf "gpgcheck=1\\n" >>$rhel_derivative_repo_file
+    if [ -n "$excluded" ]; then
+      printf "exclude=$excluded\\n" >>$rhel_derivative_repo_file
+    fi
+    printf "\\n" >>$rhel_derivative_repo_file
+    printf "[virtualmin-neutral]\\n" >>$rhel_derivative_repo_file
+    printf "name=Virtualmin Neutral for $os_real \$releasever\\n" >>$rhel_derivative_repo_file
+    printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$rhel_derivative_repo_file
+    printf "enabled=1\\n" >>$rhel_derivative_repo_file
+    printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
+    printf "gpgcheck=1\\n" >>$rhel_derivative_repo_file
+    run_ok "echo >>$rhel_derivative_repo_file" "Setting up Virtualmin repositories"
+
+    log_debug "Installing Webmin and Virtualmin package signing keys .."
+    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+    run_ok "rpm --import RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
+    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
+    run_ok "rpm --import RPM-GPG-KEY-webmin" "Installing Webmin key"
     ;;
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
       if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     debian)
       if [ "$os_major_version" -lt 10 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
@@ -1068,7 +1083,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
+"fedora" | "centos" | "rhel" | "rocky" | "almalinux" | "ol")
   disable_selinux
   ;;
 esac
