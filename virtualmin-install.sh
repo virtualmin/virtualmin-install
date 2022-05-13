@@ -22,24 +22,6 @@ VER=7.0.0-RC6
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
-# Currently supported systems:
-supported="    Red Hat Enterprise Linux derivatives
-      - Alma Linux and Rocky 8 on x86_64
-      - CentOS 7 and 8 on x86_64
-      - RHEL Linux 7 and 8 on x86_64
-
-    Debian Linux derivatives
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
-      - Debian 10 and 11 on i386 and amd64"
-
-unstable_supported="    Grade B systems
-      Red Hat Enterprise Linux derivatives
-        - Fedora Server 36 and above
-        - Oracle Linux 8"
-
-log=/root/virtualmin-install.log
-skipyesno=0
-
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
 RED="$(tput setaf 1)"
@@ -48,6 +30,25 @@ CYAN="$(tput setaf 6)"
 BLACK="$(tput setaf 16)"
 NORMAL="$(tput sgr0)"
 GREEN=$(tput setaf 2)
+CYANBG=$(tput setab 6)
+BOLD=$(tput bold)
+
+# Currently supported systems:
+supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
+      - Alma Linux and Rocky 8 on x86_64
+      - CentOS 7 and 8 on x86_64
+      - RHEL Linux 7 and 8 on x86_64${NORMAL}
+      UNSTABLERHEL
+    ${CYANBG}${BLACK}${BOLD}Debian Linux derivatives${NORMAL}${CYAN}
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
+      - Debian 10 and 11 on i386 and amd64${NORMAL}"
+
+unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64
+      - Oracle Linux 8 on x86_64
+      ${NORMAL}"
+
+log=/root/virtualmin-install.log
+skipyesno=0
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -62,7 +63,7 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for grade B systems\\n"
+  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, Oracle)\\n"
   printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
   printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
   printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
@@ -525,11 +526,13 @@ install_msg() {
   The systems currently supported by install script are:
 
 EOF
-  echo "${CYAN}$supported${NORMAL}"
+  supported_all=$supported
   if [ -n "$unstable" ]; then
-      echo
-      echo "${YELLOW}$unstable_supported${NORMAL}"
+    supported_all="${supported_all/UNSTABLERHEL/$unstable_rhel}"
+  else
+    supported_all="${supported_all/UNSTABLERHEL/}"
   fi
+  echo "$supported_all"
   cat <<EOF
 
   If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
