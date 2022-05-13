@@ -71,33 +71,6 @@ while [ "$1" != "" ]; do
     usage
     exit 0
     ;;
-  --uninstall | -u)
-    shift
-    mode="uninstall"
-    ;;
-  --force | -f | --yes | -y)
-    shift
-    skipyesno=1
-    ;;
-  --hostname | -n)
-    shift
-    forcehostname=$1
-    shift
-    ;;
-  --verbose | -v)
-    shift
-    VERBOSE=1
-    ;;
-  --setup | -s)
-    shift
-    setup_only=1
-    mode='setup'
-    break
-    ;;
-  --minimal | -m)
-    shift
-    mode='minimal'
-    ;;
   --bundle | -b)
     shift
     case "$1" in
@@ -114,6 +87,37 @@ while [ "$1" != "" ]; do
       exit 1
       ;;
     esac
+    ;;
+  --minimal | -m)
+    shift
+    mode='minimal'
+    ;;
+  --unstable | -e)
+    shift
+    unstable='unstable'
+    ;;
+  --setup | -s)
+    shift
+    setup_only=1
+    mode='setup'
+    break
+    ;;
+  --hostname | -n)
+    shift
+    forcehostname=$1
+    shift
+    ;;
+  --force | -f | --yes | -y)
+    shift
+    skipyesno=1
+    ;;
+  --verbose | -v)
+    shift
+    VERBOSE=1
+    ;;
+  --uninstall | -u)
+    shift
+    mode="uninstall"
     ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
