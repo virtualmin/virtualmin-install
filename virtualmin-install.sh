@@ -621,6 +621,17 @@ if [ "$?" != "0" ]; then
 fi
 
 if [ -n "$setup_only" ]; then
+  # If Virtualmin 6 is installed and a user needs to fix repos make,
+  # sure that we don't switch 6 to 7 to keep the same stack packages
+  reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
+  vm_version_already_installed=$(($vm_version - 1))
+  for repofile in $reposfile; do
+    if [ -f "$repofile" ]; then
+      if fgrep -q "/vm/$vm_version_already_installed/" "$repofile"; then 
+        vm_version=$vm_version_already_installed
+      fi
+    fi
+  done
   log_info "Started Virtualmin $vm_version software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
