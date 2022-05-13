@@ -774,7 +774,7 @@ install_virtualmin_release() {
     remove_virtualmin_release
     apt_auth_dir='/etc/apt/auth.conf.d'
     LOGINREAL=$LOGIN
-    if [ -x "$apt_auth_dir" ]; then
+    if [ -d "$apt_auth_dir" ]; then
       if [ -n "$LOGIN" ]; then
         LOGINREAL=""
         printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >>"$apt_auth_dir/virtualmin.conf"
