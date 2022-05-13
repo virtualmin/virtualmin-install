@@ -726,6 +726,7 @@ install_virtualmin_release() {
     package_type="rpm"
     if which dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
+      remove="dnf -y remove"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
@@ -734,6 +735,7 @@ install_virtualmin_release() {
       fi
     else
       install="/usr/bin/yum -y install"
+      remove="/usr/bin/yum -y remove"
       install_cmd="/usr/bin/yum"
       if [ "$os_major_version" -ge 7 ]; then
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
@@ -757,9 +759,10 @@ install_virtualmin_release() {
       rhel_derivative_variant="rhel"
       rhel_derivative_base_version=8
       excluded="jailkit"
+      removeunused="wbm-jailkit"
       
-      log_debug "Installing Fedora specific packages .."
-      run_ok "$install cronie" "Installing Fedora specific packages"
+      log_debug "Installing distro ($os_real) specific packages .."
+      run_ok "$install cronie" "Installing distro specific packages"
     fi
     
     # Configure repo file  
@@ -930,7 +933,7 @@ install_with_apt() {
   for d in ${deps}; do
     run_ok "$install ${d}" "Installing $d"
   done
-  run_ok "$install ${debvmpackages}" "Installing Virtualmin and all related packages"
+  run_ok "$install ${debvmpackages}" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
@@ -1001,7 +1004,7 @@ install_with_yum() {
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
+  run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $?"
   fi
@@ -1044,10 +1047,15 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing Virtualmin related packages updates"
+run_ok "$install_updates" "Installing Virtualmin $vm_version related packages updates"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
+fi
+
+# Clean up un-used packages, if any
+if [ -n "$removeunused" ]; then
+  run_ok "$remove $removeunused" "Cleaning up un-used modules"
 fi
 
 # Reap any clingy processes (like spinner forks)
