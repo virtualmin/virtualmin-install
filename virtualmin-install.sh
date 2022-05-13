@@ -766,9 +766,9 @@ install_virtualmin_release() {
     fi
     
     # Configure repo file  
-    log_debug "Setting up $os_real Virtualmin repositories .."
+    log_debug "Setting up $os_real Virtualmin $vm_version repositories .."
     printf "[virtualmin]\\n" >$rhel_derivative_repo_file
-    printf "name=Virtualmin for $os_real \$releasever - \$basearch\\n" >>$rhel_derivative_repo_file
+    printf "name=Virtualmin $vm_version Packages for $os_real \$releasever - \$basearch\\n" >>$rhel_derivative_repo_file
     printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${rhel_derivative_variant}/$rhel_derivative_base_version/\$basearch/\\n" >>$rhel_derivative_repo_file
     printf "enabled=1\\n" >>$rhel_derivative_repo_file
     printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
@@ -777,8 +777,8 @@ install_virtualmin_release() {
       printf "exclude=$excluded\\n" >>$rhel_derivative_repo_file
     fi
     printf "\\n" >>$rhel_derivative_repo_file
-    printf "[virtualmin-neutral]\\n" >>$rhel_derivative_repo_file
-    printf "name=Virtualmin Neutral for $os_real \$releasever\\n" >>$rhel_derivative_repo_file
+    printf "[virtualmin-universal]\\n" >>$rhel_derivative_repo_file
+    printf "name=Virtualmin $vm_version Neutral Packages for $os_real \$releasever\\n" >>$rhel_derivative_repo_file
     printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$rhel_derivative_repo_file
     printf "enabled=1\\n" >>$rhel_derivative_repo_file
     printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
