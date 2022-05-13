@@ -726,11 +726,45 @@ install_virtualmin_release() {
     if [ "$os_type" = "ol" ]; then
       os_type_repo='rhel'
     fi
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
-    run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
-    # XXX This weirdly only seems necessary on CentOS 8, but harmless
-    # elsewhere.
-    rpm --import /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
+    if [ "$os_type" = "fedora" ]; then
+      fedora_repo="/etc/yum.repos.d/virtualmin.repo"
+      fedora_rhel_variant="rhel"
+      fedora_rhel_base=8
+      
+      log_debug "Setting up $os_real Virtualmin repositories .."
+      printf "[virtualmin]\\n" >$fedora_repo
+      printf "name=$os_real Virtualmin \$releasever - \$basearch\\n" >>$fedora_repo
+      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${fedora_rhel_variant}/$fedora_rhel_base/\$basearch/\\n" >>$fedora_repo
+      printf "enabled=1\\n" >>$fedora_repo
+      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
+      printf "gpgcheck=1\\n" >>$fedora_repo
+      printf "exclude=jailkit\\n" >>$fedora_repo
+      printf "\\n" >>$fedora_repo
+      printf "[virtualmin-neutral]\\n" >>$fedora_repo
+      printf "name=$os_real Virtualmin Neutral \$releasever\\n" >>$fedora_repo
+      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$fedora_repo
+      printf "enabled=1\\n" >>$fedora_repo
+      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
+      printf "gpgcheck=1\\n" >>$fedora_repo
+      run_ok "echo >>$fedora_repo" "Setting up Virtualmin repositories"
+
+      log_debug "Installing Webmin and Virtualmin package signing keys .."
+      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+      run_ok "rpm --import RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
+      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
+      run_ok "rpm --import RPM-GPG-KEY-webmin" "Installing Webmin key"
+
+      log_debug "Installing Fedora specific packages .."
+      run_ok "$install cronie" "Installing Fedora specific packages"
+
+    else
+      download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
+      run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
+      
+      # Import installed keys
+      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version"
+      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-webmin"
+    fi
     ;;
   debian | ubuntu)
     case "$os_type" in
