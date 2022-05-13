@@ -268,7 +268,6 @@ vmgroup="'Virtualmin Core'"
 vmgrouptext="Virtualmin provided"
 debvmpackages="virtualmin-core"
 deps=
-sclgroup="'Software Collections PHP 7.2 Environment'"
 
 # This has to be installed before anything else, so it can be disabled during
 # install, and turned back on after. This is ridiculous.
