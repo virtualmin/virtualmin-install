@@ -130,7 +130,7 @@ if [ -z "$setup_only" ]; then
   # is not older than
   # April 2, 2022
   TIMEBASE=1651363200
-  TIME=$(date +%s)
+  TIME=`date +%s`
   if [ "$TIME" -lt "$TIMEBASE" ]; then
     echo "  Syncing system time .."
 
@@ -142,7 +142,7 @@ if [ -z "$setup_only" ]; then
     fi
 
     # Check again after all
-    TIME=$(date +%s)
+    TIME=`date +%s`
     if [ "$TIME" -lt "$TIMEBASE" ]; then
       echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
       exit
@@ -167,7 +167,7 @@ if [ -z "$setup_only" ]; then
 fi
 # loop until we've got a Perl or until we can't try any more
 while true; do
-  perl="$(command -v perl 2>/dev/null)"
+  perl="$(which perl 2>/dev/null)"
   if [ -z "$perl" ]; then
     if [ -x /usr/bin/perl ]; then
       perl=/usr/bin/perl
@@ -436,9 +436,9 @@ uninstall() {
 
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if command -v rpm 1>/dev/null 2>&1; then
+  if which rpm 1>/dev/null 2>&1; then
     package_type=rpm
-  elif command -v dpkg 1>/dev/null 2>&1; then
+  elif which dpkg 1>/dev/null 2>&1; then
     package_type=deb
   fi
 
@@ -626,7 +626,7 @@ if [ -n "$setup_only" ]; then
   vm_version_already_installed=$(($vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then 
+      if fgrep -q "/vm/$vm_version_already_installed/" "$repofile"; then 
         vm_version=$vm_version_already_installed
       fi
     fi
@@ -705,7 +705,7 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
-    if command -v dnf 1>/dev/null 2>&1; then
+    if which dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
@@ -946,7 +946,7 @@ install_with_yum() {
     # Detect PowerTools repo name
     powertools=$(dnf repolist all | grep "^powertools")
     powertoolsname="PowerTools"
-    if [ -n "$powertools" ]; then
+    if [ ! -z "$powertools" ]; then
       powertools="powertools"
     else
       powertools="PowerTools"
@@ -955,7 +955,7 @@ install_with_yum() {
     # CentOS 9 Stream changed the name to CBR
     if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos" ]; then
       powertools=$(dnf repolist all | grep "^crb")
-      if [ -n "$powertools" ]; then
+      if [ ! -z "$powertools" ]; then
         powertools="crb"
         powertoolsname="CRB"
       fi
