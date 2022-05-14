@@ -44,6 +44,7 @@ supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NOR
       - Debian 10 and 11 on i386 and amd64${NORMAL}"
 
 unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64
+      - CentOS Stream 8 and 9 on x86_64
       - Oracle Linux 8 on x86_64
       ${NORMAL}"
 
@@ -383,7 +384,7 @@ log_fatal() {
 remove_virtualmin_release() {
   # shellcheck disable=SC2154
   case "$os_type" in
-  "fedora" | "centos" | "rhel" | "rocky" | "almalinux" | "ol")
+  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -690,12 +691,19 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | rocky | almalinux | ol | fedora)
+  rhel | centos | centos_stream | rocky | almalinux | ol | fedora)
     case "$os_type" in
-    rhel | centos)
-      if [ "$os_major_version" -lt 7 ]; then
-        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
-        exit 1
+    rhel | centos | centos_stream)
+      if [ "$os_type" = "centos_stream" ]; then
+        if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ]; then
+          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          exit 1
+        fi
+      else
+        if [ "$os_major_version" -lt 7 ]; then
+          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          exit 1
+        fi
       fi
       ;;
     rocky | almalinux | ol)
@@ -764,7 +772,17 @@ install_virtualmin_release() {
       log_debug "Installing distro ($os_real) specific packages .."
       run_ok "$install cronie" "Installing distro specific packages"
     fi
-    
+
+    # CentOS Stream mods
+    if [ "$os_type" = "centos_stream" ]; then
+      rhel_derivative_variant="centos"
+      if [ "$os_major_version" -ge 9 ]; then
+        rhel_derivative_base_version=8
+        log_debug "Installing distro ($os_real) specific packages .."
+        run_ok "$install postfix" "Installing distro specific packages"
+      fi
+    fi
+
     # Configure repo file  
     log_debug "Setting up $os_real Virtualmin $vm_version repositories .."
     printf "[virtualmin]\\n" >$rhel_derivative_repo_file
@@ -959,7 +977,7 @@ install_with_yum() {
     download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # Install EPEL on CentOS/Alma/Rocky
-  elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
+  elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
     run_ok "$install epel-release" "Installing EPEL release package"
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
@@ -967,25 +985,25 @@ install_with_yum() {
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
-  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
     # Detect PowerTools repo name
-    powertools=$(dnf repolist all | grep "^powertools")
-    powertoolsname="PowerTools"
-    if [ ! -z "$powertools" ]; then
-      powertools="powertools"
+    extra_packages=$(dnf repolist all | grep "^powertools")
+    extra_packages_name="PowerTools"
+    if [ ! -z "$extra_packages" ]; then
+      extra_packages="powertools"
     else
-      powertools="PowerTools"
+      extra_packages="PowerTools"
     fi
 
     # CentOS 9 Stream changed the name to CBR
-    if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos" ]; then
-      powertools=$(dnf repolist all | grep "^crb")
-      if [ ! -z "$powertools" ]; then
-        powertools="crb"
-        powertoolsname="CRB"
+    if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos_stream" ]; then
+      extra_packages=$(dnf repolist all | grep "^crb")
+      if [ ! -z "$extra_packages" ]; then
+        extra_packages="crb"
+        extra_packages_name="CRB"
       fi
     fi
-    run_ok "$install_config_manager --set-enabled $powertools" "Enabling $powertoolsname package repository"
+    run_ok "$install_config_manager --set-enabled $extra_packages" "Enabling $extra_packages_name package repository"
   fi
 
 
@@ -1094,7 +1112,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "rhel" | "rocky" | "almalinux" | "ol")
+"fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
   disable_selinux
   ;;
 esac
