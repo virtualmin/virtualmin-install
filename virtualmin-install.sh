@@ -130,7 +130,7 @@ if [ -z "$setup_only" ]; then
   # is not older than
   # April 2, 2022
   TIMEBASE=1651363200
-  TIME=`date +%s`
+  TIME=$(date +%s)
   if [ "$TIME" -lt "$TIMEBASE" ]; then
     echo "  Syncing system time .."
 
@@ -142,7 +142,7 @@ if [ -z "$setup_only" ]; then
     fi
 
     # Check again after all
-    TIME=`date +%s`
+    TIME=$(date +%s)
     if [ "$TIME" -lt "$TIMEBASE" ]; then
       echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
       exit
@@ -626,7 +626,7 @@ if [ -n "$setup_only" ]; then
   vm_version_already_installed=$(($vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if fgrep -q "/vm/$vm_version_already_installed/" "$repofile"; then 
+      if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then 
         vm_version=$vm_version_already_installed
       fi
     fi
@@ -946,7 +946,7 @@ install_with_yum() {
     # Detect PowerTools repo name
     powertools=$(dnf repolist all | grep "^powertools")
     powertoolsname="PowerTools"
-    if [ ! -z "$powertools" ]; then
+    if [ -n "$powertools" ]; then
       powertools="powertools"
     else
       powertools="PowerTools"
@@ -955,7 +955,7 @@ install_with_yum() {
     # CentOS 9 Stream changed the name to CBR
     if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos" ]; then
       powertools=$(dnf repolist all | grep "^crb")
-      if [ ! -z "$powertools" ]; then
+      if [ -n "$powertools" ]; then
         powertools="crb"
         powertoolsname="CRB"
       fi
