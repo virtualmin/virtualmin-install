@@ -488,12 +488,13 @@ uninstall() {
     echo "I don't know how to uninstall on this operating system."
     ;;
   esac
-  echo 'Removing nameserver 127.0.0.1 from /etc/resolv.conf'
-  sed -i '/nameserver 127.0.0.1/g' /etc/resolv.conf
-  echo 'Removing virtualmin repo configuration'
+  echo 'Removing Virtualmin repo configuration'
   remove_virtualmin_release
-  echo "Removing /etc/virtualmin-license, if it exists."
-  rm /etc/virtualmin-license
+  virtualmin_license_file="/etc/virtualmin-license"
+  if [ -f "$virtualmin_license_file" ]; then
+    echo "Removing Virtualmin license"
+    rm "$virtualmin_license_file"
+  fi
   echo "Done.  There's probably quite a bit of related packages and such left behind"
   echo "but all of the Virtualmin-specific packages have been removed."
   exit 0
