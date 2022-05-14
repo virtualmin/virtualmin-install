@@ -167,7 +167,7 @@ if [ -z "$setup_only" ]; then
 fi
 # loop until we've got a Perl or until we can't try any more
 while true; do
-  perl="$(which perl 2>/dev/null)"
+  perl="$(command -v perl 2>/dev/null)"
   if [ -z "$perl" ]; then
     if [ -x /usr/bin/perl ]; then
       perl=/usr/bin/perl
@@ -436,9 +436,9 @@ uninstall() {
 
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if which rpm 1>/dev/null 2>&1; then
+  if command -v rpm 1>/dev/null 2>&1; then
     package_type=rpm
-  elif which dpkg 1>/dev/null 2>&1; then
+  elif command -v dpkg 1>/dev/null 2>&1; then
     package_type=deb
   fi
 
@@ -705,7 +705,7 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
-    if which dnf 1>/dev/null 2>&1; then
+    if command -v dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
