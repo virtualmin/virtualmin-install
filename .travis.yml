@@ -1,5 +1,54 @@
 dist: trusty
+
+env:
+  - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=centos:6      VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=centos:6      VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=centos:6      VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+  - OS_IMAGE=centos:7      VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=centos:7      VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=centos:7      VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=centos:7      VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+  - OS_IMAGE=ubuntu:16.04  VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=ubuntu:16.04  VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=ubuntu:16.04  VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=ubuntu:16.04  VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+  - OS_IMAGE=ubuntu:18.04  VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=ubuntu:18.04  VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=ubuntu:18.04  VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=ubuntu:18.04  VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+  - OS_IMAGE=debian:9      VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=debian:9      VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=debian:9      VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=debian:9      VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+  - OS_IMAGE=debian:10     VMIN_BUNDLE=LAMP      VMIN_MODE=
+  - OS_IMAGE=debian:10     VMIN_BUNDLE=LAMP      VMIN_MODE=--minimal
+  - OS_IMAGE=debian:10     VMIN_BUNDLE=LEMP      VMIN_MODE=
+  - OS_IMAGE=debian:10     VMIN_BUNDLE=LEMP      VMIN_MODE=--minimal
+
+stages:
+  - syntaxValidation
+  - test
+
+services:
+  - docker
+
 before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq perl shellcheck devscripts
-script: prove
+  - docker pull $OS_IMAGE
+  - touch $(pwd)/install.log
+  
+script: 
+  - docker run -h test.virtualmin.com -t --rm -v $(pwd):/src -v $(pwd)/install.log:/root/virtualmin-install.log -w /src $OS_IMAGE /bin/sh -c "./virtualmin-install.sh -f -b $VMIN_BUNDLE $VMIN_MODE"
+
+after_script:
+  - cat $(pwd)/install.log
+
+jobs:
+  include:
+    - stage: syntaxValidation
+      name: Validate bash file syntax
+      before_install:
+      - sudo apt-get update -qq
+      - sudo apt-get install -qq perl shellcheck devscripts
+      env: OS_IMAGE=ubuntu:18.04
+      script: prove
