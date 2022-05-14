@@ -43,11 +43,6 @@ supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NOR
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
       - Debian 10 and 11 on i386 and amd64${NORMAL}"
 
-unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64
-      - CentOS Stream 8 and 9 on x86_64
-      - Oracle Linux 8 on x86_64
-      ${NORMAL}"
-
 log=/root/virtualmin-install.log
 skipyesno=0
 
@@ -142,7 +137,7 @@ if [ -z "$setup_only" ]; then
   # is not older than
   # April 2, 2022
   TIMEBASE=1651363200
-  TIME=`date +%s`
+  TIME=$(date +%s)
   if [ "$TIME" -lt "$TIMEBASE" ]; then
     echo "  Syncing system time .."
 
@@ -154,7 +149,7 @@ if [ -z "$setup_only" ]; then
     fi
 
     # Check again after all
-    TIME=`date +%s`
+    TIME=$(date +%s)
     if [ "$TIME" -lt "$TIMEBASE" ]; then
       echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
       exit
@@ -179,7 +174,7 @@ if [ -z "$setup_only" ]; then
 fi
 # loop until we've got a Perl or until we can't try any more
 while true; do
-  perl="$(which perl 2>/dev/null)"
+  perl="$(command -v perl 2>/dev/null)"
   if [ -z "$perl" ]; then
     if [ -x /usr/bin/perl ]; then
       perl=/usr/bin/perl
@@ -450,9 +445,9 @@ uninstall() {
 
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if which rpm 1>/dev/null 2>&1; then
+  if command -v rpm 1>/dev/null 2>&1; then
     package_type=rpm
-  elif which dpkg 1>/dev/null 2>&1; then
+  elif command -v dpkg 1>/dev/null 2>&1; then
     package_type=deb
   fi
 
@@ -529,9 +524,13 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    supported_all="${supported_all/UNSTABLERHEL/$unstable_rhel}"
+    unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64\\n \
+     - CentOS Stream 8 and 9 on x86_64\\n \
+     - Oracle Linux 8 on x86_64\\n \
+          ${NORMAL}"
+    supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
   else
-    supported_all="${supported_all/UNSTABLERHEL/}"
+    supported_all=$(echo "$supported_all" | sed 's/UNSTABLERHEL//')
   fi
   echo "$supported_all"
   cat <<EOF
@@ -547,7 +546,7 @@ EOF
   Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
 
 EOF
-
+exit
   printf " Continue? (y/n) "
   if ! yesno; then
     exit
@@ -621,6 +620,7 @@ download() {
   # XXX Check this to make sure run_ok is doing the right thing.
   # Especially make sure failure gets logged right.
   # awk magic prints the filename, rather than whole URL
+  export download_file
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
   run_ok "$download $1" "$2"
   if [ $? -ne 0 ]; then
@@ -643,10 +643,10 @@ if [ -n "$setup_only" ]; then
   # If Virtualmin 6 is installed and a user needs to fix repos make,
   # sure that we don't switch 6 to 7 to keep the same stack packages
   reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
-  vm_version_already_installed=$(($vm_version - 1))
+  vm_version_already_installed=$((vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if fgrep -q "/vm/$vm_version_already_installed/" "$repofile"; then 
+      if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then
         vm_version=$vm_version_already_installed
       fi
     fi
@@ -707,13 +707,13 @@ install_virtualmin_release() {
       fi
       ;;
     rocky | almalinux | ol)
-      if [ "$os_major_version" -lt 8 ] || ([ -z "$unstable" ] && [ "$os_type" = "ol" ]); then
+      if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "ol" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     fedora)
-      if [ "$os_version" -lt 36 ] || ([ -z "$unstable" ] && [ "$os_type" = "fedora" ]); then
+      if [ "$os_version" -lt 36 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -732,7 +732,7 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
-    if which dnf 1>/dev/null 2>&1; then
+    if command -v dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
       remove="dnf -y remove"
       install_cmd="dnf"
@@ -989,7 +989,7 @@ install_with_yum() {
     # Detect PowerTools repo name
     extra_packages=$(dnf repolist all | grep "^powertools")
     extra_packages_name="PowerTools"
-    if [ ! -z "$extra_packages" ]; then
+    if [ -n "$extra_packages" ]; then
       extra_packages="powertools"
     else
       extra_packages="PowerTools"
@@ -998,7 +998,7 @@ install_with_yum() {
     # CentOS 9 Stream changed the name to CBR
     if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos_stream" ]; then
       extra_packages=$(dnf repolist all | grep "^crb")
-      if [ ! -z "$extra_packages" ]; then
+      if [ -n "$extra_packages" ]; then
         extra_packages="crb"
         extra_packages_name="CRB"
       fi
