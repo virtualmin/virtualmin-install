@@ -1,5 +1,7 @@
-dist: trusty
-before_install:
-- sudo apt-get update -qq
-- sudo apt-get install -qq perl shellcheck devscripts
-script: prove
+language: bash
+
+before_script:
+    - wget -O virtualmin-install.sh https://raw.githubusercontent.com/virtualmin/virtualmin-install/master/virtualmin-install.sh
+
+script:
+    - bash virtualmin-install.sh --help
