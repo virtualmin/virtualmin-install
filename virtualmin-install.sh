@@ -546,7 +546,7 @@ EOF
   Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
 
 EOF
-exit
+
   printf " Continue? (y/n) "
   if ! yesno; then
     exit
