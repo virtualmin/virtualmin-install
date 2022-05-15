@@ -735,7 +735,6 @@ install_virtualmin_release() {
     package_type="rpm"
     if command -pv dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
-      remove="dnf -y remove"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
@@ -744,7 +743,6 @@ install_virtualmin_release() {
       fi
     else
       install="/usr/bin/yum -y install"
-      remove="/usr/bin/yum -y remove"
       install_cmd="/usr/bin/yum"
       if [ "$os_major_version" -ge 7 ]; then
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
