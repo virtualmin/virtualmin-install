@@ -264,9 +264,11 @@ if [ "$SERIAL" = "GPL" ]; then
   LOGIN=""
   PRODUCT="GPL"
   repopath="gpl/"
+  packagetype="gpl"
 else
   LOGIN="$SERIAL:$KEY@"
   PRODUCT="Professional"
+  packagetype="pro"
   repopath=""
 fi
 
@@ -751,8 +753,8 @@ install_virtualmin_release() {
       install_config_manager="yum-config-manager"
     fi
 
-    # Install repo file  
-    download "https://software.virtualmin.com/vm/$vm_version/rpm/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
+    # Install release file
+    download "https://software.virtualmin.com/vm/$vm_version/rpm/virtualmin-$packagetype-release.noarch.rpm" "Downloading Virtualmin $vm_version release package"
     run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
 
     rpm --import RPM-GPG-KEY-virtualmin-$vm_version
