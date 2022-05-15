@@ -785,30 +785,11 @@ install_virtualmin_release() {
     fi
 
     # Configure repo file  
-    log_debug "Setting up $os_real Virtualmin $vm_version repositories .."
-    printf "[virtualmin]\\n" >$rhel_derivative_repo_file
-    printf "name=Virtualmin $vm_version Packages for $os_real \$releasever - \$basearch\\n" >>$rhel_derivative_repo_file
-    printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${rhel_derivative_variant}/$rhel_derivative_base_version/\$basearch/\\n" >>$rhel_derivative_repo_file
-    printf "enabled=1\\n" >>$rhel_derivative_repo_file
-    printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
-    printf "gpgcheck=1\\n" >>$rhel_derivative_repo_file
-    if [ -n "$excluded" ]; then
-      printf "exclude=$excluded\\n" >>$rhel_derivative_repo_file
-    fi
-    printf "\\n" >>$rhel_derivative_repo_file
-    printf "[virtualmin-universal]\\n" >>$rhel_derivative_repo_file
-    printf "name=Virtualmin $vm_version Neutral Packages for $os_real \$releasever\\n" >>$rhel_derivative_repo_file
-    printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$rhel_derivative_repo_file
-    printf "enabled=1\\n" >>$rhel_derivative_repo_file
-    printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$rhel_derivative_repo_file
-    printf "gpgcheck=1\\n" >>$rhel_derivative_repo_file
-    run_ok "echo >>$rhel_derivative_repo_file" "Setting up Virtualmin repositories"
+    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${rhel_derivative_variant}/${rhel_derivative_base_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
+    run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
 
-    log_debug "Installing Webmin and Virtualmin package signing keys .."
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-    run_ok "rpm --import RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
-    run_ok "rpm --import RPM-GPG-KEY-webmin" "Installing Webmin key"
+    rpm --import RPM-GPG-KEY-virtualmin-$vm_version
+    rpm --import RPM-GPG-KEY-webmin
     ;;
   debian | ubuntu)
     case "$os_type" in
