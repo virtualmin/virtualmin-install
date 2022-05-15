@@ -752,40 +752,9 @@ install_virtualmin_release() {
       install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
-    
-    # Setup repos
-    rhel_derivative_repo_file="/etc/yum.repos.d/virtualmin.repo"
-    rhel_derivative_variant="$os_type"
-    rhel_derivative_base_version="$os_major_version"
 
-    # Oracle mod
-    if [ "$os_type" = "ol" ]; then
-      rhel_derivative_variant='rhel'
-    fi
-
-    # Fedora mod
-    if [ "$os_type" = "fedora" ]; then
-      rhel_derivative_variant="rhel"
-      rhel_derivative_base_version=8
-      excluded="jailkit"
-      removeunused="wbm-jailkit"
-      
-      log_debug "Installing distro ($os_real) specific packages .."
-      run_ok "$install cronie" "Installing distro specific packages"
-    fi
-
-    # CentOS Stream mods
-    if [ "$os_type" = "centos_stream" ]; then
-      rhel_derivative_variant="centos"
-      if [ "$os_major_version" -ge 9 ]; then
-        rhel_derivative_base_version=8
-        log_debug "Installing distro ($os_real) specific packages .."
-        run_ok "$install postfix" "Installing distro specific packages"
-      fi
-    fi
-
-    # Configure repo file  
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${rhel_derivative_variant}/${rhel_derivative_base_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
+    # Install repo file  
+    download "https://software.virtualmin.com/vm/$vm_version/rpm/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
     run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
 
     rpm --import RPM-GPG-KEY-virtualmin-$vm_version
@@ -1051,11 +1020,6 @@ run_ok "$install_updates" "Installing Virtualmin $vm_version related packages up
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
-fi
-
-# Clean up un-used packages, if any
-if [ -n "$removeunused" ]; then
-  run_ok "$remove $removeunused" "Cleaning up un-used modules"
 fi
 
 # Reap any clingy processes (like spinner forks)
