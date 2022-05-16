@@ -278,33 +278,29 @@ vmgrouptext="Virtualmin provided"
 debvmpackages="virtualmin-core"
 deps=
 
-# This has to be installed before anything else, so it can be disabled during
-# install, and turned back on after. This is ridiculous.
-debpredeps="fail2ban"
-
 if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
-    rhgrouptext="Virtualmin LAMP stack"
-    debdeps="postfix virtualmin-lamp-stack"
-    ubudeps="postfix virtualmin-lamp-stack"
+    rhgrouptext="Virtualmin $vm_version LAMP stack"
+    debdeps="virtualmin-lamp-stack"
+    ubudeps="virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
-    rhgrouptext="Virtualmin LEMP stack"
-    debdeps="postfix php*-fpm virtualmin-lemp-stack"
-    ubudeps="postfix php*-fpm virtualmin-lemp-stack"
+    rhgrouptext="Virtualmin $vm_version LEMP stack"
+    debdeps="virtualmin-lemp-stack"
+    ubudeps="virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
-    rhgrouptext="Virtualmin LAMP stack minimal"
-    debdeps="postfix virtualmin-lamp-stack-minimal"
-    ubudeps="postfix virtualmin-lamp-stack-minimal"
+    rhgrouptext="Virtualmin $vm_version LAMP stack minimal"
+    debdeps="virtualmin-lamp-stack-minimal"
+    ubudeps="virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
-    rhgrouptext="Virtualmin LEMP stack minimal'"
-    debdeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
-    ubudeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
+    rhgrouptext="Virtualmin $vm_version LEMP stack minimal'"
+    debdeps="virtualmin-lemp-stack-minimal"
+    ubudeps="virtualmin-lemp-stack-minimal"
   fi
 fi
 
@@ -877,32 +873,12 @@ install_with_apt() {
   # Install Webmin first, because it needs to be already done for the deps
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
-  for d in $debpredeps; do
-    run_ok "$install $d" "Installing $d"
-  done
   if [ $bundle = 'LEMP' ]; then
-    # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban ipchains apache2; do
-      systemctl stop "$s" >>${RUN_LOG} 2>&1
-      systemctl disable "$s" >>${RUN_LOG} 2>&1
-    done
-    apt-get remove --assume-yes --purge apache2* php* >>${RUN_LOG} 2>&1
-    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
     run_ok "$install nginx-common" "Installing nginx-common"
     sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
-  else
-    # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban nginx; do
-      systemctl stop "$s" >>${RUN_LOG} 2>&1
-      systemctl disable "$s" >>${RUN_LOG} 2>&1
-    done
-    apt-get remove --assume-yes --purge nginx* php* >>${RUN_LOG} 2>&1
-    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
   fi
-  for d in ${deps}; do
-    run_ok "$install ${d}" "Installing $d"
-  done
-  run_ok "$install ${debvmpackages}" "Installing Virtualmin $vm_version and all related packages"
+  run_ok "$install ${debvmpackages}" "Installing Virtualmin $vm_version related packages"
+  run_ok "$install $deps" "Installing $rhgrouptext"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
