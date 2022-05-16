@@ -873,10 +873,6 @@ install_with_apt() {
   # Install Webmin first, because it needs to be already done for the deps
   run_ok "$install webmin" "Installing Webmin"
   run_ok "$install usermin" "Installing Usermin"
-  if [ $bundle = 'LEMP' ]; then
-    run_ok "$install nginx-common" "Installing nginx-common"
-    sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
-  fi
   run_ok "$install ${debvmpackages}" "Installing Virtualmin $vm_version related packages"
   run_ok "$install $deps" "Installing $rhgrouptext"
   if [ $? -ne 0 ]; then
