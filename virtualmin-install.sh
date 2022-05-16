@@ -870,11 +870,10 @@ fi
 
 # Install Functions
 install_with_apt() {
-  # Install Webmin first, because it needs to be already done for the deps
-  run_ok "$install webmin" "Installing Webmin"
-  run_ok "$install usermin" "Installing Usermin"
-  run_ok "$install ${debvmpackages}" "Installing Virtualmin $vm_version related packages"
-  run_ok "$install $deps" "Installing $rhgrouptext"
+  # Install Webmin/Usermin first, because it needs to be already done
+  # for the deps. Then install Virtualmin Core and then Stack packages
+  # Do it all in one go for the nicer UI
+  run_ok "$install webmin && $install usermin && $install $debvmpackages && $install $deps" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
@@ -988,7 +987,7 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing Virtualmin $vm_version related packages updates"
+run_ok "$install_updates" "Installing Virtualmin $vm_version and all related packages updates"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
