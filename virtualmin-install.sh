@@ -158,14 +158,14 @@ if [ -z "$setup_only" ]; then
   fi
 
   # Update all system packages first
-  echo "  Checking and installing system packages updates, if any .."
-  printf "Running system packages upgrades ..\\n" >>$log
+  echo "  Checking for an update for a set of CA certificates .."
+  printf "Checking for an update for a set of CA certificates ..\\n" >>$log
   if [ -x /usr/bin/dnf ]; then
-    dnf -y update >>$log 2>&1
+    dnf -y update ca-certificates >>$log 2>&1
   elif [ -x /usr/bin/yum ]; then
-    yum -y update >>$log 2>&1
+    yum -y update ca-certificates >>$log 2>&1
   elif [ -x /usr/bin/apt-get ]; then
-    apt-get -y upgrade >>$log 2>&1
+    apt-get -y install ca-certificates >>$log 2>&1
   fi
   echo "  .. done"
 
@@ -733,6 +733,7 @@ install_virtualmin_release() {
     package_type="rpm"
     if command -pv dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
+      update="dnf -y update"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
@@ -741,6 +742,7 @@ install_virtualmin_release() {
       fi
     else
       install="/usr/bin/yum -y install"
+      update="/usr/bin/yum -y update"
       install_cmd="/usr/bin/yum"
       if [ "$os_major_version" -ge 7 ]; then
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
@@ -837,6 +839,7 @@ install_virtualmin_release() {
     # XXX Is this still enabled by default on Debian/Ubuntu systems?
     run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
+    update="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
@@ -867,6 +870,9 @@ fi
 
 # Install Functions
 install_with_apt() {
+  # Install system package upgrades, if any
+  run_ok "$update" "Checking and installing system packages updates"
+
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
   # Do it all in one go for the nicer UI
@@ -937,9 +943,13 @@ install_with_yum() {
     run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgrouptext for install"
   fi
   
-  # Clear cache and install system packages upgrades first
+  # Clear cache
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
+  # Upgrade system packages first
+  run_ok "$update" "Checking and installing system packages updates"
+
+  # Install core and stack
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
   run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
