@@ -752,9 +752,6 @@ install_virtualmin_release() {
     # Install release file
     download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/virtualmin-$packagetype-release.noarch.rpm" "Downloading Virtualmin $vm_version release package"
     run_ok "rpm -U --replacepkgs --quiet virtualmin-$packagetype-release.noarch.rpm" "Installing Virtualmin release package"
-
-    rpm --import RPM-GPG-KEY-virtualmin-$vm_version
-    rpm --import RPM-GPG-KEY-webmin
     ;;
   debian | ubuntu)
     case "$os_type" in
