@@ -135,11 +135,11 @@ if [ -z "$setup_only" ]; then
 
   # Check if current time
   # is not older than
-  # April 2, 2022
-  TIMEBASE=1651363200
+  # May 16, 2022
+  TIMEBASE=1652691600
   TIME=$(date +%s)
   if [ "$TIME" -lt "$TIMEBASE" ]; then
-    echo "  Syncing system time .."
+    echo "  Force-syncing system time .."
 
     # Try to sync time automatically first
     if systemctl restart chronyd 1>/dev/null 2>&1; then
@@ -155,11 +155,21 @@ if [ -z "$setup_only" ]; then
       exit
     fi
     echo "  .. done"
+  # Graceful sync
+  else
+    echo "  Syncing system time .."
+    if systemctl restart chronyd 1>/dev/null 2>&1; then
+      sleep 2
+      echo "  .. done"
+    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+      echo "  .. done"
+      sleep 2
+    fi
   fi
 
   # Update all system packages first
-  echo "  Checking for an update for a set of CA certificates .."
   printf "Checking for an update for a set of CA certificates ..\\n" >>$log
+  echo "  Updating CA certificates .."
   if [ -x /usr/bin/dnf ]; then
     dnf -y update ca-certificates >>$log 2>&1
   elif [ -x /usr/bin/yum ]; then
