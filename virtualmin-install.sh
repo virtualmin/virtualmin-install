@@ -722,7 +722,7 @@ install_virtualmin_release() {
       fi
       ;;
     fedora)
-      if [ "$os_version" -lt 36 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
+      if [ "$os_version" -lt 35 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -960,8 +960,8 @@ install_with_yum() {
   run_ok "$update" "Checking and installing system packages updates"
 
   # Install core and stack
-  run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
+  run_ok "$install_group $rhgroup --skip-broken" "Installing dependencies and system packages"
+  run_ok "$install_group $vmgroup --skip-broken" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $?"
   fi
