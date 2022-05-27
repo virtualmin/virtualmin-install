@@ -35,7 +35,7 @@ BOLD=$(tput bold)
 
 # Currently supported systems:
 supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
-      - Alma Linux and Rocky 8 on x86_64
+      - Alma Linux and Rocky 8 and 9 on x86_64
       - CentOS 7 and 8 on x86_64
       - RHEL Linux 7 and 8 on x86_64${NORMAL}
       UNSTABLERHEL
@@ -921,23 +921,23 @@ install_with_yum() {
 
   # Important Perl packages are now hidden in PowerTools repo
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
-    # Detect PowerTools repo name
-    extra_packages=$(dnf repolist all | grep "^powertools")
-    extra_packages_name="PowerTools"
-    if [ -n "$extra_packages" ]; then
-      extra_packages="powertools"
-    else
-      extra_packages="PowerTools"
-    fi
-
-    # CentOS 9 Stream changed the name to CBR
-    if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos_stream" ]; then
+    # Detect CRB/PowerTools repo name
+    if [ "$os_major_version" -ge 9 ]; then
       extra_packages=$(dnf repolist all | grep "^crb")
       if [ -n "$extra_packages" ]; then
         extra_packages="crb"
         extra_packages_name="CRB"
       fi
+    else
+      extra_packages=$(dnf repolist all | grep "^powertools")
+      extra_packages_name="PowerTools"
+      if [ -n "$extra_packages" ]; then
+        extra_packages="powertools"
+      else
+        extra_packages="PowerTools"
+      fi
     fi
+
     run_ok "$install_config_manager --set-enabled $extra_packages" "Enabling $extra_packages_name package repository"
   fi
 
