@@ -781,7 +781,7 @@ install_virtualmin_release() {
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "16.04" ] && [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
+      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -798,9 +798,6 @@ install_virtualmin_release() {
       deps="$ubudeps"
       if [ "$vm6_repos" = 1 ]; then
         case "$os_version" in
-        16.04*)
-          repos="virtualmin-xenial virtualmin-universal"
-          ;;
         18.04*)
           repos="virtualmin-bionic virtualmin-universal"
           ;;
