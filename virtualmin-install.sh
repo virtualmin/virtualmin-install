@@ -60,6 +60,7 @@ usage() {
   printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
   printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, Oracle)\\n"
+  printf "  ${YELLOW}--no-package-updates|-x${NORMAL} skip installing system package updates\\n"
   printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
   printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
   printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
@@ -98,6 +99,10 @@ while [ "$1" != "" ]; do
   --unstable | -e)
     shift
     unstable='unstable'
+    ;;
+  --no-package-updates | -x)
+    shift
+    noupdates=1
     ;;
   --setup | -s)
     shift
@@ -860,7 +865,9 @@ fi
 # Install Functions
 install_with_apt() {
   # Install system package upgrades, if any
-  run_ok "$update" "Checking and installing system packages updates"
+  if [ -z "$noupdates" ]; then
+    run_ok "$update" "Checking and installing system packages updates"
+  fi
 
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
@@ -936,7 +943,9 @@ install_with_yum() {
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
   # Upgrade system packages first
-  run_ok "$update" "Checking and installing system packages updates"
+  if [ -z "$noupdates" ]; then
+    run_ok "$update" "Checking and installing system packages updates"
+  fi
 
   # Install core and stack
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
