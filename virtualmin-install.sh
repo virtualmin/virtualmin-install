@@ -18,22 +18,9 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-RC5
+VER=7.0.0-RC7
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
-
-# Currently supported systems:
-supported="    Red Hat Enterprise Linux derivatives
-      - Alma Linux and Rocky 8 on x86_64
-      - CentOS 7 and 8 on x86_64
-      - RHEL Linux 7 and 8 on x86_64
-
-    Debian Linux derivatives
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
-      - Debian 10 and 11 on i386 and amd64"
-
-log=/root/virtualmin-install.log
-skipyesno=0
 
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
@@ -43,6 +30,21 @@ CYAN="$(tput setaf 6)"
 BLACK="$(tput setaf 16)"
 NORMAL="$(tput sgr0)"
 GREEN=$(tput setaf 2)
+CYANBG=$(tput setab 6)
+BOLD=$(tput bold)
+
+# Currently supported systems:
+supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
+      - Alma Linux and Rocky 8 and 9 on x86_64
+      - CentOS 7 and 8 on x86_64
+      - RHEL Linux 7 and 8 on x86_64${NORMAL}
+      UNSTABLERHEL
+    ${CYANBG}${BLACK}${BOLD}Debian Linux derivatives${NORMAL}${CYAN}
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
+      - Debian 10 and 11 on i386 and amd64${NORMAL}"
+
+log=/root/virtualmin-install.log
+skipyesno=0
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -57,6 +59,8 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, Oracle)\\n"
+  printf "  ${YELLOW}--no-package-updates|-x${NORMAL} skip installing system package updates\\n"
   printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
   printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
   printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
@@ -70,33 +74,6 @@ while [ "$1" != "" ]; do
   --help | -h)
     usage
     exit 0
-    ;;
-  --uninstall | -u)
-    shift
-    mode="uninstall"
-    ;;
-  --force | -f | --yes | -y)
-    shift
-    skipyesno=1
-    ;;
-  --hostname | -n)
-    shift
-    forcehostname=$1
-    shift
-    ;;
-  --verbose | -v)
-    shift
-    VERBOSE=1
-    ;;
-  --setup | -s)
-    shift
-    setup_only=1
-    mode='setup'
-    break
-    ;;
-  --minimal | -m)
-    shift
-    mode='minimal'
     ;;
   --bundle | -b)
     shift
@@ -115,6 +92,41 @@ while [ "$1" != "" ]; do
       ;;
     esac
     ;;
+  --minimal | -m)
+    shift
+    mode='minimal'
+    ;;
+  --unstable | -e)
+    shift
+    unstable='unstable'
+    ;;
+  --no-package-updates | -x)
+    shift
+    noupdates=1
+    ;;
+  --setup | -s)
+    shift
+    setup_only=1
+    mode='setup'
+    break
+    ;;
+  --hostname | -n)
+    shift
+    forcehostname=$1
+    shift
+    ;;
+  --force | -f | --yes | -y)
+    shift
+    skipyesno=1
+    ;;
+  --verbose | -v)
+    shift
+    VERBOSE=1
+    ;;
+  --uninstall | -u)
+    shift
+    mode="uninstall"
+    ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
     usage
@@ -128,11 +140,11 @@ if [ -z "$setup_only" ]; then
 
   # Check if current time
   # is not older than
-  # April 2, 2022
-  TIMEBASE=1651363200
-  TIME=`date +%s`
+  # May 16, 2022
+  TIMEBASE=1652691600
+  TIME=$(date +%s)
   if [ "$TIME" -lt "$TIMEBASE" ]; then
-    echo "  Syncing system time .."
+    echo "  Force-syncing system time .."
 
     # Try to sync time automatically first
     if systemctl restart chronyd 1>/dev/null 2>&1; then
@@ -142,23 +154,33 @@ if [ -z "$setup_only" ]; then
     fi
 
     # Check again after all
-    TIME=`date +%s`
+    TIME=$(date +%s)
     if [ "$TIME" -lt "$TIMEBASE" ]; then
       echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
       exit
     fi
     echo "  .. done"
+  # Graceful sync
+  else
+    echo "  Syncing system time .."
+    if systemctl restart chronyd 1>/dev/null 2>&1; then
+      sleep 2
+      echo "  .. done"
+    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+      echo "  .. done"
+      sleep 2
+    fi
   fi
 
   # Update all system packages first
-  echo "  Checking and installing system packages updates, if any .."
-  printf "Running system packages upgrades ..\\n" >>$log
+  printf "Checking for an update for a set of CA certificates ..\\n" >>$log
+  echo "  Updating CA certificates .."
   if [ -x /usr/bin/dnf ]; then
-    dnf -y update >>$log 2>&1
+    dnf -y update ca-certificates >>$log 2>&1
   elif [ -x /usr/bin/yum ]; then
-    yum -y update >>$log 2>&1
+    yum -y update ca-certificates >>$log 2>&1
   elif [ -x /usr/bin/apt-get ]; then
-    apt-get -y upgrade >>$log 2>&1
+    apt-get -y install ca-certificates >>$log 2>&1
   fi
   echo "  .. done"
 
@@ -167,7 +189,7 @@ if [ -z "$setup_only" ]; then
 fi
 # loop until we've got a Perl or until we can't try any more
 while true; do
-  perl="$(which perl 2>/dev/null)"
+  perl="$(command -pv perl 2>/dev/null)"
   if [ -z "$perl" ]; then
     if [ -x /usr/bin/perl ]; then
       perl=/usr/bin/perl
@@ -257,10 +279,12 @@ if [ "$SERIAL" = "GPL" ]; then
   LOGIN=""
   PRODUCT="GPL"
   repopath="gpl/"
+  packagetype="gpl"
 else
   LOGIN="$SERIAL:$KEY@"
   PRODUCT="Professional"
-  repopath=""
+  packagetype="pro"
+  repopath="pro/"
 fi
 
 # Virtualmin-provided packages
@@ -269,33 +293,29 @@ vmgrouptext="Virtualmin provided"
 debvmpackages="virtualmin-core"
 deps=
 
-# This has to be installed before anything else, so it can be disabled during
-# install, and turned back on after. This is ridiculous.
-debpredeps="fail2ban"
-
 if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
-    rhgrouptext="Virtualmin LAMP stack"
-    debdeps="postfix virtualmin-lamp-stack"
-    ubudeps="postfix virtualmin-lamp-stack"
+    rhgrouptext="Virtualmin $vm_version LAMP stack"
+    debdeps="virtualmin-lamp-stack"
+    ubudeps="virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
-    rhgrouptext="Virtualmin LEMP stack"
-    debdeps="postfix php*-fpm virtualmin-lemp-stack"
-    ubudeps="postfix php*-fpm virtualmin-lemp-stack"
+    rhgrouptext="Virtualmin $vm_version LEMP stack"
+    debdeps="virtualmin-lemp-stack"
+    ubudeps="virtualmin-lemp-stack"
   fi
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
-    rhgrouptext="Virtualmin LAMP stack minimal"
-    debdeps="postfix virtualmin-lamp-stack-minimal"
-    ubudeps="postfix virtualmin-lamp-stack-minimal"
+    rhgrouptext="Virtualmin $vm_version LAMP stack minimal"
+    debdeps="virtualmin-lamp-stack-minimal"
+    ubudeps="virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
-    rhgrouptext="Virtualmin LEMP stack minimal'"
-    debdeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
-    ubudeps="postfix php*-fpm virtualmin-lemp-stack-minimal"
+    rhgrouptext="Virtualmin $vm_version LEMP stack minimal'"
+    debdeps="virtualmin-lemp-stack-minimal"
+    ubudeps="virtualmin-lemp-stack-minimal"
   fi
 fi
 
@@ -372,8 +392,10 @@ log_fatal() {
 remove_virtualmin_release() {
   # shellcheck disable=SC2154
   case "$os_type" in
-  "fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
-    run_ok "rpm -e virtualmin-release" "Removing virtualmin-release"
+  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
+    rm -f /etc/yum.repos.d/virtualmin.repo
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
     ;;
   "debian" | "ubuntu")
     grep -v "virtualmin" /etc/apt/sources.list >"$tempdir"/sources.list
@@ -436,9 +458,9 @@ uninstall() {
 
   # This is a crummy way to detect package manager...but going through
   # half the installer just to get here is even crummier.
-  if which rpm 1>/dev/null 2>&1; then
+  if command -pv rpm 1>/dev/null 2>&1; then
     package_type=rpm
-  elif which dpkg 1>/dev/null 2>&1; then
+  elif command -pv dpkg 1>/dev/null 2>&1; then
     package_type=deb
   fi
 
@@ -479,12 +501,13 @@ uninstall() {
     echo "I don't know how to uninstall on this operating system."
     ;;
   esac
-  echo 'Removing nameserver 127.0.0.1 from /etc/resolv.conf'
-  sed -i '/nameserver 127.0.0.1/g' /etc/resolv.conf
-  echo 'Removing virtualmin repo configuration'
+  echo 'Removing Virtualmin repo configuration'
   remove_virtualmin_release
-  echo "Removing /etc/virtualmin-license, if it exists."
-  rm /etc/virtualmin-license
+  virtualmin_license_file="/etc/virtualmin-license"
+  if [ -f "$virtualmin_license_file" ]; then
+    echo "Removing Virtualmin license"
+    rm "$virtualmin_license_file"
+  fi
   echo "Done.  There's probably quite a bit of related packages and such left behind"
   echo "but all of the Virtualmin-specific packages have been removed."
   exit 0
@@ -513,7 +536,17 @@ install_msg() {
   The systems currently supported by install script are:
 
 EOF
-  echo "${CYAN}$supported${NORMAL}"
+  supported_all=$supported
+  if [ -n "$unstable" ]; then
+    unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64\\n \
+     - CentOS Stream 8 and 9 on x86_64\\n \
+     - Oracle Linux 8 on x86_64\\n \
+          ${NORMAL}"
+    supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
+  else
+    supported_all=$(echo "$supported_all" | sed 's/UNSTABLERHEL//')
+  fi
+  echo "$supported_all"
   cat <<EOF
 
   If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
@@ -601,6 +634,7 @@ download() {
   # XXX Check this to make sure run_ok is doing the right thing.
   # Especially make sure failure gets logged right.
   # awk magic prints the filename, rather than whole URL
+  export download_file
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
   run_ok "$download $1" "$2"
   if [ $? -ne 0 ]; then
@@ -623,10 +657,10 @@ if [ -n "$setup_only" ]; then
   # If Virtualmin 6 is installed and a user needs to fix repos make,
   # sure that we don't switch 6 to 7 to keep the same stack packages
   reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
-  vm_version_already_installed=$(($vm_version - 1))
+  vm_version_already_installed=$((vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if fgrep -q "/vm/$vm_version_already_installed/" "$repofile"; then 
+      if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then
         vm_version=$vm_version_already_installed
       fi
     fi
@@ -671,23 +705,30 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | rocky | almalinux | ol | fedora | amazon)
+  rhel | centos | centos_stream | rocky | almalinux | ol | fedora)
     case "$os_type" in
-    rhel | centos)
-      if [ "$os_major_version" -lt 7 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
-        exit 1
+    rhel | centos | centos_stream)
+      if [ "$os_type" = "centos_stream" ]; then
+        if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ]; then
+          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          exit 1
+        fi
+      else
+        if [ "$os_major_version" -lt 7 ]; then
+          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          exit 1
+        fi
       fi
       ;;
     rocky | almalinux | ol)
-      if [ "$os_major_version" -lt 8 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+      if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "ol" ]; then
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     fedora)
-      if [ "$os_version" -lt 33 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+      if [ "$os_version" -lt 35 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
@@ -705,8 +746,9 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
-    if which dnf 1>/dev/null 2>&1; then
+    if command -pv dnf 1>/dev/null 2>&1; then
       install="dnf -y install"
+      update="dnf -y update"
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
@@ -715,6 +757,7 @@ install_virtualmin_release() {
       fi
     else
       install="/usr/bin/yum -y install"
+      update="/usr/bin/yum -y update"
       install_cmd="/usr/bin/yum"
       if [ "$os_major_version" -ge 7 ]; then
         run_ok "yum --quiet groups mark convert" "Updating yum Groups"
@@ -722,61 +765,22 @@ install_virtualmin_release() {
       install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
-    os_type_repo="$os_type"
-    if [ "$os_type" = "ol" ]; then
-      os_type_repo='rhel'
-    fi
-    if [ "$os_type" = "fedora" ]; then
-      fedora_repo="/etc/yum.repos.d/virtualmin.repo"
-      fedora_rhel_variant="rhel"
-      fedora_rhel_base=8
-      
-      log_debug "Setting up $os_real Virtualmin repositories .."
-      printf "[virtualmin]\\n" >$fedora_repo
-      printf "name=$os_real Virtualmin \$releasever - \$basearch\\n" >>$fedora_repo
-      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${fedora_rhel_variant}/$fedora_rhel_base/\$basearch/\\n" >>$fedora_repo
-      printf "enabled=1\\n" >>$fedora_repo
-      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
-      printf "gpgcheck=1\\n" >>$fedora_repo
-      printf "exclude=jailkit\\n" >>$fedora_repo
-      printf "\\n" >>$fedora_repo
-      printf "[virtualmin-neutral]\\n" >>$fedora_repo
-      printf "name=$os_real Virtualmin Neutral \$releasever\\n" >>$fedora_repo
-      printf "baseurl=https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}universal/\\n" >>$fedora_repo
-      printf "enabled=1\\n" >>$fedora_repo
-      printf "gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version\\n" >>$fedora_repo
-      printf "gpgcheck=1\\n" >>$fedora_repo
-      run_ok "echo >>$fedora_repo" "Setting up Virtualmin repositories"
 
-      log_debug "Installing Webmin and Virtualmin package signing keys .."
-      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-      run_ok "rpm --import RPM-GPG-KEY-virtualmin-$vm_version" "Installing Virtualmin $vm_version key"
-      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
-      run_ok "rpm --import RPM-GPG-KEY-webmin" "Installing Webmin key"
-
-      log_debug "Installing Fedora specific packages .."
-      run_ok "$install cronie" "Installing Fedora specific packages"
-
-    else
-      download "https://${LOGIN}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}${os_type_repo}/${os_major_version}/${arch}/virtualmin-release-latest.noarch.rpm" "Downloading Virtualmin $vm_version release package"
-      run_ok "rpm -U --replacepkgs --quiet virtualmin-release-latest.noarch.rpm" "Installing Virtualmin release package"
-      
-      # Import installed keys
-      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-$vm_version"
-      rpm --import "/etc/pki/rpm-gpg/RPM-GPG-KEY-webmin"
-    fi
+    # Install release file
+    download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/virtualmin-$packagetype-release.noarch.rpm" "Downloading Virtualmin $vm_version release package"
+    run_ok "rpm -U --replacepkgs --quiet virtualmin-$packagetype-release.noarch.rpm" "Installing Virtualmin release package"
     ;;
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
       if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     debian)
       if [ "$os_major_version" -lt 10 ]; then
-        printf "${RED}${os_type} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
@@ -784,31 +788,10 @@ install_virtualmin_release() {
     package_type="deb"
     if [ "$os_type" = "ubuntu" ]; then
       deps="$ubudeps"
-      case "$os_version" in
-      18.04*)
-        repos="virtualmin-bionic virtualmin-universal"
-        ;;
-      20.04*)
-        repos="virtualmin-focal virtualmin-universal"
-        ;;
-      22.04*)
-        repos="virtualmin-jammy virtualmin-universal"
-        ;;
-      esac
     else
       deps="$debdeps"
-      case "$os_version" in
-      9*)
-        repos="virtualmin-stretch virtualmin-universal"
-        ;;
-      10*)
-        repos="virtualmin-buster virtualmin-universal"
-        ;;
-      11*)
-        repos="virtualmin-bullseye virtualmin-universal"
-        ;;
-      esac
     fi
+    repos="virtualmin"
     log_debug "apt-get repos: ${repos}"
     if [ -z "$repos" ]; then # Probably unstable with no version number
       log_fatal "No repos available for this OS. Are you running unstable/testing?"
@@ -850,6 +833,7 @@ install_virtualmin_release() {
     # XXX Is this still enabled by default on Debian/Ubuntu systems?
     run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
+    update="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
@@ -880,35 +864,15 @@ fi
 
 # Install Functions
 install_with_apt() {
-  # Install Webmin first, because it needs to be already done for the deps
-  run_ok "$install webmin" "Installing Webmin"
-  run_ok "$install usermin" "Installing Usermin"
-  for d in $debpredeps; do
-    run_ok "$install $d" "Installing $d"
-  done
-  if [ $bundle = 'LEMP' ]; then
-    # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban ipchains apache2; do
-      systemctl stop "$s" >>${RUN_LOG} 2>&1
-      systemctl disable "$s" >>${RUN_LOG} 2>&1
-    done
-    apt-get remove --assume-yes --purge apache2* php* >>${RUN_LOG} 2>&1
-    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
-    run_ok "$install nginx-common" "Installing nginx-common"
-    sed -i 's/listen \[::\]:80 default_server;/#listen \[::\]:80 default_server;/' /etc/nginx/sites-available/default
-  else
-    # This is bloody awful. I can't believe how fragile dpkg is here.
-    for s in fail2ban nginx; do
-      systemctl stop "$s" >>${RUN_LOG} 2>&1
-      systemctl disable "$s" >>${RUN_LOG} 2>&1
-    done
-    apt-get remove --assume-yes --purge nginx* php* >>${RUN_LOG} 2>&1
-    apt-get autoremove --assume-yes >>${RUN_LOG} 2>&1
+  # Install system package upgrades, if any
+  if [ -z "$noupdates" ]; then
+    run_ok "$update" "Checking and installing system packages updates"
   fi
-  for d in ${deps}; do
-    run_ok "$install ${d}" "Installing $d"
-  done
-  run_ok "$install ${debvmpackages}" "Installing Virtualmin and all related packages"
+
+  # Install Webmin/Usermin first, because it needs to be already done
+  # for the deps. Then install Virtualmin Core and then Stack packages
+  # Do it all in one go for the nicer UI
+  run_ok "$install webmin && $install usermin && $install $debvmpackages && $install $deps" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
@@ -934,7 +898,7 @@ install_with_yum() {
     download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # Install EPEL on CentOS/Alma/Rocky
-  elif [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
+  elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
     run_ok "$install epel-release" "Installing EPEL release package"
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
@@ -942,25 +906,25 @@ install_with_yum() {
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
-  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
-    # Detect PowerTools repo name
-    powertools=$(dnf repolist all | grep "^powertools")
-    powertoolsname="PowerTools"
-    if [ ! -z "$powertools" ]; then
-      powertools="powertools"
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
+    # Detect CRB/PowerTools repo name
+    if [ "$os_major_version" -ge 9 ]; then
+      extra_packages=$(dnf repolist all | grep "^crb")
+      if [ -n "$extra_packages" ]; then
+        extra_packages="crb"
+        extra_packages_name="CRB"
+      fi
     else
-      powertools="PowerTools"
-    fi
-
-    # CentOS 9 Stream changed the name to CBR
-    if [ "$os_major_version" -ge 9 ] && [ "$os_type" = "centos" ]; then
-      powertools=$(dnf repolist all | grep "^crb")
-      if [ ! -z "$powertools" ]; then
-        powertools="crb"
-        powertoolsname="CRB"
+      extra_packages=$(dnf repolist all | grep "^powertools")
+      extra_packages_name="PowerTools"
+      if [ -n "$extra_packages" ]; then
+        extra_packages="powertools"
+      else
+        extra_packages="PowerTools"
       fi
     fi
-    run_ok "$install_config_manager --set-enabled $powertools" "Enabling $powertoolsname package repository"
+
+    run_ok "$install_config_manager --set-enabled $extra_packages" "Enabling $extra_packages_name package repository"
   fi
 
 
@@ -975,11 +939,17 @@ install_with_yum() {
     run_ok "yum --quiet groups mark install $vmgroup" "Marking $vmgrouptext for install"
   fi
   
-  # Clear cache and install system packages upgrades first
+  # Clear cache
   run_ok "$install_cmd clean all" "Cleaning up software repo metadata"
 
+  # Upgrade system packages first
+  if [ -z "$noupdates" ]; then
+    run_ok "$update" "Checking and installing system packages updates"
+  fi
+
+  # Install core and stack
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "$install_group $vmgroup" "Installing Virtualmin and all related packages"
+  run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $?"
   fi
@@ -1022,7 +992,7 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing Virtualmin related packages updates"
+run_ok "$install_updates" "Installing Virtualmin $vm_version and all related packages updates"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
@@ -1064,7 +1034,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "rhel" | "amazon" | "rocky" | "almalinux" | "ol")
+"fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
   disable_selinux
   ;;
 esac
@@ -1095,6 +1065,8 @@ if [ $errors -eq "0" ]; then
   log_success "If there were no errors above, Virtualmin should be ready"
   log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
   log_success "You may receive a security warning in your browser on your first visit."
+  TIME=$(date +%s)
+  echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed"
 else
   log_warning "The following errors occurred during installation:"
   echo
