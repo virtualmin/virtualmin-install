@@ -662,10 +662,18 @@ if [ -n "$setup_only" ]; then
     if [ -f "$repofile" ]; then
       if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then
         vm_version=$vm_version_already_installed
+
+        # Fix for Virtualmin 6 repos
+        if [ "$vm_version" = "6" ]; then
+          if [ "$SERIAL" != "GPL" ]; then
+            repopath=""
+          fi
+          vm6_repos=1
+        fi
       fi
     fi
   done
-  log_info "Started Virtualmin $vm_version software repositories setup"
+  log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
   log_info "Started installation log in $log"
@@ -773,7 +781,7 @@ install_virtualmin_release() {
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
+      if [ "$os_version" != "16.04" ] && [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -788,10 +796,42 @@ install_virtualmin_release() {
     package_type="deb"
     if [ "$os_type" = "ubuntu" ]; then
       deps="$ubudeps"
+      if [ "$vm6_repos" = 1 ]; then
+        case "$os_version" in
+        16.04*)
+          repos="virtualmin-xenial virtualmin-universal"
+          ;;
+        18.04*)
+          repos="virtualmin-bionic virtualmin-universal"
+          ;;
+        20.04*)
+          repos="virtualmin-focal virtualmin-universal"
+          ;;
+        22.04*)
+          repos="virtualmin-jammy virtualmin-universal"
+          ;;
+        esac
+      else
+        repos="virtualmin"
+      fi
     else
       deps="$debdeps"
+      if [ "$vm6_repos" = 1 ]; then
+        case "$os_version" in
+        9*)
+          repos="virtualmin-stretch virtualmin-universal"
+          ;;
+        10*)
+          repos="virtualmin-buster virtualmin-universal"
+          ;;
+        11*)
+          repos="virtualmin-bullseye virtualmin-universal"
+          ;;
+        esac
+      else
+        repos="virtualmin"
+      fi
     fi
-    repos="virtualmin"
     log_debug "apt-get repos: ${repos}"
     if [ -z "$repos" ]; then # Probably unstable with no version number
       log_fatal "No repos available for this OS. Are you running unstable/testing?"
