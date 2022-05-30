@@ -279,7 +279,7 @@ else
   LOGIN="$SERIAL:$KEY@"
   PRODUCT="Professional"
   packagetype="pro"
-  repopath=""
+  repopath="pro/"
 fi
 
 # Virtualmin-provided packages
@@ -783,31 +783,10 @@ install_virtualmin_release() {
     package_type="deb"
     if [ "$os_type" = "ubuntu" ]; then
       deps="$ubudeps"
-      case "$os_version" in
-      18.04*)
-        repos="virtualmin-bionic virtualmin-universal"
-        ;;
-      20.04*)
-        repos="virtualmin-focal virtualmin-universal"
-        ;;
-      22.04*)
-        repos="virtualmin-jammy virtualmin-universal"
-        ;;
-      esac
     else
       deps="$debdeps"
-      case "$os_version" in
-      9*)
-        repos="virtualmin-stretch virtualmin-universal"
-        ;;
-      10*)
-        repos="virtualmin-buster virtualmin-universal"
-        ;;
-      11*)
-        repos="virtualmin-bullseye virtualmin-universal"
-        ;;
-      esac
     fi
+    repos="virtualmin"
     log_debug "apt-get repos: ${repos}"
     if [ -z "$repos" ]; then # Probably unstable with no version number
       log_fatal "No repos available for this OS. Are you running unstable/testing?"
