@@ -108,6 +108,7 @@ while [ "$1" != "" ]; do
     shift
     setup_only=1
     mode='setup'
+    unstable='unstable'
     break
     ;;
   --hostname | -n)
