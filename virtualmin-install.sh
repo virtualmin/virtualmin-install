@@ -761,7 +761,8 @@ install_virtualmin_release() {
       install_cmd="dnf"
       install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
-      if ! $install_config_manager 1>/dev/null 2>&1; then
+      # Do not use package manager when fixing repos
+      if [ -z "$setup_only" ]; then
         run_ok "$install dnf-plugins-core" "Installing core plugins for package manager"
       fi
     else
@@ -769,15 +770,44 @@ install_virtualmin_release() {
       update="/usr/bin/yum -y update"
       install_cmd="/usr/bin/yum"
       if [ "$os_major_version" -ge 7 ]; then
-        run_ok "yum --quiet groups mark convert" "Updating yum Groups"
+        # Do not use package manager when fixing repos
+        if [ -z "$setup_only" ]; then
+          run_ok "yum --quiet groups mark convert" "Updating groups metadata"
+        fi
       fi
       install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
 
+    # Download release file
+    if [ -n "$vm6_repos" ] && [ "$vm6_repos" -eq 1 ]; then
+      rpm_release_file_download="virtualmin-release-latest.noarch.rpm"
+      download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${os_type}/${os_major_version}/${arch}/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
+    else
+      rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
+      download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
+    fi
+    
+    # Remove existing pkg files as they will not
+    # be replaced upon replease package upgrade
+    if [ -x "/usr/bin/rpm" ]; then
+      rpm_release_files="$(rpm -qal virtualmin*release)"
+      rpm_release_files=$(echo "$rpm_release_files" | tr "\n" " ")
+      if [ -n "$rpm_release_files" ]; then
+        for rpm_release_file in $rpm_release_files; do
+           rm -f "$rpm_release_file"
+        done
+      fi
+    fi
+
     # Install release file
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/virtualmin-$packagetype-release.noarch.rpm" "Downloading Virtualmin $vm_version release package"
-    run_ok "rpm -U --replacepkgs --quiet virtualmin-$packagetype-release.noarch.rpm" "Installing Virtualmin release package"
+    run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
+
+    # Fix login credentials if fixing repos
+    if [ -n "$setup_only" ]; then
+      sed -i "s/SERIALNUMBER:LICENSEKEY@/$LOGIN/" /etc/yum.repos.d/virtualmin.repo
+      sed -i "s/http:\/\//https:\/\//" /etc/yum.repos.d/virtualmin.repo
+    fi
     ;;
   debian | ubuntu)
     case "$os_type" in
