@@ -805,7 +805,7 @@ install_virtualmin_release() {
     # be replaced upon replease package upgrade
     if [ -x "/usr/bin/rpm" ]; then
       rpm_release_files="$(rpm -qal virtualmin*release)"
-      rpm_release_files=$(echo "$rpm_release_files" | tr "\n" " ")
+      rpm_release_files=$(echo "$rpm_release_files" | tr '\n' ' ')
       if [ -n "$rpm_release_files" ]; then
         for rpm_release_file in $rpm_release_files; do
            rm -f "$rpm_release_file"
@@ -819,7 +819,7 @@ install_virtualmin_release() {
     # Fix login credentials if fixing repos
     if [ -n "$setup_only" ]; then
       sed -i "s/SERIALNUMBER:LICENSEKEY@/$LOGIN/" /etc/yum.repos.d/virtualmin.repo
-      sed -i "s/http:\/\//https:\/\//" /etc/yum.repos.d/virtualmin.repo
+      sed -i 's/http:\/\//https:\/\//' /etc/yum.repos.d/virtualmin.repo
     fi
     ;;
   debian | ubuntu)
