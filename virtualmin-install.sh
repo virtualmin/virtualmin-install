@@ -275,7 +275,7 @@ fi
 # If Pro user downloads GPL version of `install.sh` script
 # to fix repos check if there is an active license exists
 if [ -n "$setup_only" ]; then
-  if [ -f /etc/virtualmin-license ]; then
+  if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f /etc/virtualmin-license ]; then
     virtualmin_license_existing_serial="$(grep 'SerialNumber=' /etc/virtualmin-license | sed 's/SerialNumber=//')"
     virtualmin_license_existing_key="$(grep 'LicenseKey=' /etc/virtualmin-license | sed 's/LicenseKey=//')"
     if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
