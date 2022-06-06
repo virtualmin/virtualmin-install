@@ -272,6 +272,20 @@ if [ -x /usr/bin/apt-get ]; then
   fi
 fi
 
+# If Pro user downloads GPL version of `install.sh` script
+# to fix repos check if there is an active license exists
+if [ -n "$setup_only" ]; then
+  if [ -f /etc/virtualmin-license ]; then
+    virtualmin_license_existing_serial="$(grep 'SerialNumber=' /etc/virtualmin-license | sed 's/SerialNumber=//')"
+    virtualmin_license_existing_key="$(grep 'LicenseKey=' /etc/virtualmin-license | sed 's/LicenseKey=//')"
+    if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
+      SERIAL="$virtualmin_license_existing_serial"
+      KEY="$virtualmin_license_existing_key"
+    fi
+    
+  fi
+fi
+
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
   arch="i386"
