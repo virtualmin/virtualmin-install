@@ -281,8 +281,7 @@ if [ -n "$setup_only" ]; then
     if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
       SERIAL="$virtualmin_license_existing_serial"
       KEY="$virtualmin_license_existing_key"
-    fi
-    
+    fi    
   fi
 fi
 
