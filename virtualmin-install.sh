@@ -35,9 +35,8 @@ BOLD=$(tput bold)
 
 # Currently supported systems:
 supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
-      - Alma Linux and Rocky 8 and 9 on x86_64
-      - CentOS 7 and 8 on x86_64
-      - RHEL Linux 7 and 8 on x86_64${NORMAL}
+      - Alma and Rocky 8 and 9 on x86_64
+      - CentOS and RHEL 7 on x86_64${NORMAL}
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux derivatives${NORMAL}${CYAN}
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
@@ -59,7 +58,7 @@ usage() {
   printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
   printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
   printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, Oracle)\\n"
+  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
   printf "  ${YELLOW}--no-package-updates|-x${NORMAL} skip installing system package updates\\n"
   printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
   printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
