@@ -673,7 +673,7 @@ if [ -n "$setup_only" ]; then
   vm_version_already_installed=$((vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if grep -F -q "/vm/$vm_version_already_installed/" "$repofile"; then
+      if grep -F -q "universal" "$repofile"; then
         vm_version=$vm_version_already_installed
 
         # Fix for Virtualmin 6 repos
