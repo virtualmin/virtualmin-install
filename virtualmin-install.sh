@@ -834,7 +834,7 @@ install_virtualmin_release() {
       fi
       ;;
     debian)
-      if [ "$os_major_version" -lt 10 ]; then
+      if [ "$os_major_version" -lt 10 ] && [ -z "$vm6_repos" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
