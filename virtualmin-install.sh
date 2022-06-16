@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-RC10
+VER=7.0.0-RC11
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
