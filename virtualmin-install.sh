@@ -135,6 +135,8 @@ while [ "$1" != "" ]; do
   esac
 done
 
+stty -echo
+
 if [ -z "$setup_only" ]; then
   echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
 
@@ -1156,5 +1158,7 @@ else
   echo
   printf "${errorlist}"
 fi
+
+stty echo
 
 exit 0
