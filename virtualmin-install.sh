@@ -302,7 +302,7 @@ fi
 
 # Virtualmin-provided packages
 vmgroup="'Virtualmin Core'"
-vmgrouptext="Virtualmin provided"
+vmgrouptext="Virtualmin $vm_version provided packages"
 debvmpackages="virtualmin-core"
 deps=
 
