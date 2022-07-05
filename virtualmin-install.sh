@@ -1154,6 +1154,8 @@ if [ $errors -eq "0" ]; then
   log_success "If there were no errors above, Virtualmin should be ready"
   log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
   log_success "You may receive a security warning in your browser on your first visit."
+  log_success "Chromium based browsers, to bypass security warning screen may require"
+  log_success "you to type \`thisisunsafe\` to get to the login page."
   TIME=$(date +%s)
   echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed"
 else
