@@ -959,7 +959,7 @@ install_with_apt() {
   fi
 
   # Silently purge packages that may cause issues upon installation
-  /usr/bin/apt-get --quiet purge ufw >>${RUN_LOG} 2>&1
+  /usr/bin/apt-get --quiet --assume-yes purge ufw >>${RUN_LOG} 2>&1
 
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
