@@ -1022,7 +1022,7 @@ install_with_yum() {
 
   # Important Perl packages are hidden in ol8_codeready_builder repo in Oracle
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "ol" ]; then
-    run_ok "$install_config_manager --set-enabled ol${os_major_version}_codeready_builder" "Oracle Linux $os_major_version CodeReady Builder"
+    run_ok "$install_config_manager --set-enabled ol${os_major_version}_codeready_builder" "Enabling Oracle Linux $os_major_version CodeReady Builder"
   fi
 
   # XXX This is so stupid. Why does yum insists on extra commands?
