@@ -773,7 +773,7 @@ install_virtualmin_release() {
       install="dnf -y install"
       update="dnf -y update"
       install_cmd="dnf"
-      install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
+      install_group="dnf -y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
       # Do not use package manager when fixing repos
       if [ -z "$setup_only" ]; then
@@ -789,7 +789,7 @@ install_virtualmin_release() {
           run_ok "yum --quiet groups mark convert" "Updating groups metadata"
         fi
       fi
-      install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
+      install_group="yum -y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
 
