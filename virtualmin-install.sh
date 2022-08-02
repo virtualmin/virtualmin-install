@@ -366,7 +366,7 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
+$download "https://raw.githubusercontent.com/virtualmin/slib/master/slib.sh" >>$log 2>&1
 if [ $? -ne 0 ]; then
   echo "${RED}Error:${NORMAL} Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
   exit 1
@@ -555,7 +555,7 @@ EOF
   if [ -n "$unstable" ]; then
     unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
-     - Oracle Linux 8 on x86_64\\n \
+     - Oracle Linux 8 and 9 on x86_64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
   else
