@@ -1081,6 +1081,34 @@ install_virtualmin() {
   fi
 }
 
+yum_check_skipped() {
+  loginstalled=0
+  logskipped=0
+  skippedpackages=""
+  skippedpackagesnum=0
+  while IFS= read -r line
+  do
+    if [ "$line" = "Installed:" ]; then
+      loginstalled=1
+    elif [ "$line" = "" ]; then
+      loginstalled=0
+      logskipped=0
+    elif [ "$line" = "Skipped:" ] && [ "$loginstalled" = 1 ]; then
+      logskipped=1
+    elif [ "$logskipped" = 1 ]; then
+      skippedpackages="$skippedpackages$line"
+      skippedpackagesnum=$((skippedpackagesnum+1))
+    fi
+  done < "$log"
+  if [ "$skippedpackages" != "" ]; then
+    if [ "$skippedpackagesnum" != 1 ]; then
+      ts="s"
+    fi
+    skippedpackages=$(echo "$skippedpackages" | tr -s ' ')
+    log_warning "Skipped package${ts}:${skippedpackages}"
+  fi
+}
+
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
@@ -1165,6 +1193,9 @@ echo
 if [ $errors -eq "0" ]; then
   hostname=$(hostname -f)
   detect_ip
+  if [ "$package_type" = "rpm" ]; then
+    yum_check_skipped
+  fi
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready"
   log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
