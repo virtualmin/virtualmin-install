@@ -42,7 +42,19 @@ supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NOR
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
       - Debian 10 and 11 on i386 and amd64${NORMAL}"
 
+# Store new log each time
 log=/root/virtualmin-install.log
+if [ -e "$log" ]; then
+  while true; do
+    logcnt=$((logcnt+1))
+    logold="$log.$logcnt"
+    if [ ! -e "$logold" ]; then
+      mv $log $logold
+      break
+    fi
+  done
+fi
+
 skipyesno=0
 
 # Set defaults
