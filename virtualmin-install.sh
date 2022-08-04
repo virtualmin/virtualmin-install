@@ -42,7 +42,19 @@ supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NOR
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
       - Debian 10 and 11 on i386 and amd64${NORMAL}"
 
+# Store new log each time
 log=/root/virtualmin-install.log
+if [ -e "$log" ]; then
+  while true; do
+    logcnt=$((logcnt+1))
+    logold="$log.$logcnt"
+    if [ ! -e "$logold" ]; then
+      mv $log $logold
+      break
+    fi
+  done
+fi
+
 skipyesno=0
 
 # Set defaults
@@ -773,7 +785,7 @@ install_virtualmin_release() {
       install="dnf -y install"
       update="dnf -y update"
       install_cmd="dnf"
-      install_group="dnf -y --quiet group install --setopt=group_package_types=mandatory,default"
+      install_group="dnf -y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
       install_config_manager="dnf config-manager"
       # Do not use package manager when fixing repos
       if [ -z "$setup_only" ]; then
@@ -789,7 +801,7 @@ install_virtualmin_release() {
           run_ok "yum --quiet groups mark convert" "Updating groups metadata"
         fi
       fi
-      install_group="yum -y --quiet groupinstall --setopt=group_package_types=mandatory,default"
+      install_group="yum -y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
       install_config_manager="yum-config-manager"
     fi
 
@@ -1069,6 +1081,34 @@ install_virtualmin() {
   fi
 }
 
+yum_check_skipped() {
+  loginstalled=0
+  logskipped=0
+  skippedpackages=""
+  skippedpackagesnum=0
+  while IFS= read -r line
+  do
+    if [ "$line" = "Installed:" ]; then
+      loginstalled=1
+    elif [ "$line" = "" ]; then
+      loginstalled=0
+      logskipped=0
+    elif [ "$line" = "Skipped:" ] && [ "$loginstalled" = 1 ]; then
+      logskipped=1
+    elif [ "$logskipped" = 1 ]; then
+      skippedpackages="$skippedpackages$line"
+      skippedpackagesnum=$((skippedpackagesnum+1))
+    fi
+  done < "$log"
+  if [ "$skippedpackages" != "" ]; then
+    if [ "$skippedpackagesnum" != 1 ]; then
+      ts="s"
+    fi
+    skippedpackages=$(echo "$skippedpackages" | tr -s ' ')
+    log_warning "Skipped package${ts}:${skippedpackages}"
+  fi
+}
+
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
@@ -1153,6 +1193,9 @@ echo
 if [ $errors -eq "0" ]; then
   hostname=$(hostname -f)
   detect_ip
+  if [ "$package_type" = "rpm" ]; then
+    yum_check_skipped
+  fi
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready"
   log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
