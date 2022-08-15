@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-RC11
+VER=7.0.0-RC12
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -378,7 +378,8 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
+# $download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
+$download "https://raw.githubusercontent.com/virtualmin/slib/master/slib.sh" >>$log 2>&1
 if [ $? -ne 0 ]; then
   echo "${RED}Error:${NORMAL} Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
   exit 1
