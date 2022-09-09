@@ -725,7 +725,7 @@ if [ -n "$setup_only" ]; then
 else
   log_info "Started installation log in $log"
   log_debug "Phase 1 of 3: Setup"
-  printf "${YELLOW}▣${CYAN}□□${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\\n"
+  printf "${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\\n"
 fi
 
 # Print out some details that we gather before logging existed
@@ -1135,7 +1135,7 @@ errors=$((0))
 install_virtualmin_release
 echo
 log_debug "Phase 2 of 3: Installation"
-printf "${GREEN}▣${YELLOW}▣${CYAN}□${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\\n"
+printf "${GREEN}▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
