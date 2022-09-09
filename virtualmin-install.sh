@@ -18,20 +18,38 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0-RC13
+VER=7.0.0-RC14
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
+# Determines if we have a terminal
+if ! tty -s; then
+  INTERACTIVE_MODE="off"
+else
+  INTERACTIVE_MODE="on"
+fi
+
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
-RED="$(tput setaf 1)"
-YELLOW="$(tput setaf 3)"
-CYAN="$(tput setaf 6)"
-BLACK="$(tput setaf 16)"
-NORMAL="$(tput sgr0)"
-GREEN=$(tput setaf 2)
-CYANBG=$(tput setab 6)
-BOLD=$(tput bold)
+if [ "${INTERACTIVE_MODE}" != "off" ];then
+  RED="$(tput setaf 1)"
+  YELLOW="$(tput setaf 3)"
+  CYAN="$(tput setaf 6)"
+  BLACK="$(tput setaf 16)"
+  NORMAL="$(tput sgr0)"
+  GREEN=$(tput setaf 2)
+  CYANBG=$(tput setab 6)
+  BOLD=$(tput bold)
+else
+  RED=''
+  YELLOW=''
+  CYAN=''
+  BLACK=''
+  NORMAL=''
+  GREEN=''
+  CYANBG=''
+  BOLD=''
+fi
 
 # Currently supported systems:
 supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
@@ -147,7 +165,9 @@ while [ "$1" != "" ]; do
   esac
 done
 
-stty -echo
+if [ "${INTERACTIVE_MODE}" != "off" ];then
+  stty -echo
+fi
 
 if [ -z "$setup_only" ]; then
   echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
@@ -1173,8 +1193,11 @@ esac
 
 # kill the virtualmin config-system command, if it's still running
 kill "$config_system_pid" 1>/dev/null 2>&1
+
 # Make sure the cursor is back (if spinners misbehaved)
-tput cnorm
+if [ "${INTERACTIVE_MODE}" != "off" ];then
+  tput cnorm
+fi
 
 printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
 # Cleanup the tmp files
@@ -1210,6 +1233,8 @@ else
   printf "${errorlist}"
 fi
 
-stty echo
+if [ "${INTERACTIVE_MODE}" != "off" ];then
+  stty echo
+fi
 
 exit 0
