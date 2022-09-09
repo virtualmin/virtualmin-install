@@ -29,6 +29,15 @@ else
   INTERACTIVE_MODE="on"
 fi
 
+# Set a trap to catch any exit, whether
+# normal or forced (e.g. Ctrl-C)
+enable_stty () {
+  if [ "${INTERACTIVE_MODE}" != "off" ];then
+    stty echo
+  fi
+}
+trap enable_stty INT QUIT TERM EXIT
+
 # Print usage info, if --help, set mode, etc.
 # Temporary colors
 if [ "${INTERACTIVE_MODE}" != "off" ];then
@@ -1231,10 +1240,6 @@ else
   log_warning "The following errors occurred during installation:"
   echo
   printf "${errorlist}"
-fi
-
-if [ "${INTERACTIVE_MODE}" != "off" ];then
-  stty echo
 fi
 
 exit 0
