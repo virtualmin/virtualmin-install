@@ -61,13 +61,14 @@ else
 fi
 
 # Currently supported systems:
-supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux derivatives${NORMAL}${CYAN}
+supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
+      - RHEL 8 and 9 on x86_64
       - Alma and Rocky 8 and 9 on x86_64
-      - CentOS and RHEL 7 on x86_64${NORMAL}
+      - CentOS 7 on x86_64${NORMAL}
       UNSTABLERHEL
-    ${CYANBG}${BLACK}${BOLD}Debian Linux derivatives${NORMAL}${CYAN}
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
-      - Debian 10 and 11 on i386 and amd64${NORMAL}"
+    ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
+      - Debian 10 and 11 on i386 and amd64
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}"
 
 # Store new log each time
 log=/root/virtualmin-install.log
@@ -594,7 +595,7 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 36 on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 36+ on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
           ${NORMAL}"
