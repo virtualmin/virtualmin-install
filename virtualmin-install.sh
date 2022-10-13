@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.0
+VER=7.0.1
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -48,6 +48,7 @@ if [ "${INTERACTIVE_MODE}" != "off" ];then
   NORMAL="$(tput sgr0)"
   GREEN=$(tput setaf 2)
   CYANBG=$(tput setab 6)
+  BRIGHTWHITEBG=$(tput setab 15)
   BOLD=$(tput bold)
 else
   RED=''
@@ -57,6 +58,7 @@ else
   NORMAL=''
   GREEN=''
   CYANBG=''
+  BRIGHTWHITEBG=''
   BOLD=''
 fi
 
@@ -483,6 +485,31 @@ success() {
   log_success "$1 Succeeded."
 }
 
+# Function to find out if some services were pre-installed
+is_preconfigured() {
+  preconfigured=""
+  if command -pv named -v 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}BIND${NORMAL} "
+  fi
+  if command -pv apachectl -v 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}Apache${NORMAL} "
+  fi
+  if command -pv nginx -v 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}Nginx${NORMAL} "
+  fi
+  if command -pv mariadb 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}MariaDB${NORMAL} "
+  fi
+  if command -pv mysql 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}MySQL${NORMAL} "
+  fi
+  if command -pv php -v 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}PHP${NORMAL} "
+  fi
+  preconfigured=$(echo "$preconfigured" | sed 's/ /, /g' | sed 's/, $/ /')
+  echo "$preconfigured"
+}
+
 # Function to find out if Virtualmin is already installed, so we can get
 # rid of some of the warning message. Nobody reads it, and frequently
 # folks run the install script on a production system; either to attempt
@@ -606,7 +633,7 @@ EOF
   echo "$supported_all"
   cat <<EOF
 
-  If your OS/version/arch is not listed, installation ${RED}will fail${NORMAL}. More
+  If your OS/version/arch is not listed, installation ${BOLD}${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
     ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
@@ -627,12 +654,35 @@ if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
   install_msg
 fi
 
+preconfigured_system_msg() {
+  # Double check if installed, just in case above error ignored.
+  is_preconfigured_rs=$(is_preconfigured)
+  if [ -n "$is_preconfigured_rs" ]; then
+    cat <<EOF
+
+  ${BRIGHTWHITEBG}${RED}${BOLD} ATTENTION! ${NORMAL}
+
+  Pre-installed software detected: $is_preconfigured_rs
+
+  It is highly advised ${BOLD}${RED}not to pre-install or pre-configure${NORMAL} any additional packages on your OS.
+  The installer expects a freshly installed OS, and anything you do differently might cause
+  conflicts or configuration errors. If you need to enable third-party package repositories,
+  do so after installation of Virtualmin, and only with extreme caution.
+
+EOF
+    printf " Continue? (y/n) "
+    if ! yesno; then
+      exit
+    fi
+  fi
+}
+
 already_installed_msg() {
   # Double check if installed, just in case above error ignored.
   if is_installed; then
     cat <<EOF
 
-  ${REDBG} WARNING! ${NORMAL}
+  ${BRIGHTWHITEBG}${RED}${BOLD} WARNING! ${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation failed,
   and can be ignored in that case.
@@ -649,13 +699,14 @@ already_installed_msg() {
   system package manager on the command line.
 
 EOF
-    printf " Really Continue? (y/n) "
+    printf " Continue? (y/n) "
     if ! yesno; then
       exit
     fi
   fi
 }
 if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
+  preconfigured_system_msg
   already_installed_msg
 fi
 
