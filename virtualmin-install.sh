@@ -85,11 +85,11 @@ if [ -e "$log" ]; then
   done
 fi
 
-skipyesno=0
-
 # Set defaults
 bundle='LAMP' # Other option is LEMP
 mode='full'   # Other option is minimal
+skipyesno=0
+vm6_repos=0
 
 usage() {
   # shellcheck disable=SC2046
@@ -771,7 +771,6 @@ if [ "$?" != "0" ]; then
 fi
 
 if [ -n "$setup_only" ]; then
-  vm6_repos=0
   if [ "$setup_only_force_latest" -ne 1 ]; then
     # If Virtualmin 6 is installed and a user needs to fix repos make,
     # sure that we don't switch 6 to 7 to keep the same stack packages
