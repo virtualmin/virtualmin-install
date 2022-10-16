@@ -1087,11 +1087,11 @@ install_with_yum() {
     # Important Perl packages are now hidden in CodeReady repo
     run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64*-rpms" "Enabling Red Hat CodeReady package repository"
     # Install EPEL
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm"
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>$log 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on RHEL 7
   elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm"
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm" >>$log 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # Install EPEL on CentOS/Alma/Rocky
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
