@@ -764,18 +764,19 @@ fi
 if [ -n "$setup_only" ]; then
   # If Virtualmin 6 is installed and a user needs to fix repos make,
   # sure that we don't switch 6 to 7 to keep the same stack packages
+  vm6_repos=0
   reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
-  vm_version_already_installed=$((vm_version - 1))
+  vm_prev_version_installed=$((vm_version - 1))
   for repofile in $reposfile; do
     if [ -f "$repofile" ]; then
-      if grep -F -q "universal" "$repofile"; then
-        vm_version=$vm_version_already_installed
+      if grep -F -q "virtualmin-universal" "$repofile" || grep -F -q "/vm/$vm_prev_version_installed/" "$repofile"; then
 
         # Fix for Virtualmin 6 repos
-        if [ "$vm_version" = "6" ]; then
+        if [ "$vm_prev_version_installed" = "6" ]; then
           if [ "$SERIAL" != "GPL" ]; then
             repopath=""
           fi
+          vm_version=$vm_prev_version_installed
           vm6_repos=1
         fi
       fi
@@ -887,7 +888,7 @@ install_virtualmin_release() {
     fi
 
     # Download release file
-    if [ -n "$vm6_repos" ] && [ "$vm6_repos" -eq 1 ]; then
+    if [ "$vm6_repos" -eq 1 ]; then
       rpm_release_file_download="virtualmin-release-latest.noarch.rpm"
       download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${os_type}/${os_major_version}/${arch}/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
     else
@@ -938,7 +939,7 @@ install_virtualmin_release() {
     package_type="deb"
     if [ "$os_type" = "ubuntu" ]; then
       deps="$ubudeps"
-      if [ "$vm6_repos" = 1 ]; then
+      if [ "$vm6_repos" -eq 1 ]; then
         case "$os_version" in
         16.04*)
           repos="virtualmin-xenial virtualmin-universal"
@@ -958,7 +959,7 @@ install_virtualmin_release() {
       fi
     else
       deps="$debdeps"
-      if [ "$vm6_repos" = 1 ]; then
+      if [ "$vm6_repos" -eq 1 ]; then
         case "$os_version" in
         9*)
           repos="virtualmin-stretch virtualmin-universal"
