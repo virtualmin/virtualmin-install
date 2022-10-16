@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.1
+VER=7.0.0
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
@@ -97,16 +97,16 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin."
   echo
-  printf "  ${YELLOW}--help|-h${NORMAL}               display this help and exit\\n"
-  printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL} choose bundle to install (defaults to LAMP)\\n"
-  printf "  ${YELLOW}--minimal|-m${NORMAL}            install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  ${YELLOW}--unstable|-e${NORMAL}           enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
-  printf "  ${YELLOW}--no-package-updates|-x${NORMAL} skip installing system package updates\\n"
-  printf "  ${YELLOW}--setup|-s${NORMAL}              setup Virtualmin software repositories and exit\\n"
-  printf "  ${YELLOW}--hostname|-n${NORMAL}           set fully qualified hostname\\n"
-  printf "  ${YELLOW}--force|-f${NORMAL}              assume \"yes\" as answer to all prompts\\n"
-  printf "  ${YELLOW}--verbose|-v${NORMAL}            increase verbosity\\n"
-  printf "  ${YELLOW}--uninstall|-u${NORMAL}          removes all Virtualmin packages (do not use on a production system)\\n"
+  printf "  ${YELLOW}--help|-h${NORMAL}                       display this help and exit\\n"
+  printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL}         choose bundle to install (defaults to LAMP)\\n"
+  printf "  ${YELLOW}--minimal|-m${NORMAL}                    install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  ${YELLOW}--unstable|-e${NORMAL}                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
+  printf "  ${YELLOW}--no-package-updates|-x${NORMAL}         skip installing system package updates\\n"
+  printf "  ${YELLOW}--setup|-s <auto|force-latest>${NORMAL}  setup Virtualmin software repositories and exit\\n"
+  printf "  ${YELLOW}--hostname|-n${NORMAL}                   set fully qualified hostname\\n"
+  printf "  ${YELLOW}--force|-f${NORMAL}                      assume \"yes\" as answer to all prompts\\n"
+  printf "  ${YELLOW}--verbose|-v${NORMAL}                    increase verbosity\\n"
+  printf "  ${YELLOW}--uninstall|-u${NORMAL}                  removes all Virtualmin packages (do not use on a production system)\\n"
   echo
 }
 
@@ -150,6 +150,15 @@ while [ "$1" != "" ]; do
     setup_only=1
     mode='setup'
     unstable='unstable'
+    case "$1" in
+    force-latest)
+      shift
+      setup_only_force_latest=1
+      ;;
+    *)
+      setup_only_force_latest=0
+      ;;
+    esac
     break
     ;;
   --hostname | -n)
@@ -762,26 +771,28 @@ if [ "$?" != "0" ]; then
 fi
 
 if [ -n "$setup_only" ]; then
-  # If Virtualmin 6 is installed and a user needs to fix repos make,
-  # sure that we don't switch 6 to 7 to keep the same stack packages
   vm6_repos=0
-  reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
-  vm_prev_version_installed=$((vm_version - 1))
-  for repofile in $reposfile; do
-    if [ -f "$repofile" ]; then
-      if grep -F -q "virtualmin-universal" "$repofile" || grep -F -q "/vm/$vm_prev_version_installed/" "$repofile"; then
+  if [ "$setup_only_force_latest" -ne 1 ]; then
+    # If Virtualmin 6 is installed and a user needs to fix repos make,
+    # sure that we don't switch 6 to 7 to keep the same stack packages
+    reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
+    vm_prev_version_installed=$((vm_version - 1))
+    for repofile in $reposfile; do
+      if [ -f "$repofile" ]; then
+        if grep -F -q "virtualmin-universal" "$repofile" || grep -F -q "/vm/$vm_prev_version_installed/" "$repofile"; then
 
-        # Fix for Virtualmin 6 repos
-        if [ "$vm_prev_version_installed" = "6" ]; then
-          if [ "$SERIAL" != "GPL" ]; then
-            repopath=""
+          # Fix for Virtualmin 6 repos
+          if [ "$vm_prev_version_installed" = "6" ]; then
+            if [ "$SERIAL" != "GPL" ]; then
+              repopath=""
+            fi
+            vm_version=$vm_prev_version_installed
+            vm6_repos=1
           fi
-          vm_version=$vm_prev_version_installed
-          vm6_repos=1
         fi
       fi
-    fi
-  done
+    done
+  fi
   log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
