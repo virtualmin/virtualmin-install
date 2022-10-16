@@ -264,12 +264,12 @@ while true; do
       echo "  Attempting to install Perl .."
     fi
     if [ -x /usr/bin/dnf ]; then
-      dnf -y install perl >>$log
+      dnf -y install perl >>$log 2>&1
     elif [ -x /usr/bin/yum ]; then
-      yum -y install perl >>$log
+      yum -y install perl >>$log 2>&1
     elif [ -x /usr/bin/apt-get ]; then
-      apt-get update >>$log
-      apt-get -q -y install perl >>$log
+      apt-get update >>$log 2>&1
+      apt-get -q -y install perl >>$log 2>&1
     fi
     perl_attempted=1
     # Loop. Next loop should either break or exit.
