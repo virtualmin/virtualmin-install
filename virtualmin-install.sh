@@ -807,12 +807,7 @@ log_debug "install.sh version: $VER"
 
 # Check for a fully qualified hostname
 log_debug "Checking for fully qualified hostname .."
-name="$(hostname -f 2>&1)"
-# For systems with hostnamectl command try it first as well
-if ! is_fully_qualified "$name"; then
-  name="$(hostnamectl 2>&1 | grep 'hostname' 2>&1 | sed 's/\s*\S*\s*\S*:\s*//' 2>&1)"
-fi
-# Set hostname if forced or not FQDN
+name="$(hostname -f)"
 if [ -n "$forcehostname" ]; then
   set_hostname "$forcehostname"
 elif ! is_fully_qualified "$name"; then
