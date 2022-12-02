@@ -812,6 +812,10 @@ if [ -n "$forcehostname" ]; then
   set_hostname "$forcehostname"
 elif ! is_fully_qualified "$name"; then
   set_hostname
+else
+  # Hostname is already FQDN, yet still set it 
+  # again to make sure to have it updated everywhere
+  set_hostname "$name"
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
