@@ -29,13 +29,15 @@ else
   INTERACTIVE_MODE="on"
 fi
 
-# Set a trap to catch any exit, whether
-# normal or forced (e.g. Ctrl-C)
+# Enable user input
 enable_stty () {
   if [ "${INTERACTIVE_MODE}" != "off" ];then
     stty echo
   fi
 }
+
+# Set a trap to catch any exit, whether
+# normal or forced (e.g. Ctrl-C)
 trap enable_stty INT QUIT TERM EXIT
 
 # Print usage info, if --help, set mode, etc.
@@ -44,11 +46,10 @@ if [ "${INTERACTIVE_MODE}" != "off" ];then
   RED="$(tput setaf 1)"
   YELLOW="$(tput setaf 3)"
   CYAN="$(tput setaf 6)"
-  BLACK="$(tput setaf 16)"
+  BLACK="$(tput setaf 0)"
   NORMAL="$(tput sgr0)"
   GREEN=$(tput setaf 2)
   CYANBG=$(tput setab 6)
-  BRIGHTWHITEBG=$(tput setab 15)
   BOLD=$(tput bold)
 else
   RED=''
@@ -58,7 +59,6 @@ else
   NORMAL=''
   GREEN=''
   CYANBG=''
-  BRIGHTWHITEBG=''
   BOLD=''
 fi
 
@@ -195,8 +195,8 @@ if [ -z "$setup_only" ]; then
 
   # Check if current time
   # is not older than
-  # May 16, 2022
-  TIMEBASE=1652691600
+  # Dec 01, 2022
+  TIMEBASE=1669888800
   TIME=$(date +%s)
   if [ "$TIME" -lt "$TIMEBASE" ]; then
     echo "  Force-syncing system time .."
@@ -211,7 +211,7 @@ if [ -z "$setup_only" ]; then
     # Check again after all
     TIME=$(date +%s)
     if [ "$TIME" -lt "$TIMEBASE" ]; then
-      echo "  .. failed to automatically sync system time; it must be corrected manually to continue"
+      echo "  .. failed to automatically sync system time; it should be corrected manually to continue"
       exit
     fi
     echo "  .. done"
@@ -669,7 +669,7 @@ preconfigured_system_msg() {
   if [ -n "$is_preconfigured_rs" ]; then
     cat <<EOF
 
-  ${BRIGHTWHITEBG}${RED}${BOLD} ATTENTION! ${NORMAL}
+  ${WHITEBG}${RED}${BOLD} ATTENTION! ${NORMAL}
 
   Pre-installed software detected: $is_preconfigured_rs
 
@@ -691,7 +691,7 @@ already_installed_msg() {
   if is_installed; then
     cat <<EOF
 
-  ${BRIGHTWHITEBG}${RED}${BOLD} WARNING! ${NORMAL}
+  ${WHITEBG}${RED}${BOLD} WARNING! ${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation failed,
   and can be ignored in that case.
