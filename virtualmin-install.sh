@@ -497,22 +497,21 @@ success() {
 # Function to find out if some services were pre-installed
 is_preconfigured() {
   preconfigured=""
-  if command -pv named -v 1>/dev/null 2>&1; then
+  if named -v 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}BIND${NORMAL} "
   fi
-  if command -pv apachectl -v 1>/dev/null 2>&1; then
+  if apachectl -v 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}Apache${NORMAL} "
   fi
-  if command -pv nginx -v 1>/dev/null 2>&1; then
+  if nginx -v 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}Nginx${NORMAL} "
   fi
   if command -pv mariadb 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}MariaDB${NORMAL} "
-  fi
-  if command -pv mysql 1>/dev/null 2>&1; then
+  elif command -pv mysql 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}MySQL${NORMAL} "
   fi
-  if command -pv php -v 1>/dev/null 2>&1; then
+  if php -v 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}PHP${NORMAL} "
   fi
   preconfigured=$(echo "$preconfigured" | sed 's/ /, /g' | sed 's/, $/ /')
