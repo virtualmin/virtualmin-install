@@ -205,7 +205,7 @@ while true; do
       perl=/opt/csw/bin/perl
       break
     elif [ "$perl_attempted" = 1 ]; then
-      printf "Perl could not be installed. Cannot continue.\\n"
+      printf ".. Perl could not be installed. Cannot continue.\\n"
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
@@ -346,7 +346,7 @@ fi
 # is mounted noexec, this won't catch it.
 TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
 if [ -n "$TMPNOEXEC" ]; then
-  echo ".. $TMPDIR directory is mounted noexec. Cannot continue."
+  echo "Error: $TMPDIR directory is mounted noexec. Cannot continue."
   exit 1
 fi
 
@@ -362,7 +362,7 @@ fi
 mkdir "$tempdir/files"
 srcdir="$tempdir/files"
 if ! cd "$srcdir"; then
-  echo "Failed to cd to $srcdir"
+  echo "Error: Failed to enter $srcdir temporary directory"
   exit 1
 fi
 
@@ -370,7 +370,7 @@ fi
 # Lots of little utility functions.
 $download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
 if [ $? -ne 0 ]; then
-  echo "${RED}Error:${NORMAL} Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+  echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
   exit 1
 fi
 chmod +x slib.sh
