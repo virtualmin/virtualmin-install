@@ -22,55 +22,8 @@ VER=7.0.1
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
-# Determines if we have a terminal
-if ! tty -s; then
-  INTERACTIVE_MODE="off"
-else
-  INTERACTIVE_MODE="on"
-fi
-
-# Enable user input
-enable_stty () {
-  if [ "${INTERACTIVE_MODE}" != "off" ];then
-    stty echo
-  fi
-}
-
-# Set a trap to catch any exit, whether
-# normal or forced (e.g. Ctrl-C)
-trap enable_stty INT QUIT TERM EXIT
-
-# Print usage info, if --help, set mode, etc.
-# Temporary colors
-if [ "${INTERACTIVE_MODE}" != "off" ];then
-  RED="$(tput setaf 1)"
-  YELLOW="$(tput setaf 3)"
-  CYAN="$(tput setaf 6)"
-  BLACK="$(tput setaf 0)"
-  NORMAL="$(tput sgr0)"
-  GREEN=$(tput setaf 2)
-  CYANBG=$(tput setab 6)
-  BOLD=$(tput bold)
-else
-  RED=''
-  YELLOW=''
-  CYAN=''
-  BLACK=''
-  NORMAL=''
-  GREEN=''
-  CYANBG=''
-  BOLD=''
-fi
-
-# Currently supported systems:
-supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8 and 9 on x86_64
-      - Alma and Rocky 8 and 9 on x86_64
-      - CentOS 7 on x86_64${NORMAL}
-      UNSTABLERHEL
-    ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 10 and 11 on i386 and amd64
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}"
+# Currently supported systems
+# https://www.virtualmin.com/os-support/
 
 # Store new log each time
 log=/root/virtualmin-install.log
@@ -97,16 +50,16 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin."
   echo
-  printf "  ${YELLOW}--help|-h${NORMAL}                       display this help and exit\\n"
-  printf "  ${YELLOW}--bundle|-b <LAMP|LEMP>${NORMAL}         choose bundle to install (defaults to LAMP)\\n"
-  printf "  ${YELLOW}--minimal|-m${NORMAL}                    install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  ${YELLOW}--unstable|-e${NORMAL}                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
-  printf "  ${YELLOW}--no-package-updates|-x${NORMAL}         skip installing system package updates\\n"
-  printf "  ${YELLOW}--setup|-s <auto|force-latest>${NORMAL}  setup Virtualmin software repositories and exit\\n"
-  printf "  ${YELLOW}--hostname|-n${NORMAL}                   set fully qualified hostname\\n"
-  printf "  ${YELLOW}--force|-f${NORMAL}                      assume \"yes\" as answer to all prompts\\n"
-  printf "  ${YELLOW}--verbose|-v${NORMAL}                    increase verbosity\\n"
-  printf "  ${YELLOW}--uninstall|-u${NORMAL}                  removes all Virtualmin packages (do not use on a production system)\\n"
+  printf "  --help|-h                       display this help and exit\\n"
+  printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
+  printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
+  printf "  --no-package-updates|-x         skip installing system package updates\\n"
+  printf "  --setup|-s <auto|force-latest>  setup Virtualmin software repositories and exit\\n"
+  printf "  --hostname|-n                   set fully qualified hostname\\n"
+  printf "  --force|-f                      assume \"yes\" as answer to all prompts\\n"
+  printf "  --verbose|-v                    increase verbosity\\n"
+  printf "  --uninstall|-u                  removes all Virtualmin packages (do not use on a production system)\\n"
   echo
 }
 
@@ -128,7 +81,7 @@ while [ "$1" != "" ]; do
       bundle='LEMP'
       ;;
     *)
-      printf "Unknown bundle ${YELLOW}$1${NORMAL}: exiting\\n"
+      printf "Unknown bundle $1: exiting\\n"
       exit 1
       ;;
     esac
@@ -186,12 +139,8 @@ while [ "$1" != "" ]; do
   esac
 done
 
-if [ "${INTERACTIVE_MODE}" != "off" ];then
-  stty -echo
-fi
-
 if [ -z "$setup_only" ]; then
-  echo "Running ${GREEN}Virtualmin ${vm_version}${NORMAL} pre-installation setup:"
+  echo "Running Virtualmin ${vm_version} pre-installation setup:"
 
   # Check if current time
   # is not older than
@@ -256,7 +205,7 @@ while true; do
       perl=/opt/csw/bin/perl
       break
     elif [ "$perl_attempted" = 1 ]; then
-      printf "Perl ${RED}could not${NORMAL} be installed. Cannot continue.\\n"
+      printf "Perl could not be installed. Cannot continue.\\n"
       exit 2
     fi
     # couldn't find Perl, so we need to try to install it
@@ -297,7 +246,7 @@ while true; do
     download="/usr/bin/fetch"
     break
   elif [ "$wget_attempted" = 1 ]; then
-    printf ".. ${RED}no HTTP client available. Could not install wget. Cannot continue.${NORMAL}\\n"
+    printf ".. no HTTP client available. Could not install wget. Cannot continue.\\n"
     exit 1
   fi
 
@@ -397,7 +346,7 @@ fi
 # is mounted noexec, this won't catch it.
 TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
 if [ -n "$TMPNOEXEC" ]; then
-  echo "${RED}Fatal:${NORMAL} $TMPDIR directory is mounted noexec. Cannot continue."
+  echo ".. $TMPDIR directory is mounted noexec. Cannot continue."
   exit 1
 fi
 
@@ -617,6 +566,15 @@ fi
 
 # Message to display in interactive mode
 install_msg() {
+  supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
+      - RHEL 8 and 9 on x86_64
+      - Alma and Rocky 8 and 9 on x86_64
+      - CentOS 7 on x86_64${NORMAL}
+      UNSTABLERHEL
+    ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
+      - Debian 10 and 11 on i386 and amd64
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}"
+
   cat <<EOF
 
   Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
@@ -1270,9 +1228,7 @@ esac
 kill "$config_system_pid" 1>/dev/null 2>&1
 
 # Make sure the cursor is back (if spinners misbehaved)
-if [ "${INTERACTIVE_MODE}" != "off" ];then
-  tput cnorm
-fi
+tput cnorm 1>/dev/null 2>&1
 
 printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
 # Cleanup the tmp files
