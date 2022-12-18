@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.0.2
+VER=7.0.3
 vm_version=7
 upgrade_virtualmin_host=software.virtualmin.com
 
