@@ -166,13 +166,14 @@ if [ -z "$setup_only" ]; then
     echo "  .. done"
   # Graceful sync
   else
-    echo "  Syncing system time .."
     if systemctl restart chronyd 1>/dev/null 2>&1; then
+      echo "  Syncing system time .."
       sleep 2
       echo "  .. done"
     elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
-      echo "  .. done"
+      echo "  Syncing system time .."
       sleep 2
+      echo "  .. done"
     fi
   fi
 
