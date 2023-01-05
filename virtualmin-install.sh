@@ -461,6 +461,9 @@ is_preconfigured() {
   elif command -pv mysql 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}MySQL${NORMAL} "
   fi
+  if command -pv postconf mail_version 1>/dev/null 2>&1; then
+    preconfigured="${preconfigured}${YELLOW}${BOLD}Postfix${NORMAL} "
+  fi
   if php -v 1>/dev/null 2>&1; then
     preconfigured="${preconfigured}${YELLOW}${BOLD}PHP${NORMAL} "
   fi
