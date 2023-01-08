@@ -293,6 +293,9 @@ arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
   arch="i386"
 fi
+if [ "$arch" = "arm64" ] || [ "$arch" = "aarch64" ]; then
+  arch="arm64"
+fi
 if [ "$SERIAL" = "GPL" ]; then
   LOGIN=""
   PRODUCT="GPL"
@@ -571,13 +574,13 @@ fi
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8 and 9 on x86_64
-      - Alma and Rocky 8 and 9 on x86_64
+      - RHEL 8 and 9 on x86_64 and aarch64
+      - Alma and Rocky 8 and 9 on x86_64 and aarch64
       - CentOS 7 on x86_64${NORMAL}
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 10 and 11 on i386 and amd64
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}"
+      - Debian 10 and 11 on i386, amd64 and arm64
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386, amd64 and arm64${NORMAL}"
 
   cat <<EOF
 
