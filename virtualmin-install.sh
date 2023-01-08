@@ -369,14 +369,14 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
-  exit 1
-fi
-chmod +x slib.sh
+# $download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
+# if [ $? -ne 0 ]; then
+  # echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+  # exit 1
+# fi
+chmod +x /root/slib.sh
 # shellcheck disable=SC1091
-. ./slib.sh
+. /root/slib.sh
 
 # Check the serial number and key
 serial_ok "$SERIAL" "$KEY"
@@ -764,7 +764,7 @@ fi
 # Print out some details that we gather before logging existed
 log_debug "Install mode: $mode"
 log_debug "Product: Virtualmin $PRODUCT"
-log_debug "install.sh version: $VER"
+log_debug "virtualmin-install.sh version: $VER"
 
 # Check for a fully qualified hostname
 log_debug "Checking for fully qualified hostname .."
