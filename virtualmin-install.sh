@@ -292,8 +292,7 @@ fi
 arch="$(uname -m)"
 if [ "$arch" = "i686" ]; then
   arch="i386"
-fi
-if [ "$arch" = "arm64" ] || [ "$arch" = "aarch64" ]; then
+elif [ "$arch" = "arm64" ] || [ "$arch" = "aarch64" ]; then
   arch="arm64"
 fi
 if [ "$SERIAL" = "GPL" ]; then
