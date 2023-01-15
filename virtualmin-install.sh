@@ -1024,7 +1024,7 @@ fi
 install_with_apt() {
   # Install system package upgrades, if any
   if [ -z "$noupdates" ]; then
-    run_ok "$update" "Checking and installing system packages updates"
+    run_ok "$update" "Checking and installing system package updates"
   fi
 
   # Silently purge packages that may cause issues upon installation
