@@ -563,9 +563,9 @@ fi
 
 # Calculate disk space requirements (this is a guess, for now)
 if [ "$mode" = 'minimal' ]; then
-  disk_space_required=500
+  disk_space_required=1
 else
-  disk_space_required=650
+  disk_space_required=2
 fi
 
 # Message to display in interactive mode
@@ -609,7 +609,7 @@ EOF
     ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
 
   The selected package bundle is ${CYAN}${bundle}${NORMAL} and the size of install is
-  ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} MB${NORMAL} of disk space.
+  ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space.
 
   Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
 
@@ -687,7 +687,7 @@ else
   # minimal mode probably needs less memory to succeed
   minimum_memory=1048576
 fi
-if ! memory_ok "$minimum_memory"; then
+if ! memory_ok "$minimum_memory" "$disk_space_required"; then
   log_fatal "Too little memory, and unable to create a swap file. Consider adding swap"
   log_fatal "or more RAM to your system."
   exit 1
