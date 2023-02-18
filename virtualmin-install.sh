@@ -53,7 +53,7 @@ usage() {
   printf "  --help|-h                       display this help and exit\\n"
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle)\\n"
+  printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle, CloudLinux)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates\\n"
   printf "  --setup|-s <auto|force-latest>  setup Virtualmin software repositories and exit\\n"
   printf "  --hostname|-n                   set fully qualified hostname\\n"
@@ -410,7 +410,7 @@ log_fatal() {
 remove_virtualmin_release() {
   # shellcheck disable=SC2154
   case "$os_type" in
-  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
+  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux")
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -595,6 +595,7 @@ EOF
     unstable_rhel="${YELLOW}- Fedora Server 36+ on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
+     - CloudLinux 8 and 9 on x86_64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
   else
@@ -797,7 +798,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | centos_stream | rocky | almalinux | ol | fedora)
+  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | fedora)
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -814,6 +815,12 @@ install_virtualmin_release() {
       ;;
     rocky | almalinux | ol)
       if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "ol" ]; then
+        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        exit 1
+      fi
+      ;;
+    cloudlinux)
+      if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "cloudlinux" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -1061,13 +1068,18 @@ install_with_yum() {
   # Install EPEL on CentOS/Alma/Rocky
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
     run_ok "$install epel-release" "Installing EPEL release package"
+  # CloudLinux EPEL 
+  elif [ "$os_type" = "cloudlinux" ]; then
+    # Install EPEL on CloudLinux
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>$log 2>&1
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
     run_ok "$install oracle-epel-release-el$os_major_version" "Installing EPEL release package"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
-  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then
+  if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ] || [ "$os_type" = "cloudlinux" ]; then
     # Detect CRB/PowerTools repo name
     if [ "$os_major_version" -ge 9 ]; then
       extra_packages=$(dnf repolist all | grep "^crb")
@@ -1223,7 +1235,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol")
+"fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux")
   disable_selinux
   ;;
 esac
