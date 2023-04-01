@@ -1117,7 +1117,7 @@ install_with_yum() {
 
   # Upgrade system packages first
   if [ -z "$noupdates" ]; then
-    run_ok "$update" "Checking and installing system packages updates"
+    run_ok "$update" "Checking and installing system package updates"
   fi
 
   # Install core and stack
