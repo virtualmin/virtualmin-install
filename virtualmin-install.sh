@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317
 # virtualmin-install.sh
 # Copyright 2005-2022 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
@@ -139,103 +139,8 @@ while [ "$1" != "" ]; do
   esac
 done
 
-if [ -z "$setup_only" ]; then
-  echo "Running Virtualmin ${vm_version} pre-installation setup:"
-
-  # Check if current time
-  # is not older than
-  # Dec 01, 2022
-  TIMEBASE=1669888800
-  TIME=$(date +%s)
-  if [ "$TIME" -lt "$TIMEBASE" ]; then
-    echo "  Force-syncing system time .."
-
-    # Try to sync time automatically first
-    if systemctl restart chronyd 1>/dev/null 2>&1; then
-      sleep 15
-    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
-      sleep 15
-    fi
-
-    # Check again after all
-    TIME=$(date +%s)
-    if [ "$TIME" -lt "$TIMEBASE" ]; then
-      echo "  .. failed to automatically sync system time; it should be corrected manually to continue"
-      exit
-    fi
-    echo "  .. done"
-  # Graceful sync
-  else
-    if systemctl restart chronyd 1>/dev/null 2>&1; then
-      echo "  Syncing system time .."
-      sleep 2
-      echo "  .. done"
-    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
-      echo "  Syncing system time .."
-      sleep 2
-      echo "  .. done"
-    fi
-  fi
-
-  # Update all system packages first
-  printf "Checking for an update for a set of CA certificates ..\\n" >>$log
-  echo "  Updating CA certificates .."
-  if [ -x /usr/bin/dnf ]; then
-    dnf -y update ca-certificates >>$log 2>&1
-  elif [ -x /usr/bin/yum ]; then
-    yum -y update ca-certificates >>$log 2>&1
-  elif [ -x /usr/bin/apt-get ]; then
-    apt-get -y install ca-certificates >>$log 2>&1
-  fi
-  echo "  .. done"
-
-  # Make sure Perl is installed
-  printf "Checking for Perl ..\\n" >>$log
-fi
-# loop until we've got a Perl or until we can't try any more
-while true; do
-  perl="$(command -pv perl 2>/dev/null)"
-  if [ -z "$perl" ]; then
-    if [ -x /usr/bin/perl ]; then
-      perl=/usr/bin/perl
-      break
-    elif [ -x /usr/local/bin/perl ]; then
-      perl=/usr/local/bin/perl
-      break
-    elif [ -x /opt/csw/bin/perl ]; then
-      perl=/opt/csw/bin/perl
-      break
-    elif [ "$perl_attempted" = 1 ]; then
-      printf ".. Perl could not be installed. Cannot continue.\\n"
-      exit 2
-    fi
-    # couldn't find Perl, so we need to try to install it
-    if [ -z "$setup_only" ]; then
-      echo "  Attempting to install Perl .."
-    fi
-    if [ -x /usr/bin/dnf ]; then
-      dnf -y install perl >>$log 2>&1
-    elif [ -x /usr/bin/yum ]; then
-      yum -y install perl >>$log 2>&1
-    elif [ -x /usr/bin/apt-get ]; then
-      apt-get update >>$log 2>&1
-      apt-get -q -y install perl >>$log 2>&1
-    fi
-    perl_attempted=1
-    # Loop. Next loop should either break or exit.
-  else
-    break
-  fi
-done
-if [ -z "$setup_only" ]; then
-  if [ "$perl_attempted" = 1 ]; then
-    echo "  .. done"
-  fi
-fi
-printf ".. found Perl at $perl\\n" >>$log
-
 # Check for wget or curl or fetch
-printf "Checking for HTTP client .." >>$log
+printf "Checking for HTTP client .." >>"$log"
 while true; do
   if [ -x "/usr/bin/wget" ]; then
     download="/usr/bin/wget -nv"
@@ -247,33 +152,25 @@ while true; do
     download="/usr/bin/fetch"
     break
   elif [ "$wget_attempted" = 1 ]; then
-    printf ".. no HTTP client available. Could not install wget. Cannot continue.\\n"
+    printf " error: No HTTP client available. Could not install \`wget\`. Cannot continue.\\n"
     exit 1
   fi
 
   # Made it here without finding a downloader, so try to install one
   wget_attempted=1
   if [ -x /usr/bin/dnf ]; then
-    dnf -y install wget >>$log
+    dnf -y install wget >>"$log"
   elif [ -x /usr/bin/yum ]; then
-    yum -y install wget >>$log
+    yum -y install wget >>"$log"
   elif [ -x /usr/bin/apt-get ]; then
     apt-get update >>/dev/null
-    apt-get -y -q install wget >>$log
+    apt-get -y -q install wget >>"$log"
   fi
 done
 if [ -z "$download" ]; then
-  echo "Tried to install downloader, but failed. Do you have working network and DNS?"
-fi
-printf " found %s\\n" "$download" >>$log
-
-# Check for gpg, debian 10 doesn't install by default!?
-if [ -x /usr/bin/apt-get ]; then
-  if [ ! -x /usr/bin/gpg ]; then
-    printf "GPG not found, attempting to install .." >>$log
-    apt-get update >>/dev/null
-    apt-get -y -q install gnupg >>$log
-  fi
+  printf " not found\\n" >>"$log"
+else
+  printf " found %s\\n" "$download" >>"$log"
 fi
 
 # If Pro user downloads GPL version of `install.sh` script
@@ -345,7 +242,7 @@ fi
 # Check whether $TMPDIR is mounted noexec (everything will fail, if so)
 # XXX: This check is imperfect. If $TMPDIR is a full path, but the parent dir
 # is mounted noexec, this won't catch it.
-TMPNOEXEC="$(grep $TMPDIR /etc/mtab | grep noexec)"
+TMPNOEXEC="$(grep "$TMPDIR" /etc/mtab | grep noexec)"
 if [ -n "$TMPNOEXEC" ]; then
   echo "Error: $TMPDIR directory is mounted noexec. Cannot continue."
   exit 1
@@ -369,7 +266,7 @@ fi
 
 # Download the slib (source: http://github.com/virtualmin/slib)
 # Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>$log 2>&1
+$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>"$log" 2>&1
 if [ $? -ne 0 ]; then
   echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
   exit 1
@@ -707,6 +604,124 @@ if [ -z "$setup_only" ]; then
   fi
 fi
 
+pre_check_system_time() {
+  # Check if current time
+  # is not older than
+  # Wed Dec 01 2022
+  printf "Syncing system time ..\\n" >>"$log"
+  TIMEBASE=1669888800
+  TIME=$(date +%s)
+  if [ "$TIME" -lt "$TIMEBASE" ]; then
+
+    # Try to sync time automatically first
+    if systemctl restart chronyd 1>/dev/null 2>&1; then
+      sleep 30
+    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+      sleep 30
+    fi
+
+    # Check again after all
+    TIME=$(date +%s)
+    if [ "$TIME" -lt "$TIMEBASE" ]; then
+      printf ".. failed to automatically sync system time; it should be corrected manually to continue\\n" >>"$log"
+      return 1;
+    fi
+  # Graceful sync
+  else
+    if systemctl restart chronyd 1>/dev/null 2>&1; then
+      sleep 10
+    elif systemctl restart systemd-timesyncd 1>/dev/null 2>&1; then
+      sleep 10
+    fi
+  fi
+  printf ".. done\\n" >>"$log"
+  return 0
+}
+
+pre_check_ca_certificates() {
+  printf "Checking for an update for a set of CA certificates ..\\n" >>"$log"
+  if [ -x /usr/bin/dnf ]; then
+    dnf -y update ca-certificates >>"$log" 2>&1
+  elif [ -x /usr/bin/yum ]; then
+    yum -y update ca-certificates >>"$log" 2>&1
+  elif [ -x /usr/bin/apt-get ]; then
+    apt-get -y install ca-certificates >>"$log" 2>&1
+  fi
+  res=$?
+  printf ".. done\\n" >>"$log"
+  return "$res"
+}
+
+pre_check_perl() {
+  printf "Checking for Perl .." >>"$log"
+  # loop until we've got a Perl or until we can't try any more
+  while true; do
+    perl="$(command -pv perl 2>/dev/null)"
+    if [ -z "$perl" ]; then
+      if [ -x /usr/bin/perl ]; then
+        perl=/usr/bin/perl
+        break
+      elif [ -x /usr/local/bin/perl ]; then
+        perl=/usr/local/bin/perl
+        break
+      elif [ -x /opt/csw/bin/perl ]; then
+        perl=/opt/csw/bin/perl
+        break
+      elif [ "$perl_attempted" = 1 ]; then
+        printf ".. Perl could not be installed. Cannot continue\\n" >>"$log"
+        return 1
+      fi
+      # couldn't find Perl, so we need to try to install it
+      if [ -x /usr/bin/dnf ]; then
+        dnf -y install perl >>"$log" 2>&1
+      elif [ -x /usr/bin/yum ]; then
+        yum -y install perl >>"$log" 2>&1
+      elif [ -x /usr/bin/apt-get ]; then
+        apt-get update >>"$log" 2>&1
+        apt-get -q -y install perl >>"$log" 2>&1
+      fi
+      perl_attempted=1
+      # Loop. Next loop should either break or exit.
+    else
+      break
+    fi
+  done
+  printf ".. found Perl at $perl\\n" >>"$log"
+  return 0
+}
+
+pre_check_gpg() {
+  if [ -x /usr/bin/apt-get ]; then
+    printf "Checking for GPG .." >>"$log"
+    if [ ! -x /usr/bin/gpg ]; then
+      printf " not found, attempting to install .." >>"$log"
+      apt-get update >>/dev/null
+      apt-get -y -q install gnupg >>"$log"
+      printf " finished : $?\\n" >>"$log"
+    else
+      printf " found GPG command\\n" >>"$log"
+    fi
+  fi
+}
+
+pre_check_all() {
+  # Make sure Perl is installed
+  run_ok pre_check_perl "Checking Perl installation"
+
+  if [ -z "$setup_only" ]; then
+    # Check system time
+    run_ok pre_check_system_time "Checking system time"
+
+    # Update CA certificates package
+    run_ok pre_check_ca_certificates "Checking CA certificates package"
+  fi
+
+  # Check for gpg, debian 10 doesn't install by default!?
+  run_ok pre_check_gpg "Checking GPG package"
+
+  echo ""
+}
+
 # download()
 # Use $download to download the provided filename or exit with an error.
 download() {
@@ -754,12 +769,19 @@ if [ -n "$setup_only" ]; then
       fi
     done
   fi
+  pre_check_perl
+  pre_check_gpg
   log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
   log_info "Started installation log in $log"
-  log_debug "Phase 1 of 3: Setup"
-  printf "${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}3${NORMAL}: Setup\\n"
+
+  log_debug "Phase 1 of 4: Check"
+  printf "${YELLOW}▣${CYAN}◻◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Check\\n"
+  pre_check_all
+
+  log_debug "Phase 2 of 4: Setup"
+  printf "${GREEN}▣${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}4${NORMAL}: Setup\\n"
 fi
 
 # Print out some details that we gather before logging existed
@@ -986,7 +1008,7 @@ install_virtualmin_release() {
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
     # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
-    if [ $os_type = "ubuntu" ]; then
+    if [ "$os_type" = "ubuntu" ]; then
       if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then
         run_ok "add-apt-repository -y universe" \
           "Enabling universe repositories, if not already available"
@@ -1059,11 +1081,11 @@ install_with_yum() {
     # Important Perl packages are now hidden in CodeReady repo
     run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
     # Install EPEL
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>$log 2>&1
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>"$log" 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on RHEL 7
   elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm" >>$log 2>&1
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm" >>"$log" 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
   # Install EPEL on CentOS/Alma/Rocky
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
@@ -1071,7 +1093,7 @@ install_with_yum() {
   # CloudLinux EPEL 
   elif [ "$os_type" = "cloudlinux" ]; then
     # Install EPEL on CloudLinux
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>$log 2>&1
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>"$log" 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
@@ -1123,8 +1145,9 @@ install_with_yum() {
   # Install core and stack
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
   run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
+  rs=$?
   if [ $? -ne 0 ]; then
-    fatal "Installation failed: $?"
+    fatal "Installation failed: $rs"
   fi
 
 
@@ -1143,10 +1166,11 @@ install_virtualmin() {
     install_with_tar
     ;;
   esac
+  rs=$?
   if [ $? -eq 0 ]; then
     return 0
   else
-    return $?
+    return "$rs"
   fi
 }
 
@@ -1183,8 +1207,8 @@ yum_check_skipped() {
 errors=$((0))
 install_virtualmin_release
 echo
-log_debug "Phase 2 of 3: Installation"
-printf "${GREEN}▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}3${NORMAL}: Installation\\n"
+log_debug "Phase 3 of 4: Installation"
+printf "${GREEN}▣▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Installation\\n"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
@@ -1211,8 +1235,8 @@ done
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
 echo
-log_debug "Phase 3 of 3: Configuration"
-printf "${GREEN}▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}3${NORMAL}: Configuration\\n"
+log_debug "Phase 4 of 4: Configuration"
+printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Configuration\\n"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
