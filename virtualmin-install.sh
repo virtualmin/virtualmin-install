@@ -782,6 +782,7 @@ if [ -n "$setup_only" ]; then
     done
   fi
   pre_check_perl
+  pre_check_http_client
   pre_check_gpg
   log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
