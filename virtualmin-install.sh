@@ -710,19 +710,23 @@ pre_check_gpg() {
 }
 
 pre_check_all() {
-  # Make sure Perl is installed
-  run_ok pre_check_perl "Checking Perl installation"
-
+  
   if [ -z "$setup_only" ]; then
     # Check system time
     run_ok pre_check_system_time "Checking system time"
+    
+    # Make sure Perl is installed
+    run_ok pre_check_perl "Checking Perl installation"
 
     # Update CA certificates package
     run_ok pre_check_ca_certificates "Checking CA certificates package"
+  else
+    # Make sure Perl is installed
+    run_ok pre_check_perl "Checking Perl installation"
   fi
 
   # Checking for HTTP client
-  run_ok pre_check_http_client "Checking for HTTP client"
+  run_ok pre_check_http_client "Checking HTTP client"
 
   # Check for gpg, debian 10 doesn't install by default!?
   run_ok pre_check_gpg "Checking GPG package"
