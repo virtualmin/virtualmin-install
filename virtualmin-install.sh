@@ -1,7 +1,7 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034
 # virtualmin-install.sh
-# Copyright 2005-2022 Virtualmin, Inc.
+# Copyright 2005-2023 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
 # The packages do most of the hard work, so this script can be small-ish and
 # lazy-ish.
@@ -278,25 +278,19 @@ chmod +x slib.sh
 # Check the serial number and key
 serial_ok "$SERIAL" "$KEY"
 # Setup slog
-# shellcheck disable=SC2034
 LOG_PATH="$log"
 # Setup run_ok
-# shellcheck disable=SC2034
 RUN_LOG="$log"
 # Exit on any failure during shell stage
-# shellcheck disable=SC2034
 RUN_ERRORS_FATAL=1
 
 # Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
-  # shellcheck disable=SC2034
   LOG_LEVEL_STDOUT="DEBUG"
 else
-  # shellcheck disable=SC2034
   LOG_LEVEL_STDOUT="INFO"
 fi
 # Log file output level; catch literally everything.
-# shellcheck disable=SC2034
 LOG_LEVEL_LOG="DEBUG"
 
 # log_fatal calls log_error
@@ -305,7 +299,6 @@ log_fatal() {
 }
 
 remove_virtualmin_release() {
-  # shellcheck disable=SC2154
   case "$os_type" in
   "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux")
     rm -f /etc/yum.repos.d/virtualmin.repo
