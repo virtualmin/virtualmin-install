@@ -139,40 +139,6 @@ while [ "$1" != "" ]; do
   esac
 done
 
-# Check for wget or curl or fetch
-printf "Checking for HTTP client .." >>"$log"
-while true; do
-  if [ -x "/usr/bin/wget" ]; then
-    download="/usr/bin/wget -nv"
-    break
-  elif [ -x "/usr/bin/curl" ]; then
-    download="/usr/bin/curl -f -s -L -O"
-    break
-  elif [ -x "/usr/bin/fetch" ]; then
-    download="/usr/bin/fetch"
-    break
-  elif [ "$wget_attempted" = 1 ]; then
-    printf " error: No HTTP client available. Could not install \`wget\`. Cannot continue.\\n"
-    exit 1
-  fi
-
-  # Made it here without finding a downloader, so try to install one
-  wget_attempted=1
-  if [ -x /usr/bin/dnf ]; then
-    dnf -y install wget >>"$log"
-  elif [ -x /usr/bin/yum ]; then
-    yum -y install wget >>"$log"
-  elif [ -x /usr/bin/apt-get ]; then
-    apt-get update >>/dev/null
-    apt-get -y -q install wget >>"$log"
-  fi
-done
-if [ -z "$download" ]; then
-  printf " not found\\n" >>"$log"
-else
-  printf " found %s\\n" "$download" >>"$log"
-fi
-
 # If Pro user downloads GPL version of `install.sh` script
 # to fix repos check if there is an active license exists
 if [ -n "$setup_only" ]; then
@@ -264,16 +230,62 @@ if ! cd "$srcdir"; then
   exit 1
 fi
 
-# Download the slib (source: http://github.com/virtualmin/slib)
-# Lots of little utility functions.
-$download "https://$upgrade_virtualmin_host/lib/slib.sh" >>"$log" 2>&1
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
-  exit 1
-fi
-chmod +x slib.sh
-# shellcheck disable=SC1091
-. ./slib.sh
+pre_check_http_client() {
+  # Check for wget or curl or fetch
+  printf "Checking for HTTP client .." >>"$log"
+  while true; do
+    if [ -x "/usr/bin/wget" ]; then
+      download="/usr/bin/wget -nv"
+      break
+    elif [ -x "/usr/bin/curl" ]; then
+      download="/usr/bin/curl -f -s -L -O"
+      break
+    elif [ -x "/usr/bin/fetch" ]; then
+      download="/usr/bin/fetch"
+      break
+    elif [ "$wget_attempted" = 1 ]; then
+      printf " error: No HTTP client available. Could not install \`wget\`. Cannot continue.\\n" >>"$log"
+      return 1
+    fi
+
+    # Made it here without finding a downloader, so try to install one
+    wget_attempted=1
+    if [ -x /usr/bin/dnf ]; then
+      dnf -y install wget >>"$log"
+    elif [ -x /usr/bin/yum ]; then
+      yum -y install wget >>"$log"
+    elif [ -x /usr/bin/apt-get ]; then
+      apt-get update >>/dev/null
+      apt-get -y -q install wget >>"$log"
+    fi
+  done
+  if [ -z "$download" ]; then
+    printf " not found\\n" >>"$log"
+    return 1
+  else
+    printf " found %s\\n" "$download" >>"$log"
+    return 0;
+  fi
+}
+
+download_slib() {
+  # We need HTTP client first
+  pre_check_http_client
+
+  # Download the slib (source: http://github.com/virtualmin/slib)
+  $download "https://$upgrade_virtualmin_host/lib/slib.sh" >>"$log" 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+    exit 1
+  fi
+  chmod +x slib.sh
+  # shellcheck disable=SC1091
+  . ./slib.sh
+}
+
+# Lots of little utility functions. Start.
+download_slib
+# Lots of little utility functions. End.
 
 # Check the serial number and key
 serial_ok "$SERIAL" "$KEY"
@@ -708,6 +720,9 @@ pre_check_all() {
     # Update CA certificates package
     run_ok pre_check_ca_certificates "Checking CA certificates package"
   fi
+
+  # Checking for HTTP client
+  run_ok pre_check_http_client "Checking for HTTP client"
 
   # Check for gpg, debian 10 doesn't install by default!?
   run_ok pre_check_gpg "Checking GPG package"
