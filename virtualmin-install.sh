@@ -54,7 +54,8 @@ usage() {
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
   printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle, CloudLinux)\\n"
-  printf "  --no-package-updates|-x         skip installing system package updates\\n"
+  printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
+  printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
   printf "  --setup|-s <auto|force-latest>  setup Virtualmin software repositories and exit\\n"
   printf "  --hostname|-n                   set fully qualified hostname\\n"
   printf "  --force|-f                      assume \"yes\" as answer to all prompts\\n"
@@ -93,6 +94,11 @@ while [ "$1" != "" ]; do
   --unstable | -e)
     shift
     unstable='unstable'
+    ;;
+  --insecure-downloads | -i)
+    shift
+    insecure_download_wget_flag=' --no-check-certificate'
+    insecure_download_curl_flag=' -k'
     ;;
   --no-package-updates | -x)
     shift
@@ -235,10 +241,10 @@ pre_check_http_client() {
   printf "Checking for HTTP client .." >>"$log"
   while true; do
     if [ -x "/usr/bin/wget" ]; then
-      download="/usr/bin/wget -nv"
+      download="/usr/bin/wget -nv$insecure_download_wget_flag"
       break
     elif [ -x "/usr/bin/curl" ]; then
-      download="/usr/bin/curl -f -s -L -O"
+      download="/usr/bin/curl -f$insecure_download_curl_flag -s -L -O"
       break
     elif [ -x "/usr/bin/fetch" ]; then
       download="/usr/bin/fetch"
