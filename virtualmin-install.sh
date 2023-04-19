@@ -757,7 +757,7 @@ download() {
 }
 
 # Only root can run this
-id | grep -i "uid=0(" >/dev/null
+id | grep -i "id=0(" >/dev/null
 if [ "$?" != "0" ]; then
   uname -a | grep -i CYGWIN >/dev/null
   if [ "$?" != "0" ]; then
