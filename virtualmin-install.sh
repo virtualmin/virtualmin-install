@@ -250,7 +250,7 @@ pre_check_http_client() {
       download="/usr/bin/fetch"
       break
     elif [ "$wget_attempted" = 1 ]; then
-      printf " error: No HTTP client available. Could not install \`wget\`. Cannot continue.\\n" >>"$log"
+      printf " error: No HTTP client available. The installation of a download command has failed. Cannot continue.\\n" >>"$log"
       return 1
     fi
 
