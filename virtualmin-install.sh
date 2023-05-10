@@ -20,6 +20,8 @@ SERIAL=GPL
 KEY=GPL
 VER=7.0.4
 vm_version=7
+
+# Server
 upgrade_virtualmin_host=software.virtualmin.com
 
 # Currently supported systems
