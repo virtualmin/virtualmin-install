@@ -289,9 +289,13 @@ download_slib() {
   . ./slib.sh
 }
 
-# Lots of little utility functions. Start.
-download_slib
-# Lots of little utility functions. End.
+# Utility function library
+##########################################
+download_slib # for production this block
+              # can be replaces with the
+              # content of slib.sh file,
+              # minus its header
+##########################################
 
 # Check the serial number and key
 serial_ok "$SERIAL" "$KEY"
