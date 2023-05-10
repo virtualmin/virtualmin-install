@@ -761,7 +761,7 @@ download() {
 }
 
 # Only root can run this
-if [ $(id -u) -ne 0 ]; then
+if [ "$(id -u)" -ne 0 ]; then
   uname -a | grep -i CYGWIN >/dev/null
   if [ "$?" != "0" ]; then
     fatal "${RED}Fatal:${NORMAL} The Virtualmin install script must be run as root"
