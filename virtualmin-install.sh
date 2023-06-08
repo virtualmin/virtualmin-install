@@ -952,13 +952,13 @@ install_virtualmin_release() {
   debian | ubuntu)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ -z "$vm6_repos" ]; then
+      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ "$vm6_repos" -eq 0 ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     debian)
-      if [ "$os_major_version" -lt 10 ] && [ -z "$vm6_repos" ]; then
+      if [ "$os_major_version" -lt 10 ] && [ "$vm6_repos" -eq 0 ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
