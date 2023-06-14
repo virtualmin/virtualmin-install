@@ -501,7 +501,7 @@ install_msg() {
   perform updates or upgrades (use your system package manager) or license
   changes (use the "virtualmin change-license" command).
 
-  The systems currently supported by install script are:
+  The systems currently supported by the install script are:
 
 EOF
   supported_all=$supported
