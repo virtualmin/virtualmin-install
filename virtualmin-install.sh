@@ -814,16 +814,18 @@ log_debug "Product: Virtualmin $PRODUCT"
 log_debug "virtualmin-install.sh version: $VER"
 
 # Check for a fully qualified hostname
-log_debug "Checking for fully qualified hostname .."
-name="$(hostname -f)"
-if [ -n "$forcehostname" ]; then
-  set_hostname "$forcehostname"
-elif ! is_fully_qualified "$name"; then
-  set_hostname
-else
-  # Hostname is already FQDN, yet still set it 
-  # again to make sure to have it updated everywhere
-  set_hostname "$name"
+if [ -z "$setup_only" ]; then
+  log_debug "Checking for fully qualified hostname .."
+  name="$(hostname -f)"
+  if [ -n "$forcehostname" ]; then
+    set_hostname "$forcehostname"
+  elif ! is_fully_qualified "$name"; then
+    set_hostname
+  else
+    # Hostname is already FQDN, yet still set it 
+    # again to make sure to have it updated everywhere
+    set_hostname "$name"
+  fi
 fi
 
 # Insert the serial number and password into /etc/virtualmin-license
