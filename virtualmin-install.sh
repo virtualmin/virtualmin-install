@@ -239,6 +239,7 @@ if ! cd "$srcdir"; then
   echo "Error: Failed to enter $srcdir temporary directory"
   exit 1
 fi
+export tempdir
 
 pre_check_http_client() {
   # Check for wget or curl or fetch
@@ -1321,8 +1322,13 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm 1>/dev/null 2>&1
 
-printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
+# Was host default domain SSL request successful?
+if [ -d "$tempdir/virtualmin_ssl_host_success" ]; then
+  ssl_host_success=1
+fi
+
 # Cleanup the tmp files
+printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
 if [ "$tempdir" != "" ] && [ "$tempdir" != "/" ]; then
   log_debug "Cleaning up temporary files in $tempdir."
   find "$tempdir" -delete
