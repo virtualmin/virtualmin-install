@@ -846,6 +846,7 @@ log_debug "Operating system type:    $os_type"
 log_debug "Operating system major:   $os_major_version"
 
 install_virtualmin_release() {
+  unstable_suffix=" but it can be installed as Grade B system using ${YELLOW}--unstable${NORMAL} flag."
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
@@ -854,42 +855,46 @@ install_virtualmin_release() {
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
         if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ]; then
-          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
           exit 1
         fi
       else
         if [ "$os_major_version" -lt 7 ]; then
-          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
           exit 1
         fi
       fi
       ;;
     rocky | almalinux | ol)
       if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "ol" ]; then
-        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        can_unstable_suffix="."
+        if [ "$os_type" = "ol" ]; then
+          can_unstable_suffix="$unstable_suffix"
+        fi
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${can_unstable_suffix}\\n"
         exit 1
       fi
       ;;
     cloudlinux)
       if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "cloudlinux" ]; then
-        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
     amzn)
       if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
-        printf "${RED}${os_real} ${os_version} is not supported by stable installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
     fedora)
       if [ "$os_version" -lt 35 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
-        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
     *)
-      printf "${RED}This OS/version is not recognized. Cannot continue.${NORMAL}\\n"
+      printf "${RED}This OS/version is not recognized! Cannot continue!${NORMAL}\\n"
       exit 1
       ;;
     esac
