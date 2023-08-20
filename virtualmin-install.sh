@@ -96,6 +96,8 @@ while [ "$1" != "" ]; do
   --unstable | -e)
     shift
     unstable='unstable'
+    virtualmin_config_system_excludes=""
+    virtualmin_stack_custom_packages=""
     ;;
   --insecure-downloads | -i)
     shift
@@ -324,7 +326,7 @@ log_fatal() {
 
 remove_virtualmin_release() {
   case "$os_type" in
-  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux")
+  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux" | "amzn")
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -506,7 +508,8 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 36+ on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 38 on x86_64\\n \
+     - Amazon Linux 2023 on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
@@ -846,7 +849,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | fedora)
+  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | fedora)
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -870,6 +873,12 @@ install_virtualmin_release() {
     cloudlinux)
       if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "cloudlinux" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        exit 1
+      fi
+      ;;
+    amzn)
+      if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
+        printf "${RED}${os_real} ${os_version} is not supported by stable installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
@@ -1124,6 +1133,13 @@ install_with_yum() {
   # Install EPEL on Oracle 7+
   elif [ "$os_type" = "ol" ]; then
     run_ok "$install oracle-epel-release-el$os_major_version" "Installing EPEL release package"
+  # Installation on Amazon Linux
+  elif [ "$os_type" = "amzn" ]; then
+    # Set for installation packages whichever available on Amazon Linux as they
+    # go with different name, e.g. mariadb105-server instead of mariadb-server
+    virtualmin_stack_custom_packages="mariadb*-server"
+    # Exclude from config what's not available on Amazon Linux
+    virtualmin_config_system_excludes=" --exclude AWStats --exclude Etckeeper --exclude Fail2banFirewalld --exclude ProFTPd"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
@@ -1168,6 +1184,11 @@ install_with_yum() {
     run_ok "$update" "Checking and installing system package updates"
   fi
 
+  # Install custom stack packages
+  if [ -n "$virtualmin_stack_custom_packages" ]; then
+    run_ok "$install $virtualmin_stack_custom_packages" "Installing missing stack packages"
+  fi
+
   # Install core and stack
   run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
   run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
@@ -1175,7 +1196,6 @@ install_with_yum() {
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $rs"
   fi
-
 
   return 0
 }
@@ -1266,7 +1286,7 @@ printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GR
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
-virtualmin-config-system --bundle "$bundle"
+virtualmin-config-system --bundle "$bundle"$virtualmin_config_system_excludes
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
