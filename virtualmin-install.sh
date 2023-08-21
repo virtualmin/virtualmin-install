@@ -1293,6 +1293,11 @@ if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
 virtualmin-config-system --bundle "$bundle"$virtualmin_config_system_excludes
+# Log SSL request status, if available
+if [ -f "$tempdir/virtualmin_ssl_host_status" ]; then
+  virtualmin_ssl_host_status=$(cat "$tempdir/virtualmin_ssl_host_status")
+  log_debug "$virtualmin_ssl_host_status"
+fi
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
