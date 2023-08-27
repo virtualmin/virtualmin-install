@@ -1032,11 +1032,11 @@ install_virtualmin_release() {
     if [ -d "$apt_auth_dir" ]; then
       if [ -n "$LOGIN" ]; then
         LOGINREAL=""
-        printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >>"$apt_auth_dir/virtualmin.conf"
+        printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
       fi
     fi
     for repo in $repos; do
-      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >>/etc/apt/sources.list.d/virtualmin.list
+      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
     done
 
     # Install our keys
