@@ -18,7 +18,7 @@ the standard package needs tweaks, we provide it in our repository and fetch it 
 
 ## Supported Operating Systems
 
-The Grade A systems currently supported by install script are:
+The **Grade A** systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
       - RHEL 8 and 9 on x86_64
@@ -26,17 +26,22 @@ The Grade A systems currently supported by install script are:
       - CentOS 7 on x86_64
       
     Debian Linux and derivatives
-      - Debian 10 and 11 on i386 and amd64
+      - Debian 10, 11 and 12 on i386 and amd64
       - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64
 
-The Grade B systems currently supported by install script are:
+The _Grade B_ systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
-      - Fedora Server 36+ on x86_64
+      - Fedora Server 38 on x86_64
+      - Amazon Linux 2023 on x86_64
       - CentOS Stream 8 and 9 on x86_64
       - Oracle Linux 8 and 9 on x86_64
+      - CloudLinux 8 and 9 on x86_64
   
-We strongly recommend you use the latest version of your preferred Grade A supported distribution. The latest release gets the most active testing and bug fixing.
+    Debian Linux and derivatives
+      - Kali Linux Rolling on x86_64
+
+We strongly recommend you use the latest version of your preferred **Grade A** supported distribution. The latest release gets the most active testing and bug fixing.
 
 # How to run it
 
