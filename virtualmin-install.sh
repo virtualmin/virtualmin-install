@@ -494,7 +494,8 @@ install_msg() {
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
       - Debian 10, 11 and 12 on i386 and amd64
-      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}"
+      - Ubuntu 20.04 LTS and 22.04 LTS on i386 and amd64${NORMAL}
+      UNSTABLEDEB"
 
   cat <<EOF
 
@@ -515,13 +516,16 @@ EOF
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
           ${NORMAL}"
+    unstable_deb="${YELLOW}- Kali Linux Rolling on x86_64\\n \
+          ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
+    supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
   else
     supported_all=$(echo "$supported_all" | sed 's/UNSTABLERHEL//')
+    supported_all=$(echo "$supported_all" | sed 's/UNSTABLEDEB//')
   fi
   echo "$supported_all"
   cat <<EOF
-
   If your OS/version/arch is not listed, installation ${BOLD}${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
@@ -966,7 +970,7 @@ install_virtualmin_release() {
       sed -i 's/http:\/\//https:\/\//' /etc/yum.repos.d/virtualmin.repo
     fi
     ;;
-  debian | ubuntu)
+  debian | ubuntu | kali)
     case "$os_type" in
     ubuntu)
       if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ "$vm6_repos" -eq 0 ]; then
@@ -977,6 +981,12 @@ install_virtualmin_release() {
     debian)
       if [ "$os_major_version" -lt 10 ] && [ "$vm6_repos" -eq 0 ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+        exit 1
+      fi
+      ;;
+    kali)
+      if [ -z "$unstable" ] && [ "$os_type" = "kali" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
