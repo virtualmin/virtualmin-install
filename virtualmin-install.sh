@@ -224,22 +224,22 @@ if [ -n "$TMPNOEXEC" ]; then
   exit 1
 fi
 
-if [ -z "$vminstalltempdir" ]; then
-  vminstalltempdir="$TMPDIR/.virtualmin-$$"
-  if [ -e "$vminstalltempdir" ]; then
-    rm -rf "$vminstalltempdir"
+if [ -z "$VMITMPDIR" ]; then
+  VMITMPDIR="$TMPDIR/.virtualmin-$$"
+  if [ -e "$VMITMPDIR" ]; then
+    rm -rf "$VMITMPDIR"
   fi
-  mkdir "$vminstalltempdir"
+  mkdir "$VMITMPDIR"
 fi
 
 # "files" subdir for libs
-mkdir "$vminstalltempdir/files"
-srcdir="$vminstalltempdir/files"
+mkdir "$VMITMPDIR/files"
+srcdir="$VMITMPDIR/files"
 if ! cd "$srcdir"; then
   echo "Error: Failed to enter $srcdir temporary directory"
   exit 1
 fi
-export vminstalltempdir
+export VMITMPDIR
 
 pre_check_http_client() {
   # Check for wget or curl or fetch
@@ -333,8 +333,8 @@ remove_virtualmin_release() {
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
     ;;
   "debian" | "ubuntu")
-    grep -v "virtualmin" /etc/apt/sources.list >"$vminstalltempdir"/sources.list
-    mv "$vminstalltempdir"/sources.list /etc/apt/sources.list
+    grep -v "virtualmin" /etc/apt/sources.list >"$VMITMPDIR"/sources.list
+    mv "$VMITMPDIR"/sources.list /etc/apt/sources.list
     rm -f /etc/apt/sources.list.d/virtualmin.list
     rm -f /etc/apt/auth.conf.d/virtualmin.conf
     rm -f /usr/share/keyrings/debian-virtualmin-*
@@ -348,9 +348,9 @@ fatal() {
   log_fatal "Fatal Error Occurred: $1"
   printf "${RED}Cannot continue installation.${NORMAL}\\n"
   remove_virtualmin_release
-  if [ -x "$vminstalltempdir" ]; then
+  if [ -x "$VMITMPDIR" ]; then
     log_warning "Removing temporary directory and files."
-    rm -rf "$vminstalltempdir"
+    rm -rf "$VMITMPDIR"
   fi
   log_fatal "If you are unsure of what went wrong, you may wish to review the log"
   log_fatal "in $log"
@@ -1304,8 +1304,8 @@ if [ "$mode" = "minimal" ]; then
 fi
 virtualmin-config-system --bundle "$bundle"$virtualmin_config_system_excludes
 # Log SSL request status, if available
-if [ -f "$vminstalltempdir/virtualmin_ssl_host_status" ]; then
-  virtualmin_ssl_host_status=$(cat "$vminstalltempdir/virtualmin_ssl_host_status")
+if [ -f "$VMITMPDIR/virtualmin_ssl_host_status" ]; then
+  virtualmin_ssl_host_status=$(cat "$VMITMPDIR/virtualmin_ssl_host_status")
   log_debug "$virtualmin_ssl_host_status"
 fi
 if [ "$?" != "0" ]; then
@@ -1338,17 +1338,17 @@ kill "$config_system_pid" 1>/dev/null 2>&1
 tput cnorm 1>/dev/null 2>&1
 
 # Was host default domain SSL request successful?
-if [ -d "$vminstalltempdir/virtualmin_ssl_host_success" ]; then
+if [ -d "$VMITMPDIR/virtualmin_ssl_host_success" ]; then
   ssl_host_success=1
 fi
 
 # Cleanup the tmp files
 printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
-if [ "$vminstalltempdir" != "" ] && [ "$vminstalltempdir" != "/" ]; then
-  log_debug "Cleaning up temporary files in $vminstalltempdir."
-  find "$vminstalltempdir" -delete
+if [ "$VMITMPDIR" != "" ] && [ "$VMITMPDIR" != "/" ]; then
+  log_debug "Cleaning up temporary files in $VMITMPDIR."
+  find "$VMITMPDIR" -delete
 else
-  log_error "Could not safely clean up temporary files because TMPDIR set to $vminstalltempdir."
+  log_error "Could not safely clean up temporary files because TMPDIR set to $VMITMPDIR."
 fi
 
 if [ -n "$QUOTA_FAILED" ]; then
