@@ -826,6 +826,9 @@ log_debug "virtualmin-install.sh version: $VER"
 if [ -z "$setup_only" ]; then
   log_debug "Checking for fully qualified hostname .."
   name="$(hostname -f)"
+  if [ $? -ne 0 ]; then
+    name=$(hostnamectl --static)
+  fi
   if [ -n "$forcehostname" ]; then
     set_hostname "$forcehostname"
   elif ! is_fully_qualified "$name"; then
