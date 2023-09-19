@@ -1249,7 +1249,6 @@ install_with_yum() {
         virtualmin_group_missing=$(echo "$virtualmin_group_missing" | sed 's/fail2ban-firewalld/fail2ban/g')
         # The package mod_fcgid is named apache2-mod_fcgid in openSUSE
         virtualmin_group_missing=$(echo "$virtualmin_group_missing" | sed 's/mod_fcgid/apache2-mod_fcgid/g')
-        echo $virtualmin_group_missing
         # AppArmor should either be configured to allow /var/php-fpm for
         # PHP-FPM sockets or disabled completely
         systemctl stop apparmor.service
