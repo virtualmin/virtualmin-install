@@ -962,26 +962,28 @@ install_virtualmin_release() {
     fi
     package_type="rpm"
     if command -pv dnf 1>/dev/null 2>&1; then
-      install="dnf -y install"
-      update="dnf -y update"
       install_cmd="dnf"
-      install_group="dnf -y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
-      install_config_manager="dnf config-manager"
+      install="$install_cmd -y install"
+      update="$install_cmd -y update"
+      install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
+      install_group="$install_cmd $install_group_opts"
+      install_config_manager="$install_cmd config-manager"
       # Do not use package manager when fixing repos
       if [ -z "$setup_only" ]; then
         run_ok "$install dnf-plugins-core" "Installing core plugins for package manager"
       fi
     else
-      install="/usr/bin/yum -y install"
-      update="/usr/bin/yum -y update"
-      install_cmd="/usr/bin/yum"
+      install_cmd="yum"
+      install="$install_cmd -y install"
+      update="$install_cmd -y update"
       if [ "$os_major_version" -ge 7 ]; then
         # Do not use package manager when fixing repos
         if [ -z "$setup_only" ]; then
-          run_ok "yum --quiet groups mark convert" "Updating groups metadata"
+          run_ok "$install_cmd --quiet groups mark convert" "Updating groups metadata"
         fi
       fi
-      install_group="yum -y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
+      install_group="$install_cmd $install_group_opts"
       install_config_manager="yum-config-manager"
     fi
 
