@@ -106,16 +106,6 @@ while [ "$1" != "" ]; do
     setup_only=1
     mode='setup'
     unstable='unstable'
-    case "$1" in
-    force-latest)
-      shift
-      setup_only_force_latest=1
-      ;;
-    *)
-      setup_only_force_latest=0
-      ;;
-    esac
-    break
     ;;
   --hostname | -n)
     shift
