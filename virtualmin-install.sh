@@ -941,6 +941,12 @@ install_virtualmin_release() {
         exit 1
       fi
       ;;
+    amzn)
+      if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer${unstable_suffix}\\n"
+        exit 1
+      fi
+      ;;
     *)
       printf "${RED}This OS/version is not recognized! Cannot continue!${NORMAL}\\n"
       exit 1
