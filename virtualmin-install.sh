@@ -27,18 +27,11 @@ upgrade_virtualmin_host=software.virtualmin.com
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
 
-# Store new log each time
-log=/root/virtualmin-install.log
-if [ -e "$log" ]; then
-  while true; do
-    logcnt=$((logcnt+1))
-    logold="$log.$logcnt"
-    if [ ! -e "$logold" ]; then
-      mv $log $logold
-      break
-    fi
-  done
-fi
+# Save current working directory
+pwd="$PWD"
+
+# Set log type
+log_type="virtualmin-install"
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -140,6 +133,7 @@ while [ "$1" != "" ]; do
   --uninstall | -u)
     shift
     mode="uninstall"
+    log_type="virtualmin-uninstall"
     ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
@@ -148,6 +142,19 @@ while [ "$1" != "" ]; do
     ;;
   esac
 done
+
+# Store new log each time
+log="$pwd/$log_type.log"
+if [ -e "$log" ]; then
+  while true; do
+    logcnt=$((logcnt+1))
+    logold="$log.$logcnt"
+    if [ ! -e "$logold" ]; then
+      mv $log $logold
+      break
+    fi
+  done
+fi
 
 # If Pro user downloads GPL version of `install.sh` script
 # to fix repos check if there is an active license exists
