@@ -571,6 +571,35 @@ if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
   install_msg
 fi
 
+os_unstable_pre_check() {
+  if [ -n "$unstable" ]; then
+    cat <<EOF
+
+  ${YELLOWBG}${BLACK}${BOLD} INSTALLATION WARNING! ${NORMAL}
+
+  You are about to install Virtualmin $PRODUCT on a ${BOLD}Grade B${NORMAL} operating system. Please
+  be advised that this OS version is not recommended for servers, and may have
+  bugs that could affect the performance and stability of the system.
+
+  Certain features may not work as intended or might be unavailable on this OS.
+
+EOF
+    if [ "$os_type" = "opensuse-leap" ]; then
+      cat <<EOF
+  For installation to work on ${UNDERLINE}${BOLD}openSUSE${NORMAL} it is required to set up NetworkManager
+  as default network configuration tool during the initial OS installation pha-
+  se. Furthermore, you will need to set up the DNF package manager using the
+  instructions provided in this tutorial: ${UNDERLINE}https://en.opensuse.org/SDB:DNF${NORMAL}
+
+EOF
+    fi
+    printf " Continue? (y/n) "
+    if ! yesno; then
+      exit
+    fi
+  fi
+}
+
 preconfigured_system_msg() {
   # Double check if installed, just in case above error ignored.
   is_preconfigured_rs=$(is_preconfigured)
@@ -623,6 +652,7 @@ EOF
   fi
 }
 if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
+  os_unstable_pre_check
   preconfigured_system_msg
   already_installed_msg
 fi
