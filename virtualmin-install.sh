@@ -1265,6 +1265,8 @@ install_with_yum() {
       } >> "$log" 2>&1
     }
     run_ok "opensuse_poststack" "Installing Virtualmin $vm_version missing stack packages"
+    # Don't show false positively skipped packages
+    noskippedpackagesforce=1
     # Fix to skip configuring AWStats as it's not available in openSUSE
     virtualmin_config_system_excludes=" --exclude AWStats"
   fi
@@ -1311,7 +1313,7 @@ yum_check_skipped() {
       skippedpackagesnum=$((skippedpackagesnum+1))
     fi
   done < "$log"
-  if [ "$skippedpackages" != "" ]; then
+  if [ -z "$noskippedpackagesforce" ] && [ "$skippedpackages" != "" ]; then
     if [ "$skippedpackagesnum" != 1 ]; then
       ts="s"
     fi
