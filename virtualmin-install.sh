@@ -331,18 +331,22 @@ log_fatal() {
 
 remove_virtualmin_release() {
   case "$os_type" in
-  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux" | "amzn")
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
     rm -f /etc/yum.repos.d/virtualmin.repo
-    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
     ;;
-  "debian" | "ubuntu")
+  debian | ubuntu | kali)
     grep -v "virtualmin" /etc/apt/sources.list >"$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list
     mv "$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list /etc/apt/sources.list
     rm -f /etc/apt/sources.list.d/virtualmin.list
     rm -f /etc/apt/auth.conf.d/virtualmin.conf
-    rm -f /usr/share/keyrings/debian-virtualmin-*
-    rm -f /usr/share/keyrings/debian-webmin.gpg
+    rm -f /usr/share/keyrings/debian-virtualmin*
+    rm -f /usr/share/keyrings/debian-webmin
+    rm -f /usr/share/keyrings/ubuntu-virtualmin*
+    rm -f /usr/share/keyrings/ubuntu-webmin
+    rm -f /usr/share/keyrings/kali-virtualmin*
+    rm -f /usr/share/keyrings/kali-webmin
     ;;
   esac
 }
@@ -406,76 +410,92 @@ is_installed() {
 }
 
 # This function performs a rough uninstallation of Virtualmin
-# It is neither complete, nor correct, but it almost certainly won't break
-# anything.  It is primarily useful for cleaning up a botched install, so you
-# can run the installer again.
+# all related packages and configurations
 uninstall() {
-  # Very destructive, ask first.
-  echo
-  printf "  ${REDBG}WARNING${NORMAL}\\n"
-  echo
-  echo "  This operation is very destructive. It removes nearly all of the packages"
-  echo "  installed by the Virtualmin installer. Never run this on a production system."
-  echo
-  printf " Continue? (y/n) "
-  if ! yesno; then
-    exit
+  log_debug "Initiating Virtualmin uninstallation procedure"
+  log_debug "Operating system name:    $os_real"
+  log_debug "Operating system version: $os_version"
+  log_debug "Operating system type:    $os_type"
+  log_debug "Operating system major:   $os_major_version"
+
+  if [ "$skipyesno" -ne 1 ]; then
+    echo
+    printf "  ${REDBG}WARNING${NORMAL}\\n"
+    echo
+    echo "  This operation is highly disruptive and cannot be undone. It removes all of"
+    echo "  the packages and configuration files installed by the Virtualmin installer."
+    echo
+    echo "  It must never be executed on a live production system."
+    echo
+    printf " ${RED}Uninstall?${NORMAL} (y/N) "
+    if ! yesno; then
+      exit
+    fi
   fi
 
-  # This is a crummy way to detect package manager...but going through
-  # half the installer just to get here is even crummier.
-  if command -pv rpm 1>/dev/null 2>&1; then
-    package_type=rpm
-  elif command -pv dpkg 1>/dev/null 2>&1; then
-    package_type=deb
-  fi
+  # Go to the temp directory
+  cd "$srcdir"
 
-  case "$package_type" in
-  rpm)
-    yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin Core"
-    yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack"
-    yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LEMP Stack"
-    yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LAMP Stack Minimal"
-    yum groupremove -y --setopt="groupremove_leaf_only=true" "Virtualmin LEMP Stack Minimal"
-    yum remove -y virtualmin-base
-    yum remove -y wbm-virtual-server wbm-virtualmin-htpasswd wbm-virtualmin-dav wbm-virtualmin-mailman wbm-virtualmin-awstats wbm-php-pear wbm-ruby-gems wbm-virtualmin-registrar wbm-virtualmin-init wbm-jailkit wbm-virtualmin-git wbm-virtualmin-slavedns wbm-virtual-server wbm-virtualmin-sqlite wbm-virtualmin-svn
-    yum remove -y wbt-virtual-server-mobile
-    yum remove -y virtualmin-config perl-Term-Spinner-Color
-    yum remove -y webmin usermin awstats
-    yum remove -y nginx
-    yum remove -y fail2ban
-    yum clean all
-    os_type="centos"
-    ;;
-  deb)
-    rm -rf /etc/fail2ban/jail.d/00-firewalld.conf
-    rm -f /etc/fail2ban/jail.local
-    apt-get remove --assume-yes --purge virtualmin-base virtualmin-core virtualmin-lamp-stack virtualmin-lemp-stack
-    apt-get remove --assume-yes --purge virtualmin-lamp-stack-minimal virtualmin-lemp-stack-minimal
-    apt-get remove --assume-yes --purge virtualmin-config libterm-spinner-color-perl
-    apt-get remove --assume-yes --purge webmin-virtual-server webmin-virtualmin-htpasswd webmin-virtualmin-git webmin-virtualmin-slavedns webmin-virtualmin-dav webmin-virtualmin-mailman webmin-virtualmin-awstats webmin-php-pear webmin-ruby-gems webmin-virtualmin-registrar webmin-virtualmin-init webmin-jailkit webmin-virtual-server webmin-virtualmin-sqlite webmin-virtualmin-svn
-    apt-get remove --assume-yes --purge webmin-virtual-server-mobile
-    apt-get remove --assume-yes --purge fail2ban
-    apt-get remove --assume-yes --purge apache2*
-    apt-get remove --assume-yes --purge nginx*
-    apt-get remove --assume-yes --purge webmin usermin
-    apt-get autoremove --assume-yes
-    os_type="debian"
-    apt-get clean
-    ;;
-  *)
-    echo "I don't know how to uninstall on this operating system."
-    ;;
-  esac
-  echo 'Removing Virtualmin repo configuration'
-  remove_virtualmin_release
-  virtualmin_license_file="/etc/virtualmin-license"
-  if [ -f "$virtualmin_license_file" ]; then
-    echo "Removing Virtualmin license"
-    rm "$virtualmin_license_file"
-  fi
-  echo "Done.  There's probably quite a bit of related packages and such left behind"
-  echo "but all of the Virtualmin-specific packages have been removed."
+  # Uninstall packages
+  uninstall_packages()
+  {
+    # Detect the package manager
+    case "$os_type" in
+    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+      package_type=rpm
+      if command -pv dnf 1>/dev/null 2>&1; then
+        uninstall_cmd="dnf remove -y"
+        uninstall_cmd_group="dnf groupremove -y"
+      else
+        uninstall_cmd="yum remove -y"
+        uninstall_cmd_group="yum groupremove -y"
+      fi
+      ;;
+    debian | ubuntu | kali)
+      package_type=deb
+      uninstall_cmd="apt-get remove --assume-yes --purge"
+      ;;
+    esac
+    
+    case "$package_type" in
+    rpm)
+      $uninstall_cmd_group "Virtualmin Core" "Virtualmin LAMP Stack" "Virtualmin LEMP Stack" "Virtualmin LAMP Stack Minimal" "Virtualmin LEMP Stack Minimal"
+      $uninstall_cmd wbm-* wbt-* webmin* usermin* virtualmin*
+      os_type="rhel"
+      return 0
+      ;;
+    deb)
+      $uninstall_cmd "virtualmin*" "webmin*" "usermin*"
+      apt-get autoremove --assume-yes
+      os_type="debian"
+      return 0
+      ;;
+    *)
+      log_error "Unknown package manager, cannot uninstall"
+      return 1
+      ;;
+    esac
+  }
+
+  # Uninstall repos and helper command
+  uninstall_repos()
+  {
+    echo "Removing Virtualmin $vm_version repo configuration"
+    remove_virtualmin_release
+    virtualmin_license_file="/etc/virtualmin-license"
+    if [ -f "$virtualmin_license_file" ]; then
+      echo "Removing Virtualmin license"
+      rm "$virtualmin_license_file"
+    fi
+
+    echo "Removing Virtualmin helper command"
+    rm "/usr/sbin/virtualmin"
+    echo "Virtualmin uninstallation complete."
+  }
+  
+  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Uninstall\\n"
+  run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
+  run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
   exit 0
 }
 if [ "$mode" = "uninstall" ]; then
