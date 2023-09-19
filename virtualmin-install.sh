@@ -1315,7 +1315,7 @@ yum_check_skipped() {
       skippedpackagesnum=$((skippedpackagesnum+1))
     fi
   done < "$log"
-  if [ "$skippedpackages" != "" ]; then
+  if [ -z "$noskippedpackagesforce" ] && [ "$skippedpackages" != "" ]; then
     if [ "$skippedpackagesnum" != 1 ]; then
       ts="s"
     fi
