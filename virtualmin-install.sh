@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090
 # virtualmin-install.sh
 # Copyright 2005-2023 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
