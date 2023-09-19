@@ -327,7 +327,7 @@ log_fatal() {
 
 remove_virtualmin_release() {
   case "$os_type" in
-  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux" | "amzn")
+  "fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux" | "amzn" | "opensuse-leap")
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin-*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -515,6 +515,7 @@ EOF
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
+     - openSUSE Server 15 on x86_64\\n \
           ${NORMAL}"
     unstable_deb="${YELLOW}- Kali Linux Rolling on x86_64\\n \
           ${NORMAL}"
@@ -855,7 +856,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | fedora)
+  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | fedora | opensuse-leap)
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -886,9 +887,9 @@ install_virtualmin_release() {
         exit 1
       fi
       ;;
-    amzn)
-      if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer${unstable_suffix}\\n"
+    opensuse-leap)
+      if [ "$os_major_version" -lt 15 ] || [ -z "$unstable" ] && [ "$os_type" = "opensuse-leap" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
