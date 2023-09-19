@@ -898,7 +898,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | fedora)
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -1386,7 +1386,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-"fedora" | "centos" | "centos_stream" | "rhel" | "rocky" | "almalinux" | "ol" | "cloudlinux")
+rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn)
   disable_selinux
   ;;
 esac
