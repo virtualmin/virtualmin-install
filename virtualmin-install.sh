@@ -923,11 +923,12 @@ install_virtualmin_release() {
     fi
     package_type="rpm"
     if command -pv dnf 1>/dev/null 2>&1; then
-      install="dnf -y install"
-      update="dnf -y update"
       install_cmd="dnf"
-      install_group="dnf -y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
-      install_config_manager="dnf config-manager"
+      install="$install_cmd -y install"
+      update="$install_cmd -y update"
+      install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
+      install_group="$install_cmd $install_group_opts"
+      install_config_manager="$install_cmd config-manager"
       # Do not use package manager when fixing repos
       if [ -z "$setup_only" ]; then
         run_ok "$install dnf-plugins-core" "Installing core plugins for package manager"
