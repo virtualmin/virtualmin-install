@@ -1031,6 +1031,14 @@ install_virtualmin_release() {
     fi
     # Remove any existing repo config, in case it's a reinstall
     remove_virtualmin_release
+    
+    # Set correct keys name for Debian vs derivatives
+    repoid_debian_like=debian
+    if [ -n "${os_type}" ]; then
+      repoid_debian_like="${os_type}"
+    fi
+
+    # Setup repo file
     apt_auth_dir='/etc/apt/auth.conf.d'
     LOGINREAL=$LOGIN
     if [ -d "$apt_auth_dir" ]; then
@@ -1040,12 +1048,13 @@ install_virtualmin_release() {
       fi
     fi
     for repo in $repos; do
-      printf "deb [signed-by=/usr/share/keyrings/debian-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
+      printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
     done
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+    run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
     if [ "$vm6_repos" -eq 1 ]; then
       download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
       run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-webmin.gpg" "Installing Webmin key"
