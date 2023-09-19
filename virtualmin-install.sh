@@ -51,7 +51,7 @@ usage() {
   printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle, CloudLinux)\\n"
   printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
-  printf "  --setup|-s <auto|force-latest>  setup Virtualmin software repositories and exit\\n"
+  printf "  --setup|-s                      setup Virtualmin software repositories and exit\\n"
   printf "  --hostname|-n                   set fully qualified hostname\\n"
   printf "  --force|-f                      assume \"yes\" as answer to all prompts\\n"
   printf "  --verbose|-v                    increase verbosity\\n"
@@ -786,26 +786,13 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 if [ -n "$setup_only" ]; then
-  if [ "$setup_only_force_latest" -ne 1 ]; then
-    # If Virtualmin 6 is installed and a user needs to fix repos make,
-    # sure that we don't switch 6 to 7 to keep the same stack packages
-    reposfile="/etc/yum.repos.d/virtualmin.repo /etc/apt/sources.list.d/virtualmin.list /etc/apt/sources.list"
-    vm_prev_version_installed=$((vm_version - 1))
-    for repofile in $reposfile; do
-      if [ -f "$repofile" ]; then
-        if grep -F -q "virtualmin-universal" "$repofile" || grep -F -q "/vm/$vm_prev_version_installed/" "$repofile"; then
-
-          # Fix for Virtualmin 6 repos
-          if [ "$vm_prev_version_installed" = "6" ]; then
-            if [ "$SERIAL" != "GPL" ]; then
-              repopath=""
-            fi
-            vm_version=$vm_prev_version_installed
-            vm6_repos=1
-          fi
-        fi
-      fi
-    done
+  # Force CentOS 7 to get older repos because of custom Apache
+  if [ "$os_type" = "centos" ] && [ "$os_major_version" -eq 7 ]; then
+    if [ "$SERIAL" != "GPL" ]; then
+      repopath=""
+    fi
+    vm_version=6
+    vm6_repos=1
   fi
   pre_check_perl
   pre_check_http_client
@@ -1059,10 +1046,10 @@ install_virtualmin_release() {
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
     download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-    run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/debian-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
-    run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/debian-webmin.gpg" "Installing Webmin key"
-
+    if [ "$vm6_repos" -eq 1 ]; then
+      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
+      run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-webmin.gpg" "Installing Webmin key"
+    fi
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
     # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
