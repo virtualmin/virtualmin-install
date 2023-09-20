@@ -49,7 +49,6 @@ usage() {
   printf "  --help|-h                       display this help and exit\\n"
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  --unstable|-e                   enable support for Grade B systems (Fedora, CentOS Stream, Oracle, CloudLinux)\\n"
   printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
   printf "  --setup|-s                      setup Virtualmin software repositories and exit\\n"
@@ -86,12 +85,6 @@ while [ "$1" != "" ]; do
   --minimal | -m)
     shift
     mode='minimal'
-    ;;
-  --unstable | -e)
-    shift
-    unstable='unstable'
-    virtualmin_config_system_excludes=""
-    virtualmin_stack_custom_packages=""
     ;;
   --insecure-downloads | -i)
     shift
@@ -349,6 +342,14 @@ grade_b_system() {
   return 1
 }
 
+# Detect and enable Grade B system
+grade_b_system
+if [ $? -eq 1 ]; then
+  unstable='unstable'
+  virtualmin_config_system_excludes=""
+  virtualmin_stack_custom_packages=""
+fi
+
 remove_virtualmin_release() {
   case "$os_type" in
   rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
@@ -554,14 +555,14 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 38 on x86_64\\n \
-     - Amazon Linux 2023 on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 38+ on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
+     - Amazon Linux 2023+ on x86_64\\n \
      - openSUSE Server 15 on x86_64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Kali Linux Rolling on x86_64\\n \
+    unstable_deb="${YELLOW}- Kali Linux Rolling 2023+ on x86_64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
@@ -918,7 +919,6 @@ log_debug "Operating system type:    $os_type"
 log_debug "Operating system major:   $os_major_version"
 
 install_virtualmin_release() {
-  unstable_suffix=" but it can be installed as Grade B system using ${YELLOW}--unstable${NORMAL} flag."
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
@@ -926,8 +926,8 @@ install_virtualmin_release() {
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
-        if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ]; then
-          printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
+        if [ "$os_major_version" -lt 8 ]; then
+          printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
           exit 1
         fi
       else
@@ -938,36 +938,32 @@ install_virtualmin_release() {
       fi
       ;;
     rocky | almalinux | ol)
-      if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "ol" ]; then
-        can_unstable_suffix="."
-        if [ "$os_type" = "ol" ]; then
-          can_unstable_suffix="$unstable_suffix"
-        fi
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${can_unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 8 ]; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
     cloudlinux)
-      if [ "$os_major_version" -lt 8 ] || [ -z "$unstable" ] && [ "$os_type" = "cloudlinux" ]; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 8 ] && [ "$os_type" = "cloudlinux" ]; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
     opensuse-leap)
-      if [ "$os_major_version" -lt 15 ] || [ -z "$unstable" ] && [ "$os_type" = "opensuse-leap" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 15 ] && [ "$os_type" = "opensuse-leap" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
     fedora)
-      if [ "$os_version" -lt 35 ] || [ -z "$unstable" ] && [ "$os_type" = "fedora" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 35 ] && [ "$os_type" = "fedora" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
     amzn)
-      if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer${unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 2023 ] && [ "$os_type" = "amzn" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer.\\n"
         exit 1
       fi
       ;;
@@ -1060,8 +1056,8 @@ install_virtualmin_release() {
       fi
       ;;
     kali)
-      if [ -z "$unstable" ] && [ "$os_type" = "kali" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
+      if [ "$os_major_version" -lt 2023 ] && [ "$os_type" = "kali" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
