@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090 disable=SC1091 disable=SC2164 disable=SC1090
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090 disable=SC1091 disable=SC1090
 # virtualmin-install.sh
 # Copyright 2005-2023 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
@@ -235,11 +235,15 @@ fi
 # "files" subdir for libs
 mkdir "$VIRTUALMIN_INSTALL_TEMPDIR/files"
 srcdir="$VIRTUALMIN_INSTALL_TEMPDIR/files"
-if ! cd "$srcdir"; then
-  echo "Error: Failed to enter $srcdir temporary directory"
-  exit 1
-fi
-export VIRTUALMIN_INSTALL_TEMPDIR
+
+# Switch to temp directory or exit with error
+goto_tmpdir() {
+  if ! cd "$srcdir" >>"$log" 2>&1; then
+    echo "Error: Failed to enter $srcdir temporary directory"
+    exit 1
+  fi
+}
+goto_tmpdir
 
 pre_check_http_client() {
   # Check for wget or curl or fetch
@@ -455,7 +459,7 @@ uninstall() {
   fi
 
   # Go to the temp directory
-  cd "$srcdir"
+  goto_tmpdir
 
   # Uninstall packages
   uninstall_packages()
