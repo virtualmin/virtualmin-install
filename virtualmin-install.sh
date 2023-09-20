@@ -23,7 +23,7 @@ vm_version=7
 
 # Server
 upgrade_virtualmin_host=software.virtualmin.com
-upgrade_virtualmin_host_mods="$upgrade_virtualmin_host/mods"
+upgrade_virtualmin_host_mods="$upgrade_virtualmin_host/lib/mods"
 
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
