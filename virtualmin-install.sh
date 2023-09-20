@@ -462,6 +462,12 @@ uninstall() {
     fi
   fi
 
+  # Log to file and tell the user nicely
+  log_info "Started uninstallation log in $log"
+
+  # Always sleep just a bit in case the user changes their mind
+  sleep 1
+
   # Go to the temp directory
   goto_tmpdir
 
