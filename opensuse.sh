@@ -6,7 +6,6 @@
 opensuse_poststack() {
     # Install Virtualmin Config package manually
     # as it currently fails with false positive error
-    echo "Hello im module $module_name -- $install_group_opts"
     package_virtualmin_config=$(dnf download virtualmin-config)
     package_virtualmin_config_name=$(echo "$package_virtualmin_config" | grep -o 'virtualmin-config[^ ]*.rpm')
     rpm -U --nodeps --replacepkgs --replacefiles --quiet $package_virtualmin_config_name
