@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090 disable=SC1091 disable=SC2164
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090 disable=SC1091 disable=SC2164 disable=SC1090
 # virtualmin-install.sh
 # Copyright 2005-2023 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
@@ -23,6 +23,7 @@ vm_version=7
 
 # Server
 upgrade_virtualmin_host=software.virtualmin.com
+upgrade_virtualmin_host_mods="$upgrade_virtualmin_host/mods"
 
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
@@ -106,6 +107,15 @@ while [ "$1" != "" ]; do
     setup_only=1
     mode='setup'
     unstable='unstable'
+    ;;
+  # Later we can make modules fully pluggable,
+  # however it would require to rethink how OS
+  # detection and uninstallation works with
+  # those custom modules
+  --module | -o)
+    shift
+    module_name=$1
+    shift
     ;;
   --hostname | -n)
     shift
@@ -539,6 +549,7 @@ EOF
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
+     - openSUSE Server 15 on x86_64\\n \
           ${NORMAL}"
     unstable_deb="${YELLOW}- Kali Linux Rolling on x86_64\\n \
           ${NORMAL}"
@@ -929,9 +940,9 @@ install_virtualmin_release() {
         exit 1
       fi
       ;;
-    amzn)
-      if [ "$os_version" -lt 2023 ] || [ -z "$unstable" ] && [ "$os_type" = "amzn" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer${unstable_suffix}\\n"
+    opensuse-leap)
+      if [ "$os_major_version" -lt 15 ] || [ -z "$unstable" ] && [ "$os_type" = "opensuse-leap" ]  ; then
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer${unstable_suffix}\\n"
         exit 1
       fi
       ;;
@@ -1271,6 +1282,33 @@ install_with_yum() {
   rs=$?
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $rs"
+  fi
+
+  # Initialize embedded modules
+  if [ -n "$unstable" ]; then
+    if [ -z "$module_name" ]; then
+      if [ "$os_type" = "opensuse-leap" ]; then
+        module_name="opensuse"
+      fi
+    fi
+    if [ -n "$module_name" ]; then
+      # If module is available locally in the same directory use it
+      if [ -f "$pwd/${module_name}.sh" ]; then
+        chmod +x "$pwd/${module_name}.sh"
+        . "$pwd/${module_name}.sh"
+      # Download the module from the server
+      else
+        # We need HTTP client first
+        pre_check_http_client
+        $download "https://$upgrade_virtualmin_host_mods/${module_name}.sh" >>"$log" 2>&1
+        if [ $? -ne 0 ]; then
+          echo "Error: Failed to download embedded module ${module_name}.sh. Cannot continue. Check your network connection and DNS settings."
+          exit 1
+        fi
+        chmod +x "$module_name"
+        . "./$module_name"
+      fi
+    fi
   fi
 
   return 0
