@@ -232,6 +232,9 @@ if [ -z "$VIRTUALMIN_INSTALL_TEMPDIR" ]; then
   mkdir "$VIRTUALMIN_INSTALL_TEMPDIR"
 fi
 
+# Export temp directory for Virtualmin Config
+export VIRTUALMIN_INSTALL_TEMPDIR
+
 # "files" subdir for libs
 mkdir "$VIRTUALMIN_INSTALL_TEMPDIR/files"
 srcdir="$VIRTUALMIN_INSTALL_TEMPDIR/files"
