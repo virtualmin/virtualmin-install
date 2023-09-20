@@ -339,6 +339,16 @@ log_fatal() {
   log_error "$1"
 }
 
+# Test if grade B system
+grade_b_system() {
+  case "$os_type" in
+  rhel | centos | rocky | almalinux | debian | ubuntu)
+    return 0
+    ;;
+  esac
+  return 1
+}
+
 remove_virtualmin_release() {
   case "$os_type" in
   rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
@@ -663,7 +673,10 @@ EOF
   fi
 }
 if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
-  os_unstable_pre_check
+  grade_b_system
+  if [ $? -eq 1 ]; then
+    os_unstable_pre_check
+  fi
   preconfigured_system_msg
   already_installed_msg
 fi
