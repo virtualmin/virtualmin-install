@@ -1,7 +1,7 @@
 #!/bin/sh
-# Copyright 2005-2023 Virtualmin, Inc.
-# virtualmin-install.sh - openSUSE module
 # shellcheck disable=SC2154 disable=SC2034 disable=SC2086
+# Copyright 2005-2023 Virtualmin, Inc.
+# virtualmin-install.sh - openSUSE module v1.0.0
 
 # Fix openSUSE pitfalls
 opensuse_poststack() {
