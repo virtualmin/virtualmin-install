@@ -32,14 +32,15 @@ The **Grade A** systems currently supported by install script are:
 The _Grade B_ systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
-      - Fedora Server 38 on x86_64
-      - Amazon Linux 2023 on x86_64
+      - Fedora Server 38+ on x86_64
       - CentOS Stream 8 and 9 on x86_64
       - Oracle Linux 8 and 9 on x86_64
       - CloudLinux 8 and 9 on x86_64
+      - Amazon Linux 2023+ on x86_64
+      - openSUSE Server 15 on x86_64
   
     Debian Linux and derivatives
-      - Kali Linux Rolling on x86_64
+      - Kali Linux Rolling 2023+ on x86_64
 
 We strongly recommend you use the latest version of your preferred **Grade A** supported distribution. The latest release gets the most active testing and bug fixing.
 
