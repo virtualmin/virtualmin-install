@@ -23,7 +23,8 @@ vm_version=7
 
 # Server
 upgrade_virtualmin_host=software.virtualmin.com
-upgrade_virtualmin_host_mods="$upgrade_virtualmin_host/lib/mods"
+upgrade_virtualmin_host_lib="$upgrade_virtualmin_host/lib"
+upgrade_virtualmin_host_mods="$upgrade_virtualmin_host_lib/mods"
 
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
@@ -295,7 +296,7 @@ download_slib() {
   else
     # We need HTTP client first
     pre_check_http_client
-    $download "https://$upgrade_virtualmin_host/lib/slib.sh" >>"$log" 2>&1
+    $download "https://$upgrade_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
     if [ $? -ne 0 ]; then
       echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
       exit 1
@@ -1138,10 +1139,10 @@ install_virtualmin_release() {
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
-    download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+    download "https://$upgrade_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
     if [ "$vm6_repos" -eq 1 ]; then
-      download "https://$upgrade_virtualmin_host/lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
+      download "https://$upgrade_virtualmin_host_lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
       run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-webmin.gpg" "Installing Webmin key"
     fi
     run_ok "apt-get update" "Downloading repository metadata"
