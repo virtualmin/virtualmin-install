@@ -864,15 +864,16 @@ if [ "$(id -u)" -ne 0 ]; then
   fi
 fi
 
-if [ -n "$setup_only" ]; then
-  # Force CentOS 7 to get older repos because of custom Apache
-  if [ "$os_type" = "centos" ] && [ "$os_major_version" -eq 7 ]; then
-    if [ "$SERIAL" != "GPL" ]; then
-      repopath=""
-    fi
-    vm_version=6
-    vm6_repos=1
+# Force CentOS 7 to get older repos because of custom Apache
+if [ "$os_type" = "centos" ] && [ "$os_major_version" -eq 7 ]; then
+  if [ "$SERIAL" != "GPL" ]; then
+    repopath=""
   fi
+  vm_version=6
+  vm6_repos=1
+fi
+
+if [ -n "$setup_only" ]; then
   pre_check_perl
   pre_check_http_client
   pre_check_gpg
