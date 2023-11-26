@@ -859,7 +859,7 @@ download() {
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
   run_ok "$download $1" "$2"
   if [ $? -ne 0 ]; then
-    fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings."
+    fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
   else
     return 0
   fi
