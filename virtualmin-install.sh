@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.3.2
+VER=7.3.3
 vm_version=7
 
 # Server
@@ -358,10 +358,10 @@ log_fatal() {
 grade_b_system() {
   case "$os_type" in
   rhel | centos | rocky | almalinux | debian | ubuntu)
-    return 0
+    return 1
     ;;
   esac
-  return 1
+  return 0
 }
 
 if grade_b_system && [ "$unstable" != 'unstable' ]; then
@@ -701,8 +701,7 @@ EOF
   fi
 }
 if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
-  grade_b_system
-  if [ $? -eq 1 ]; then
+  if grade_b_system; then
     os_unstable_pre_check
   fi
   preconfigured_system_msg
