@@ -24,7 +24,6 @@ vm_version=7
 # Server
 upgrade_virtualmin_host=software.virtualmin.com
 upgrade_virtualmin_host_lib="$upgrade_virtualmin_host/lib"
-upgrade_virtualmin_host_mods="$upgrade_virtualmin_host_lib/mods"
 
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
@@ -50,6 +49,7 @@ usage() {
   printf "  --help|-h                       display this help and exit\\n"
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  --module|-o                     source a custom shell module during the post-installation phase\\n"
   printf "  --unstable|-e                   enable support for Grade B systems (not recommended, see documentation)\\n"
   printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
@@ -109,10 +109,6 @@ while [ "$1" != "" ]; do
     virtualmin_config_system_excludes=""
     virtualmin_stack_custom_packages=""
     ;;
-  # Later we can make modules fully pluggable,
-  # however it would require to rethink how OS
-  # detection and uninstallation works with
-  # those custom modules
   --module | -o)
     shift
     module_name=$1
@@ -1304,30 +1300,6 @@ install_with_yum() {
     fatal "Installation failed: $rs"
   fi
 
-  # Initialize embedded modules
-  if [ -n "$unstable" ]; then
-    if [ -n "$module_name" ]; then
-      # If module is available locally in the same directory use it
-      if [ -f "$pwd/${module_name}.sh" ]; then
-        chmod +x "$pwd/${module_name}.sh"
-        # shellcheck disable=SC1090
-        . "$pwd/${module_name}.sh"
-      # Download the module from the server
-      else
-        # We need HTTP client first
-        pre_check_http_client
-        $download "https://$upgrade_virtualmin_host_mods/${module_name}.sh" >>"$log" 2>&1
-        if [ $? -ne 0 ]; then
-          echo "Error: Failed to download embedded module ${module_name}.sh. Cannot continue. Check your network connection and DNS settings."
-          exit 1
-        fi
-        chmod +x "$module_name"
-        # shellcheck disable=SC1090
-        . "./$module_name"
-      fi
-    fi
-  fi
-
   return 0
 }
 
@@ -1398,6 +1370,18 @@ run_ok "$install_updates" "Installing Virtualmin $vm_version related package upd
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
+fi
+
+# Initialize embedded module if any
+if [ -n "$module_name" ]; then
+  # If module is available locally in the same directory use it
+  if [ -f "$pwd/${module_name}.sh" ]; then
+    chmod +x "$pwd/${module_name}.sh"
+    # shellcheck disable=SC1090
+    . "$pwd/${module_name}.sh"
+  else
+    log_warning "Requested module ${module_name} is not available."
+  fi
 fi
 
 # Reap any clingy processes (like spinner forks)
