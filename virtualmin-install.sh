@@ -18,7 +18,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.3.0
+VER=7.3.1
 vm_version=7
 
 # Server
@@ -50,6 +50,7 @@ usage() {
   printf "  --help|-h                       display this help and exit\\n"
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  --unstable|-e                   enable support for Grade B systems (not recommended, see documentation)\\n"
   printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
   printf "  --setup|-s                      setup Virtualmin software repositories and exit\\n"
@@ -101,6 +102,12 @@ while [ "$1" != "" ]; do
     setup_only=1
     mode='setup'
     unstable='unstable'
+    ;;
+  --unstable | -e)
+    shift
+    unstable='unstable'
+    virtualmin_config_system_excludes=""
+    virtualmin_stack_custom_packages=""
     ;;
   # Later we can make modules fully pluggable,
   # however it would require to rethink how OS
@@ -357,12 +364,11 @@ grade_b_system() {
   return 1
 }
 
-# Detect and enable Grade B system
-grade_b_system
-if [ $? -eq 1 ]; then
-  unstable='unstable'
-  virtualmin_config_system_excludes=""
-  virtualmin_stack_custom_packages=""
+if grade_b_system && [ "$unstable" = 'unstable' ]; then
+  log_error "Unsupported operating system detected. You may be able to install with"
+  log_error "the --unstable flag, but this is not recommended. Consult the installation"
+  log_error "documentation."
+  exit 1
 fi
 
 remove_virtualmin_release() {
