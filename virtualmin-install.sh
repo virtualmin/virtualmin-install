@@ -364,7 +364,7 @@ grade_b_system() {
   return 1
 }
 
-if grade_b_system && [ "$unstable" = 'unstable' ]; then
+if grade_b_system && [ "$unstable" != 'unstable' ]; then
   log_error "Unsupported operating system detected. You may be able to install with"
   log_error "the --unstable flag, but this is not recommended. Consult the installation"
   log_error "documentation."
