@@ -373,7 +373,7 @@ fi
 
 remove_virtualmin_release() {
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -489,7 +489,7 @@ uninstall() {
   {
     # Detect the package manager
     case "$os_type" in
-    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
       package_type=rpm
       if command -pv dnf 1>/dev/null 2>&1; then
         uninstall_cmd="dnf remove -y"
@@ -582,14 +582,13 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 38+ on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 38 and above on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
-     - Amazon Linux 2023+ on x86_64\\n \
-     - openSUSE Server 15 on x86_64\\n \
+     - Amazon Linux 2023 and above on x86_64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Kali Linux Rolling 2023+ on x86_64\\n \
+    unstable_deb="${YELLOW}- Kali Linux Rolling 2023 and above on x86_64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
@@ -633,15 +632,6 @@ os_unstable_pre_check() {
   Certain features may not work as intended or might be unavailable on this OS.
 
 EOF
-    if [ "$os_type" = "opensuse-leap" ]; then
-      cat <<EOF
-  For installation to work on ${UNDERLINE}${BOLD}openSUSE${NORMAL} it is required to set up NetworkManager
-  as default network configuration tool during the initial OS installation pha-
-  se. Furthermore, you will need to set up the DNF package manager using the
-  instructions provided in this tutorial: ${UNDERLINE}https://en.opensuse.org/SDB:DNF${NORMAL}
-
-EOF
-    fi
     printf " Continue? (y/n) "
     if ! yesno; then
       exit
@@ -949,7 +939,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -972,12 +962,6 @@ install_virtualmin_release() {
       ;;
     cloudlinux)
       if [ "$os_major_version" -lt 8 ] && [ "$os_type" = "cloudlinux" ]; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
-        exit 1
-      fi
-      ;;
-    opensuse-leap)
-      if [ "$os_major_version" -lt 15 ] && [ "$os_type" = "opensuse-leap" ]  ; then
         printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
@@ -1322,11 +1306,6 @@ install_with_yum() {
 
   # Initialize embedded modules
   if [ -n "$unstable" ]; then
-    if [ -z "$module_name" ]; then
-      if [ "$os_type" = "opensuse-leap" ]; then
-        module_name="opensuse"
-      fi
-    fi
     if [ -n "$module_name" ]; then
       # If module is available locally in the same directory use it
       if [ -f "$pwd/${module_name}.sh" ]; then
