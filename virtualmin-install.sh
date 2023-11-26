@@ -18,13 +18,12 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.3.3
+VER=7.3.4
 vm_version=7
 
 # Server
 upgrade_virtualmin_host=software.virtualmin.com
 upgrade_virtualmin_host_lib="$upgrade_virtualmin_host/lib"
-upgrade_virtualmin_host_mods="$upgrade_virtualmin_host_lib/mods"
 
 # Currently supported systems
 # https://www.virtualmin.com/os-support/
@@ -50,6 +49,7 @@ usage() {
   printf "  --help|-h                       display this help and exit\\n"
   printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
   printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
+  printf "  --module|-o                     source a custom shell module during the post-installation phase\\n"
   printf "  --unstable|-e                   enable support for Grade B systems (not recommended, see documentation)\\n"
   printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
   printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
@@ -109,10 +109,6 @@ while [ "$1" != "" ]; do
     virtualmin_config_system_excludes=""
     virtualmin_stack_custom_packages=""
     ;;
-  # Later we can make modules fully pluggable,
-  # however it would require to rethink how OS
-  # detection and uninstallation works with
-  # those custom modules
   --module | -o)
     shift
     module_name=$1
@@ -306,7 +302,7 @@ download_slib() {
     pre_check_http_client
     $download "https://$upgrade_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
     if [ $? -ne 0 ]; then
-      echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+      echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
       exit 1
     fi
     chmod +x slib.sh
@@ -373,7 +369,7 @@ fi
 
 remove_virtualmin_release() {
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -489,7 +485,7 @@ uninstall() {
   {
     # Detect the package manager
     case "$os_type" in
-    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
       package_type=rpm
       if command -pv dnf 1>/dev/null 2>&1; then
         uninstall_cmd="dnf remove -y"
@@ -582,14 +578,13 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 38+ on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 38 and above on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
-     - Amazon Linux 2023+ on x86_64\\n \
-     - openSUSE Server 15 on x86_64\\n \
+     - Amazon Linux 2023 and above on x86_64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Kali Linux Rolling 2023+ on x86_64\\n \
+    unstable_deb="${YELLOW}- Kali Linux Rolling 2023 and above on x86_64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
@@ -633,15 +628,6 @@ os_unstable_pre_check() {
   Certain features may not work as intended or might be unavailable on this OS.
 
 EOF
-    if [ "$os_type" = "opensuse-leap" ]; then
-      cat <<EOF
-  For installation to work on ${UNDERLINE}${BOLD}openSUSE${NORMAL} it is required to set up NetworkManager
-  as default network configuration tool during the initial OS installation pha-
-  se. Furthermore, you will need to set up the DNF package manager using the
-  instructions provided in this tutorial: ${UNDERLINE}https://en.opensuse.org/SDB:DNF${NORMAL}
-
-EOF
-    fi
     printf " Continue? (y/n) "
     if ! yesno; then
       exit
@@ -869,7 +855,7 @@ download() {
   download_file=$(echo "$1" | awk -F/ '{print $NF}')
   run_ok "$download $1" "$2"
   if [ $? -ne 0 ]; then
-    fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings."
+    fatal "Failed to download Virtualmin release package. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
   else
     return 0
   fi
@@ -949,7 +935,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn | opensuse-leap)
+  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -972,12 +958,6 @@ install_virtualmin_release() {
       ;;
     cloudlinux)
       if [ "$os_major_version" -lt 8 ] && [ "$os_type" = "cloudlinux" ]; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
-        exit 1
-      fi
-      ;;
-    opensuse-leap)
-      if [ "$os_major_version" -lt 15 ] && [ "$os_type" = "opensuse-leap" ]  ; then
         printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
@@ -1320,35 +1300,6 @@ install_with_yum() {
     fatal "Installation failed: $rs"
   fi
 
-  # Initialize embedded modules
-  if [ -n "$unstable" ]; then
-    if [ -z "$module_name" ]; then
-      if [ "$os_type" = "opensuse-leap" ]; then
-        module_name="opensuse"
-      fi
-    fi
-    if [ -n "$module_name" ]; then
-      # If module is available locally in the same directory use it
-      if [ -f "$pwd/${module_name}.sh" ]; then
-        chmod +x "$pwd/${module_name}.sh"
-        # shellcheck disable=SC1090
-        . "$pwd/${module_name}.sh"
-      # Download the module from the server
-      else
-        # We need HTTP client first
-        pre_check_http_client
-        $download "https://$upgrade_virtualmin_host_mods/${module_name}.sh" >>"$log" 2>&1
-        if [ $? -ne 0 ]; then
-          echo "Error: Failed to download embedded module ${module_name}.sh. Cannot continue. Check your network connection and DNS settings."
-          exit 1
-        fi
-        chmod +x "$module_name"
-        # shellcheck disable=SC1090
-        . "./$module_name"
-      fi
-    fi
-  fi
-
   return 0
 }
 
@@ -1419,6 +1370,18 @@ run_ok "$install_updates" "Installing Virtualmin $vm_version related package upd
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
+fi
+
+# Initialize embedded module if any
+if [ -n "$module_name" ]; then
+  # If module is available locally in the same directory use it
+  if [ -f "$pwd/${module_name}.sh" ]; then
+    chmod +x "$pwd/${module_name}.sh"
+    # shellcheck disable=SC1090
+    . "$pwd/${module_name}.sh"
+  else
+    log_warning "Requested module with the filename $pwd/${module_name}.sh does not exist."
+  fi
 fi
 
 # Reap any clingy processes (like spinner forks)

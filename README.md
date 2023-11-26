@@ -23,7 +23,7 @@ The **Grade A** systems currently supported by install script are:
     Red Hat Enterprise Linux and derivatives
       - RHEL 8 and 9 on x86_64
       - Alma and Rocky 8 and 9 on x86_64
-      - CentOS 7 on x86_64
+      - CentOS 7 on x86_64 (no longer recommended)
       
     Debian Linux and derivatives
       - Debian 10, 11 and 12 on i386 and amd64
@@ -32,15 +32,14 @@ The **Grade A** systems currently supported by install script are:
 The _Grade B_ systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
-      - Fedora Server 38+ on x86_64
+      - Fedora Server 38 and above on x86_64
       - CentOS Stream 8 and 9 on x86_64
       - Oracle Linux 8 and 9 on x86_64
       - CloudLinux 8 and 9 on x86_64
-      - Amazon Linux 2023+ on x86_64
-      - openSUSE Server 15 on x86_64
+      - Amazon Linux 2023 and above on x86_64
   
     Debian Linux and derivatives
-      - Kali Linux Rolling 2023+ on x86_64
+      - Kali Linux Rolling 2023 and above on x86_64
 
 We strongly recommend you use the latest version of your preferred **Grade A** supported distribution. The latest release gets the most active testing and bug fixing.
 
@@ -61,13 +60,13 @@ Please file tickets, either here or at [Virtualmin Forum](https://forum.virtualm
 
 # How to contribute
 
-Wrap your head around how `install.sh` does its job (mostly by setting up package repositories and installed metapackages or `yum` groups). Ask questions if you're not sure what's going on.
+Wrap your head around how `virtualmin-install.sh` does its job (mostly by setting up package repositories and installed _metapackages_ or _yum_-groups). Ask questions if you're not sure what's going on.
 
 Pick your favorite distro or OS, and start coding and packaging for it! I'm usually happy to devote time and resources to helping make Virtualmin work on other systems. I just don't have the time/resources to maintain more than the most popular server operating systems myself.
 
 # See also
 
-These are the tools the shell script uses to actually perform the installation and configuration. It sets up package repositories, installs the yum groups or the metapackages, and then uses Virtualmin-Config to perform the initial configuration steps, like turning on services, making service configuration changes, etc.
+These are the tools the shell script uses to actually perform the installation and configuration. It sets up package repositories, installs the _yum_-groups or the _metapackages_, and then uses Virtualmin-Config to perform the initial configuration steps, like turning on services, making service configuration changes, etc.
 
 [Virtualmin-Config: a post-modern post-installation configuration tool](https://github.com/virtualmin/Virtualmin-Config)
 
