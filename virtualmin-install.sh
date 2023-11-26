@@ -306,7 +306,7 @@ download_slib() {
     pre_check_http_client
     $download "https://$upgrade_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
     if [ $? -ne 0 ]; then
-      echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings."
+      echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
       exit 1
     fi
     chmod +x slib.sh
