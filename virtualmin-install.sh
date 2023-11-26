@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC3043 disable=SC2086 disable=SC2039 disable=SC2034 disable=SC2089 disable=SC2090 disable=SC1091 disable=SC1090
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317
 # virtualmin-install.sh
 # Copyright 2005-2023 Virtualmin, Inc.
 # Simple script to grab the virtualmin-release and virtualmin-base packages.
@@ -144,7 +144,7 @@ if [ -e "$log" ]; then
     logcnt=$((logcnt+1))
     logold="$log.$logcnt"
     if [ ! -e "$logold" ]; then
-      mv $log $logold
+      mv "$log" "$logold"
       break
     fi
   done
@@ -291,6 +291,7 @@ download_slib() {
   # If slib.sh is available locally in the same directory use it
   if [ -f "$pwd/slib.sh" ]; then
     chmod +x "$pwd/slib.sh"
+    # shellcheck disable=SC1091
     . "$pwd/slib.sh"
   # Download the slib (source: http://github.com/virtualmin/slib)
   else
@@ -302,6 +303,7 @@ download_slib() {
       exit 1
     fi
     chmod +x slib.sh
+    # shellcheck disable=SC1091
     . ./slib.sh
   fi
 }
@@ -334,6 +336,11 @@ else
 fi
 # Log file output level; catch literally everything.
 LOG_LEVEL_LOG="DEBUG"
+
+log_info "Log will be written to: $LOG_PATH"
+log_debug "LOG_ERRORS_FATAL=$RUN_ERRORS_FATAL"
+log_debug "LOG_LEVEL_STDOUT=$LOG_LEVEL_STDOUT"
+log_debug "LOG_LEVEL_LOG=$LOG_LEVEL_LOG"
 
 # log_fatal calls log_error
 log_fatal() {
@@ -1045,7 +1052,7 @@ install_virtualmin_release() {
 
     # Remove releases first, as the system can
     # end up having both GPL and Pro installed
-    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release)" >>${RUN_LOG} 2>&1
+    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release)" >> "$RUN_LOG"2>&1
 
     # Install release file
     run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
@@ -1203,7 +1210,7 @@ install_with_apt() {
   fi
 
   # Silently purge packages that may cause issues upon installation
-  /usr/bin/apt-get --quiet --assume-yes purge ufw >>${RUN_LOG} 2>&1
+  /usr/bin/apt-get --quiet --assume-yes purge ufw >> "$RUN_LOG" 2>&1
 
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
@@ -1216,7 +1223,7 @@ install_with_apt() {
   fi
 
   # Make sure the time is set properly
-  /usr/sbin/ntpdate-debian >>${RUN_LOG} 2>&1
+  /usr/sbin/ntpdate-debian >> "$RUN_LOG" 2>&1
 
   return 0
 }
@@ -1319,6 +1326,7 @@ install_with_yum() {
       # If module is available locally in the same directory use it
       if [ -f "$pwd/${module_name}.sh" ]; then
         chmod +x "$pwd/${module_name}.sh"
+        # shellcheck disable=SC1090
         . "$pwd/${module_name}.sh"
       # Download the module from the server
       else
@@ -1330,6 +1338,7 @@ install_with_yum() {
           exit 1
         fi
         chmod +x "$module_name"
+        # shellcheck disable=SC1090
         . "./$module_name"
       fi
     fi
@@ -1401,7 +1410,7 @@ fi
 
 # We want to make sure we're running our version of packages if we have
 # our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing Virtualmin $vm_version related packages updates"
+run_ok "$install_updates" "Installing Virtualmin $vm_version related package updates"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
@@ -1424,7 +1433,8 @@ printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GR
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
-virtualmin-config-system --bundle "$bundle"$virtualmin_config_system_excludes
+# shellcheck disable=SC2086
+virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes
 # Log SSL request status, if available
 if [ -f "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status" ]; then
   virtualmin_ssl_host_status=$(cat "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status")
