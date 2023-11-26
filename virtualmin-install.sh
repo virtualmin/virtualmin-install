@@ -1380,7 +1380,7 @@ if [ -n "$module_name" ]; then
     # shellcheck disable=SC1090
     . "$pwd/${module_name}.sh"
   else
-    log_warning "Requested module ${module_name} is not available."
+    log_warning "Requested module with the filename $pwd/${module_name}.sh does not exist."
   fi
 fi
 
