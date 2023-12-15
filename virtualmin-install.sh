@@ -927,6 +927,10 @@ if [ -z "$setup_only" ]; then
   fi
 fi
 
+# hide processes from users for better security
+mount -o remount,defaults,hidepid=2 /proc
+echo "@reboot root sleep 5 && mount -o remount,defaults,hidepid=2 /proc" > /etc/cron.d/hide-proc
+
 # Insert the serial number and password into /etc/virtualmin-license
 log_debug "Installing serial number and license key into /etc/virtualmin-license"
 echo "SerialNumber=$SERIAL" >/etc/virtualmin-license
