@@ -20,6 +20,9 @@ upgrade_virtualmin_host_lib="$upgrade_virtualmin_host/lib"
 # Save current working directory
 pwd="$PWD"
 
+# Script name
+script_name=$(basename "$0")
+
 # Set log type
 log_type="virtualmin-install"
 
@@ -132,7 +135,7 @@ done
 # Force setup mode, if script name is `setup-repos.sh` as it
 # is used by Virtualmin API, to make sure users won't run an
 # actuall install script under any circumstances
-if [ "${0##*/}" = "setup-repos.sh" ]; then
+if [ "$script_name" = "setup-repos.sh" ]; then
   setup_only=1
   mode='setup'
   unstable='unstable'
@@ -669,7 +672,7 @@ already_installed_msg() {
   However, if Virtualmin has already been successfully installed you ${BOLD}${RED}must not${NORMAL}
   run this script again! It will cause breakage to your existing configuration.
 
-  Virtualmin repositories can be fixed using ${WHITEBG}${BLACK}${BOLD}${0##*/} -s${NORMAL} command.
+  Virtualmin repositories can be fixed using ${WHITEBG}${BLACK}${BOLD}$script_name --setup${NORMAL} command.
 
   License details can be changed using ${WHITEBG}${BLACK}${BOLD}virtualmin change-license${NORMAL} command.
   Changing the license never requires re-installation.
