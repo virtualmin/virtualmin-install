@@ -1038,7 +1038,7 @@ install_virtualmin_release() {
 
     # Remove releases first, as the system can
     # end up having both GPL and Pro installed
-    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release)" >> "$RUN_LOG"2>&1
+    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release 2>/dev/null)" >> "$RUN_LOG" 2>&1
 
     # Install release file
     run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
