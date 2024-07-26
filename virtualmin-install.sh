@@ -10,7 +10,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.4.0
+VER=7.4.1
 vm_version=7
 
 # Server
@@ -340,6 +340,16 @@ else
 fi
 # Log file output level; catch literally everything.
 LOG_LEVEL_LOG="DEBUG"
+
+# If already installed successfully, do not allow running again
+if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ]; then
+  log_error "Your system already has a successful Virtualmin installation deployed."
+  log_error "Re-installation is neither possible nor necessary. This script must be"
+  log_error "run on a freshly installed supported operating system. It does not fit"
+  log_error "for package updates or license changes. For further assistance, please"
+  log_error "visit the Virtualmin Community forum."
+  exit 100
+fi
 
 log_info "Log will be written to: $LOG_PATH"
 log_debug "LOG_ERRORS_FATAL=$RUN_ERRORS_FATAL"
@@ -1471,6 +1481,7 @@ if [ $errors -eq "0" ]; then
   fi
   TIME=$(date +%s)
   echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed"
+  echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed-auto"
 else
   log_warning "The following errors occurred during installation:"
   echo
