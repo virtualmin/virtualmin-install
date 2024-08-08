@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Copyright 2005-2024 Virtualmin
+# Simple script to configure Virtualmin S3 scheduled backups
+
 S3NAM=${S3NAM:-'Default S3 Backup Server'}
 # Environment variables must be set prior
 S3KEY=${S3KEY}

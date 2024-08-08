@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# Copyright 2005-2024 Virtualmin
+# Simple script to call individual Virtualmin install modules
+
 # Set the path
 pwd="${pwd:-.}"
 
