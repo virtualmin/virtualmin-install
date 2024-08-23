@@ -30,7 +30,6 @@ log_type="virtualmin-install"
 bundle='LAMP' # Other option is LEMP
 mode='full'   # Other option is minimal
 skipyesno=0
-vm6_repos=0
 
 usage() {
   # shellcheck disable=SC2046
@@ -880,15 +879,6 @@ if [ "$(id -u)" -ne 0 ]; then
   fi
 fi
 
-# Force CentOS 7 to get older repos because of custom Apache
-if [ "$os_type" = "centos" ] && [ "$os_major_version" -eq 7 ]; then
-  if [ "$SERIAL" != "GPL" ]; then
-    repopath=""
-  fi
-  vm_version=6
-  vm6_repos=1
-fi
-
 if [ -n "$setup_only" ]; then
   pre_check_perl
   pre_check_http_client
@@ -1026,13 +1016,8 @@ install_virtualmin_release() {
     fi
 
     # Download release file
-    if [ "$vm6_repos" -eq 1 ]; then
-      rpm_release_file_download="virtualmin-release-latest.noarch.rpm"
-      download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/${repopath}${os_type}/${os_major_version}/${arch}/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
-    else
-      rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
-      download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
-    fi
+    rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
+    download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
     
     # Remove existing pkg files as they will not
     # be replaced upon replease package upgrade
@@ -1062,13 +1047,13 @@ install_virtualmin_release() {
   debian | ubuntu | kali)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ "$os_version" != "24.04" ] && [ "$vm6_repos" -eq 0 ]; then
+      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ "$os_version" != "24.04" ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
       ;;
     debian)
-      if [ "$os_major_version" -lt 10 ] && [ "$vm6_repos" -eq 0 ]; then
+      if [ "$os_major_version" -lt 10 ]; then
         printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
         exit 1
       fi
@@ -1083,41 +1068,10 @@ install_virtualmin_release() {
     package_type="deb"
     if [ "$os_type" = "ubuntu" ]; then
       deps="$ubudeps"
-      if [ "$vm6_repos" -eq 1 ]; then
-        case "$os_version" in
-        16.04*)
-          repos="virtualmin-xenial virtualmin-universal"
-          ;;
-        18.04*)
-          repos="virtualmin-bionic virtualmin-universal"
-          ;;
-        20.04*)
-          repos="virtualmin-focal virtualmin-universal"
-          ;;
-        22.04*)
-          repos="virtualmin-focal virtualmin-universal"
-          ;;
-        esac
-      else
-        repos="virtualmin"
-      fi
+      repos="virtualmin"
     else
       deps="$debdeps"
-      if [ "$vm6_repos" -eq 1 ]; then
-        case "$os_version" in
-        9*)
-          repos="virtualmin-stretch virtualmin-universal"
-          ;;
-        10*)
-          repos="virtualmin-buster virtualmin-universal"
-          ;;
-        11*)
-          repos="virtualmin-buster virtualmin-universal"
-          ;;
-        esac
-      else
-        repos="virtualmin"
-      fi
+      repos="virtualmin"
     fi
     log_debug "apt-get repos: ${repos}"
     if [ -z "$repos" ]; then # Probably unstable with no version number
@@ -1150,10 +1104,6 @@ install_virtualmin_release() {
     log_debug "Installing Webmin and Virtualmin package signing keys .."
     download "https://$upgrade_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
-    if [ "$vm6_repos" -eq 1 ]; then
-      download "https://$upgrade_virtualmin_host_lib/RPM-GPG-KEY-webmin" "Downloading Webmin key"
-      run_ok "gpg --import RPM-GPG-KEY-webmin && cat RPM-GPG-KEY-webmin | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-webmin.gpg" "Installing Webmin key"
-    fi
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
     # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
