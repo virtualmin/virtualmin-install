@@ -8,6 +8,7 @@ S3NAM=${S3NAM:-'Default S3 Backup Server'}
 S3KEY=${S3KEY}
 S3SEC=${S3SEC}
 S3RGN=${S3RGN}
+S3END=${S3END}
 
 if [ -z "$S3KEY" ] || [ -z "$S3SEC" ] || [ -z "$S3RGN" ]; then
   log_debug "Virtualmin S3 module: Failed to install '$S3NAM' as the required 'S3KEY', 'S3SEC', and 'S3RGN' environment variables are missing"
@@ -42,6 +43,11 @@ location=${S3RGN}
 access=${S3KEY}
 desc=${S3NAM}
 EOL
+
+  # Add the endpoint if set
+  if [ -n "$S3END" ]; then
+    echo "endpoint=${S3END}" >>/etc/webmin/virtual-server/s3accounts/${ACCOUNT_ID}
+  fi
 
   # Create /etc/webmin/virtual-server/backups/${BACKUP_ID}
   mkdir -p /etc/webmin/virtual-server/backups

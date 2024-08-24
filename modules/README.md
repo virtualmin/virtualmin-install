@@ -26,6 +26,7 @@ Required parameters are:
 
 Optional parameters are:
 
+- `S3END`: S3 endpoint (for compatibility with other S3-compatible services)
 - `S3NAM`: S3 bucket name
 
 ### Example Usage
