@@ -341,7 +341,7 @@ fi
 LOG_LEVEL_LOG="DEBUG"
 
 # If already installed successfully, do not allow running again
-if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ]; then
+if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] && [ "$skipyesno" -ne 1 ]; then
   log_error "Your system already has a successful Virtualmin installation deployed."
   log_error "Re-installation is neither possible nor necessary. This script must be"
   log_error "run on a freshly installed supported operating system. It does not fit"
