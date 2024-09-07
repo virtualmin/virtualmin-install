@@ -556,18 +556,30 @@ uninstall() {
   exit 0
 }
 
+# Bind hooks
+bind_hook() {
+    hook="$1"
+    pre_hook="pre_hook__$hook"
+    post_hook="post_hook__$hook"
+    # Do we want to completely override the original function?
+    if type "hook__$hook" > /dev/null 2>&1; then
+        "hook__$hook"
+    # Or do we want to run the original function wrapped by third-party functions?
+    else
+        if type "$pre_hook" > /dev/null 2>&1; then
+            "$pre_hook"
+        fi
+        if type "$hook" > /dev/null 2>&1; then
+            "$hook"
+        fi
+        if type "$post_hook" > /dev/null 2>&1; then
+            "$post_hook"
+        fi
+    fi
+}
+
 if [ "$mode" = "uninstall" ]; then
-  if type hook__uninstall > /dev/null 2>&1; then
-    hook__uninstall
-  else
-    if type pre_hook__uninstall > /dev/null 2>&1; then
-      pre_hook__uninstall
-    fi
-    uninstall
-    if type post_hook__uninstall > /dev/null 2>&1; then
-      post_hook__uninstall
-    fi
-  fi
+    bind_hook "uninstall"
 fi
 
 # Calculate disk space requirements (this is a guess, for now)
@@ -643,17 +655,7 @@ EOF
 }
 
 if [ -z "$setup_only" ]; then
-  if type hook__install_msg > /dev/null 2>&1; then
-      hook__install_msg
-    else
-      if type pre_hook__install_msg > /dev/null 2>&1; then
-        pre_hook__install_msg
-      fi
-      install_msg
-      if type post_hook__install_msg > /dev/null 2>&1; then
-        post_hook__install_msg
-      fi
-  fi
+    bind_hook "install_msg"
 fi
 
 os_unstable_pre_check() {
@@ -745,40 +747,10 @@ post_install_message() {
 
 if [ -z "$setup_only" ]; then
   if grade_b_system; then
-    if type hook__os_unstable_pre_check > /dev/null 2>&1; then
-      hook__os_unstable_pre_check
-    else
-      if type pre_hook__os_unstable_pre_check > /dev/null 2>&1; then
-        pre_hook__os_unstable_pre_check
-      fi
-      os_unstable_pre_check
-      if type pre_post_hook__os_unstable_check > /dev/null 2>&1; then
-        pre_post_hook__os_unstable_check
-      fi
-    fi
+    bind_hook "os_unstable_pre_check"
   fi
-  if type hook__preconfigured_system_msg > /dev/null 2>&1; then
-    hook__preconfigured_system_msg
-  else
-    if type pre_hook__preconfigured_system_msg > /dev/null 2>&1; then
-      pre_hook__preconfigured_system_msg
-    fi
-    preconfigured_system_msg
-    if type post_hook__preconfigured_system_msg > /dev/null 2>&1; then
-      post_hook__preconfigured_system_msg
-    fi
-  fi
-  if type hook__already_installed_msg > /dev/null 2>&1; then
-    hook__already_installed_msg
-  else
-    if type pre_hook__already_installed_msg > /dev/null 2>&1; then
-      pre_hook__already_installed_msg
-    fi
-    already_installed_msg
-    if type post_hook__already_installed_msg > /dev/null 2>&1; then
-      post_hook__already_installed_msg
-    fi
-  fi
+  bind_hook "preconfigured_system_msg"
+  bind_hook "already_installed_msg"
 fi
 
 # Check memory
@@ -964,20 +936,14 @@ else
   echo
   log_debug "Phase 1 of 4: Check"
   printf "${YELLOW}▣${CYAN}◻◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Check\\n"
-  if type pre_hook__phase1 > /dev/null 2>&1; then
-    pre_hook__phase1
-  fi
+  bind_hook "phase1_pre"
   pre_check_all
-  if type post_hook__phase1 > /dev/null 2>&1; then
-    post_hook__phase1
-  fi
+  bind_hook "phase1_post"
   echo
 
   log_debug "Phase 2 of 4: Setup"
   printf "${GREEN}▣${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}4${NORMAL}: Setup\\n"
-  if type pre_hook__phase2 > /dev/null 2>&1; then
-    pre_hook__phase2
-  fi
+  bind_hook "phase2_pre"
 fi
 
 # Print out some details that we gather before logging existed
@@ -1400,15 +1366,11 @@ yum_check_skipped() {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
 install_virtualmin_release
-if type post_hook__phase2 > /dev/null 2>&1; then
-  post_hook__phase2
-fi
+bind_hook "phase2_post"
 echo
 log_debug "Phase 3 of 4: Installation"
 printf "${GREEN}▣▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Installation\\n"
-if type pre_hook__phase3 > /dev/null 2>&1; then
-  pre_hook__phase3
-fi
+bind_hook "phase3_pre"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
@@ -1446,15 +1408,11 @@ done
 # apt processes disappear before we start, as they're huge and memory is a
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
-if type post_hook__phase3 > /dev/null 2>&1; then
-  post_hook__phase3
-fi
+bind_hook "phase3_post"
 echo
 log_debug "Phase 4 of 4: Configuration"
 printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Configuration\\n"
-if type pre_hook__phase4 > /dev/null 2>&1; then
-  pre_hook__phase4
-fi
+bind_hook "phase4_pre"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
@@ -1512,9 +1470,7 @@ if [ -n "$QUOTA_FAILED" ]; then
   log_warning "Quotas were not configurable. A reboot may be required. Or, if this is"
   log_warning "a VM, configuration may be required at the host level."
 fi
-if type post_hook__phase4 > /dev/null 2>&1; then
-  post_hook__phase4
-fi
+bind_hook "phase4_post"
 echo
 if [ $errors -eq "0" ]; then
   hostname=$(hostname -f)
@@ -1522,17 +1478,7 @@ if [ $errors -eq "0" ]; then
   if [ "$package_type" = "rpm" ]; then
     yum_check_skipped
   fi
-  if type hook__post_install_message > /dev/null 2>&1; then
-    hook__post_install_message
-  else
-    if type pre_hook__post_install_message > /dev/null 2>&1; then
-      pre_hook__post_install_message
-    fi
-    post_install_message
-    if type post_hook__post_install_message > /dev/null 2>&1; then
-      post_hook__post_install_message
-    fi
-  fi
+  bind_hook "post_install_message"
   TIME=$(date +%s)
   echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed"
   echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed-auto"
