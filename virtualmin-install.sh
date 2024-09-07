@@ -488,7 +488,7 @@ uninstall() {
   fi
 
   # Always sleep just a bit in case the user changes their mind
-  sleep 1
+  sleep 3
 
   # Go to the temp directory
   goto_tmpdir
