@@ -1433,6 +1433,10 @@ if [ "$mode" = "minimal" ]; then
 fi
 # shellcheck disable=SC2086
 virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes
+sleep 1
+# kill the virtualmin config-system command, if it's still running
+kill $! 1>/dev/null 2>&1
+
 # Log SSL request status, if available
 if [ -f "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status" ]; then
   virtualmin_ssl_host_status=$(cat "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status")
@@ -1442,7 +1446,6 @@ if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
 fi
-config_system_pid=$!
 
 # Functions that are used in the OS specific modifications section
 disable_selinux() {
@@ -1461,8 +1464,9 @@ rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | a
   ;;
 esac
 
-# kill the virtualmin config-system command, if it's still running
-kill "$config_system_pid" 1>/dev/null 2>&1
+
+
+
 
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm 1>/dev/null 2>&1
