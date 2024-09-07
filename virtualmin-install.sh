@@ -93,6 +93,7 @@ while [ "$1" != "" ]; do
     setup_only=1
     mode='setup'
     unstable='unstable'
+    log_file_name="${setup_log_file_name:-virtualmin-repos-setup}"
     ;;
   --unstable | -e)
     shift
@@ -349,8 +350,13 @@ if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] &&
   log_error "visit the Virtualmin Community forum."
   exit 100
 fi
-
-log_info "Log will be written to: $LOG_PATH"
+if [ -n "$setup_only" ]; then
+  log_info "Setup log is written to $LOG_PATH"
+elif [ "$mode" = "uninstall" ]; then
+  log_info "Uninstallation log is written to $LOG_PATH"
+else
+  log_info "Installation log is written to $LOG_PATH"
+fi
 log_debug "LOG_ERRORS_FATAL=$RUN_ERRORS_FATAL"
 log_debug "LOG_LEVEL_STDOUT=$LOG_LEVEL_STDOUT"
 log_debug "LOG_LEVEL_LOG=$LOG_LEVEL_LOG"
@@ -480,9 +486,6 @@ uninstall() {
       exit
     fi
   fi
-
-  # Log to file and tell the user nicely
-  log_info "Started uninstallation log in $log"
 
   # Always sleep just a bit in case the user changes their mind
   sleep 1
@@ -899,8 +902,7 @@ if [ -n "$setup_only" ]; then
   log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
-  log_info "Started installation log in $log"
-
+  echo
   log_debug "Phase 1 of 4: Check"
   printf "${YELLOW}▣${CYAN}◻◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Check\\n"
   pre_check_all
