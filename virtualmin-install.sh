@@ -24,7 +24,7 @@ pwd="$PWD"
 script_name=$(basename "$0")
 
 # Set log type
-log_type="virtualmin-install"
+log_file_name="${install_log_file_name:-virtualmin-install}"
 
 # Set defaults
 bundle='LAMP' # Other option is LEMP
@@ -121,7 +121,7 @@ while [ "$1" != "" ]; do
   --uninstall | -u)
     shift
     mode="uninstall"
-    log_type="virtualmin-uninstall"
+    log_file_name="${uninstall_log_file_name:-virtualmin-uninstall}"
     ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
@@ -141,7 +141,7 @@ if [ "$script_name" = "setup-repos.sh" ]; then
 fi
 
 # Store new log each time
-log="$pwd/$log_type.log"
+log="$pwd/$log_file_name.log"
 if [ -e "$log" ]; then
   while true; do
     logcnt=$((logcnt+1))
