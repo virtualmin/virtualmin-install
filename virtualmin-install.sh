@@ -555,8 +555,19 @@ uninstall() {
   run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
   exit 0
 }
+
 if [ "$mode" = "uninstall" ]; then
-  uninstall
+  if type hook__uninstall > /dev/null 2>&1; then
+    hook__uninstall
+  else
+    if type pre_hook__uninstall > /dev/null 2>&1; then
+      pre_hook__uninstall
+    fi
+    uninstall
+    if type post_hook__uninstall > /dev/null 2>&1; then
+      post_hook__uninstall
+    fi
+  fi
 fi
 
 # Calculate disk space requirements (this is a guess, for now)
@@ -632,6 +643,17 @@ EOF
 }
 
 if [ -z "$setup_only" ]; then
+  if type hook__install_msg > /dev/null 2>&1; then
+      hook__install_msg
+    else
+      if type pre_hook__install_msg > /dev/null 2>&1; then
+        pre_hook__install_msg
+      fi
+      install_msg
+      if type post_hook__install_msg > /dev/null 2>&1; then
+        post_hook__install_msg
+      fi
+  fi
 fi
 
 os_unstable_pre_check() {
@@ -712,12 +734,51 @@ EOF
   fi
 }
 
+post_install_message() {
+  log_success "Installation Complete!"
+  log_success "If there were no errors above, Virtualmin should be ready"
+  log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
+  if [ -z "$ssl_host_success" ]; then
+    log_success "You may receive a security warning in your browser on your first visit."
+  fi
+}
+
 if [ -z "$setup_only" ]; then
   if grade_b_system; then
-    os_unstable_pre_check
+    if type hook__os_unstable_pre_check > /dev/null 2>&1; then
+      hook__os_unstable_pre_check
+    else
+      if type pre_hook__os_unstable_pre_check > /dev/null 2>&1; then
+        pre_hook__os_unstable_pre_check
+      fi
+      os_unstable_pre_check
+      if type pre_post_hook__os_unstable_check > /dev/null 2>&1; then
+        pre_post_hook__os_unstable_check
+      fi
+    fi
   fi
-  preconfigured_system_msg
-  already_installed_msg
+  if type hook__preconfigured_system_msg > /dev/null 2>&1; then
+    hook__preconfigured_system_msg
+  else
+    if type pre_hook__preconfigured_system_msg > /dev/null 2>&1; then
+      pre_hook__preconfigured_system_msg
+    fi
+    preconfigured_system_msg
+    if type post_hook__preconfigured_system_msg > /dev/null 2>&1; then
+      post_hook__preconfigured_system_msg
+    fi
+  fi
+  if type hook__already_installed_msg > /dev/null 2>&1; then
+    hook__already_installed_msg
+  else
+    if type pre_hook__already_installed_msg > /dev/null 2>&1; then
+      pre_hook__already_installed_msg
+    fi
+    already_installed_msg
+    if type post_hook__already_installed_msg > /dev/null 2>&1; then
+      post_hook__already_installed_msg
+    fi
+  fi
 fi
 
 # Check memory
@@ -867,8 +928,6 @@ pre_check_all() {
 
   # Check for gpg, debian 10 doesn't install by default!?
   run_ok pre_check_gpg "Checking GPG package"
-
-  echo ""
 }
 
 # download()
@@ -905,10 +964,20 @@ else
   echo
   log_debug "Phase 1 of 4: Check"
   printf "${YELLOW}▣${CYAN}◻◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Check\\n"
+  if type pre_hook__phase1 > /dev/null 2>&1; then
+    pre_hook__phase1
+  fi
   pre_check_all
+  if type post_hook__phase1 > /dev/null 2>&1; then
+    post_hook__phase1
+  fi
+  echo
 
   log_debug "Phase 2 of 4: Setup"
   printf "${GREEN}▣${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}4${NORMAL}: Setup\\n"
+  if type pre_hook__phase2 > /dev/null 2>&1; then
+    pre_hook__phase2
+  fi
 fi
 
 # Print out some details that we gather before logging existed
@@ -1331,9 +1400,15 @@ yum_check_skipped() {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
 install_virtualmin_release
+if type post_hook__phase2 > /dev/null 2>&1; then
+  post_hook__phase2
+fi
 echo
 log_debug "Phase 3 of 4: Installation"
 printf "${GREEN}▣▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Installation\\n"
+if type pre_hook__phase3 > /dev/null 2>&1; then
+  pre_hook__phase3
+fi
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
@@ -1371,9 +1446,15 @@ done
 # apt processes disappear before we start, as they're huge and memory is a
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
+if type post_hook__phase3 > /dev/null 2>&1; then
+  post_hook__phase3
+fi
 echo
 log_debug "Phase 4 of 4: Configuration"
 printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Configuration\\n"
+if type pre_hook__phase4 > /dev/null 2>&1; then
+  pre_hook__phase4
+fi
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
@@ -1431,6 +1512,9 @@ if [ -n "$QUOTA_FAILED" ]; then
   log_warning "Quotas were not configurable. A reboot may be required. Or, if this is"
   log_warning "a VM, configuration may be required at the host level."
 fi
+if type post_hook__phase4 > /dev/null 2>&1; then
+  post_hook__phase4
+fi
 echo
 if [ $errors -eq "0" ]; then
   hostname=$(hostname -f)
@@ -1438,11 +1522,16 @@ if [ $errors -eq "0" ]; then
   if [ "$package_type" = "rpm" ]; then
     yum_check_skipped
   fi
-  log_success "Installation Complete!"
-  log_success "If there were no errors above, Virtualmin should be ready"
-  log_success "to configure at https://${hostname}:10000 (or https://${address}:10000)."
-  if [ -z "$ssl_host_success" ]; then
-    log_success "You may receive a security warning in your browser on your first visit."
+  if type hook__post_install_message > /dev/null 2>&1; then
+    hook__post_install_message
+  else
+    if type pre_hook__post_install_message > /dev/null 2>&1; then
+      pre_hook__post_install_message
+    fi
+    post_install_message
+    if type post_hook__post_install_message > /dev/null 2>&1; then
+      post_hook__post_install_message
+    fi
   fi
   TIME=$(date +%s)
   echo "$VER=$TIME" > "/etc/webmin/virtual-server/installed"
