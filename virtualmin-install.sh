@@ -1464,9 +1464,35 @@ rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | a
   ;;
 esac
 
+# Process additional phases if set in third-party functions
+if [ -n "$hooks__phases" ]; then
+    # Trim leading and trailing whitespace
+    trim() {
+        echo "$1" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+    }
+    bind_hook "phases_pre"
+    unset current_phase
+    printf '%s\n' "$hooks__phases" | sed '/^$/d' | while read -r line; do
+        # Split the line into components
+        phase_number=$(trim "${line%%	*}")
+        rest="${line#*	}"
+        phase_name=$(trim "${rest%%	*}")
+        rest="${rest#*	}"
+        command=$(trim "${rest%%	*}")
+        description=$(trim "${rest#*	}")
+        
+        # If it's a new phase, display phase progress
+        if [ "$phase_number" != "$current_phase" ]; then
+            echo
+            phase "$phase_name" "$phase_number"
+            current_phase="$phase_number"
+        fi
 
-
-
+        # Execute the command using run_ok
+        run_ok "$command" "$description"
+    done
+    bind_hook "phases_post"
+fi
 
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm 1>/dev/null 2>&1
