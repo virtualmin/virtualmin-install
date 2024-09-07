@@ -64,10 +64,6 @@ The Virtualmin install script is highly customizable and includes various hooks 
 
 ## Usage example for your project in a wrapper script
 ```sh
-# Override the default log file name
-install_log_file_name=combined-install.log
-export install_log_file_name
-
 hook__install_msg() {
   # If defined, it will override the default welcome message
   :
@@ -89,42 +85,50 @@ hook__os_unstable_pre_check() {
 }
 
 pre_hook__os_unstable_pre_check() {
-  # If defined, it will inject a message before the default pre-check message for unstable OS
+  # If defined, it will inject a message before the default pre-check
+  # message for unstable OS
   :
 }
 
 post_hook__os_unstable_pre_check() {
-  # If defined, it will inject a message after the default pre-check message for unstable OS
+  # If defined, it will inject a message after the default pre-check
+  # message for unstable OS
   :
 }
 
 hook__preconfigured_system_msg() { 
-  # If defined, it will override the default system message about pre-installed software
+  # If defined, it will override the default system message about
+  # pre-installed software
   :
 }
 
 pre_hook__preconfigured_system_msg() {
-  # If defined, it will inject a message before the default system message about pre-installed software
+  # If defined, it will inject a message before the default system
+  # message about pre-installed software
   :
 }
 
 post_hook__preconfigured_system_msg() {
-  # If defined, it will inject a message after the default system message about pre-installed software
+  # If defined, it will inject a message after the default system
+  # message about pre-installed software
   :
 }
 
 hook__already_installed_msg() {
-  # If defined, it will override the default message about already installed Virtualmin
+  # If defined, it will override the default message about already
+  # installed Virtualmin
   :
 }
 
 pre_hook__already_installed_msg() {
-  # If defined, it will inject a message before the default message about already installed Virtualmin
+  # If defined, it will inject a message before the default message
+  # about already installed Virtualmin
   :
 }
 
 post_hook__already_installed_msg() {
-  # If defined, it will inject a message after the default message about already installed Virtualmin
+  # If defined, it will inject a message after the default message
+  # about already installed Virtualmin
   :
 }
 
@@ -192,6 +196,10 @@ hook__phases_post() {
   # If defined, it will run after the custom phases end
   :
 }
+
+# Override the default log file name
+install_log_file_name=combined-install.log
+export install_log_file_name
 
 # If defined, it will override the default number of
 # phases for the use in custom phases (default is 4)
