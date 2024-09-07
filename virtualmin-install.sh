@@ -1090,7 +1090,7 @@ install_virtualmin_release() {
     fi
     log_debug "apt-get repos: ${repos}"
     if [ -z "$repos" ]; then # Probably unstable with no version number
-      log_fatal "No repos available for this OS. Are you running unstable/testing?"
+      log_fatal "No repositories available for this OS. Are you running unstable/testing?"
       exit 1
     fi
     # Remove any existing repo config, in case it's a reinstall
