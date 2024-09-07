@@ -582,17 +582,17 @@ bind_hook() {
     pre_hook="pre_hook__$hook"
     post_hook="post_hook__$hook"
     # Do we want to completely override the original function?
-    if type "hook__$hook" > /dev/null 2>&1; then
+    if command -v "hook__$hook" > /dev/null 2>&1; then
         "hook__$hook"
     # Or do we want to run the original function wrapped by third-party functions?
     else
-        if type "$pre_hook" > /dev/null 2>&1; then
+        if command -v "$pre_hook" > /dev/null 2>&1; then
             "$pre_hook"
         fi
-        if type "$hook" > /dev/null 2>&1; then
+        if command -v "$hook" > /dev/null 2>&1; then
             "$hook"
         fi
-        if type "$post_hook" > /dev/null 2>&1; then
+        if command -v "$post_hook" > /dev/null 2>&1; then
             "$post_hook"
         fi
     fi
