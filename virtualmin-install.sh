@@ -14,8 +14,8 @@ VER=7.4.1
 vm_version=7
 
 # Server
-upgrade_virtualmin_host=software.virtualmin.com
-upgrade_virtualmin_host_lib="$upgrade_virtualmin_host/lib"
+download_virtualmin_host="${download_virtualmin_host:-software.virtualmin.com}"
+download_virtualmin_host_lib="$download_virtualmin_host/lib"
 
 # Save current working directory
 pwd="$PWD"
@@ -300,7 +300,7 @@ download_slib() {
   else
     # We need HTTP client first
     pre_check_http_client
-    $download "https://$upgrade_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
+    $download "https://$download_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
     if [ $? -ne 0 ]; then
       echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
       exit 1
@@ -1017,7 +1017,7 @@ install_virtualmin_release() {
 
     # Download release file
     rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
-    download "https://${LOGIN}$upgrade_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
+    download "https://${LOGIN}$download_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
     
     # Remove existing pkg files as they will not
     # be replaced upon replease package upgrade
@@ -1093,16 +1093,16 @@ install_virtualmin_release() {
     if [ -d "$apt_auth_dir" ]; then
       if [ -n "$LOGIN" ]; then
         LOGINREAL=""
-        printf "machine $upgrade_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
+        printf "machine $download_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
       fi
     fi
     for repo in $repos; do
-      printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$upgrade_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
+      printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$download_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
     done
 
     # Install our keys
     log_debug "Installing Webmin and Virtualmin package signing keys .."
-    download "https://$upgrade_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+    download "https://$download_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
     run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
     run_ok "apt-get update" "Downloading repository metadata"
     # Make sure universe repos are available
