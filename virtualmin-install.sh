@@ -556,6 +556,26 @@ uninstall() {
   exit 0
 }
 
+# Phase control
+phase() {
+    phases_total="${phases_total:-4}"
+    description="$1"
+    phase_number="$2"
+    # Print completed phases (green)
+    printf "${GREEN}"
+    for i in $(seq 1 $(( phase_number - 1 ))); do
+        printf "▣"
+    done
+    # Print current phase (yellow)
+    printf "${YELLOW}▣"
+    # Print remaining phases (cyan)
+    for i in $(seq $(( phase_number + 1 )) "$phases_total"); do
+        printf "${CYAN}◻"
+    done
+    log_debug "Phase ${phase_number} of ${phases_total}: ${description}"
+    printf "${NORMAL} Phase ${YELLOW}${phase_number}${NORMAL} of ${GREEN}${phases_total}${NORMAL}: ${description}\\n"
+}
+
 # Bind hooks
 bind_hook() {
     hook="$1"
@@ -931,18 +951,15 @@ if [ -n "$setup_only" ]; then
   pre_check_http_client
   pre_check_gpg
   log_info "Started Virtualmin $vm_version $PRODUCT software repositories setup"
-  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Setup\\n"
 else
   echo
-  log_debug "Phase 1 of 4: Check"
-  printf "${YELLOW}▣${CYAN}◻◻◻${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}4${NORMAL}: Check\\n"
+  phase "Check" 1
   bind_hook "phase1_pre"
   pre_check_all
   bind_hook "phase1_post"
   echo
 
-  log_debug "Phase 2 of 4: Setup"
-  printf "${GREEN}▣${YELLOW}▣${CYAN}◻◻${NORMAL} Phase ${YELLOW}2${NORMAL} of ${GREEN}4${NORMAL}: Setup\\n"
+  phase "Setup" 2
   bind_hook "phase2_pre"
 fi
 
@@ -1368,8 +1385,7 @@ errors=$((0))
 install_virtualmin_release
 bind_hook "phase2_post"
 echo
-log_debug "Phase 3 of 4: Installation"
-printf "${GREEN}▣▣${YELLOW}▣${CYAN}◻${NORMAL} Phase ${YELLOW}3${NORMAL} of ${GREEN}4${NORMAL}: Installation\\n"
+phase "Installation" 3
 bind_hook "phase3_pre"
 install_virtualmin
 if [ "$?" != "0" ]; then
@@ -1410,8 +1426,7 @@ done
 sleep 1
 bind_hook "phase3_post"
 echo
-log_debug "Phase 4 of 4: Configuration"
-printf "${GREEN}▣▣▣${YELLOW}▣${NORMAL} Phase ${YELLOW}4${NORMAL} of ${GREEN}4${NORMAL}: Configuration\\n"
+phase "Configuration" 4
 bind_hook "phase4_pre"
 if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
