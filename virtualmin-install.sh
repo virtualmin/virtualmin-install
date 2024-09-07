@@ -599,7 +599,7 @@ bind_hook() {
 }
 
 if [ "$mode" = "uninstall" ]; then
-    bind_hook "uninstall"
+  bind_hook "uninstall"
 fi
 
 # Calculate disk space requirements (this is a guess, for now)
