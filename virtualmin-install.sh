@@ -612,17 +612,23 @@ EOF
   The selected package bundle is ${CYAN}${bundle}${NORMAL} and the size of install is
   ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space.
 
+EOF
+
+  if [ "$skipyesno" -ne 1 ]; then
+  cat <<EOF
   Exit and re-run this script with ${CYAN}--help${NORMAL} flag to see available options.
 
 EOF
-
-  printf " Continue? (y/n) "
-  if ! yesno; then
-    exit
+  fi
+  if [ "$skipyesno" -ne 1 ]; then
+    printf " Continue? (y/n) "
+    if ! yesno; then
+      exit
+    fi
   fi
 }
-if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
-  install_msg
+
+if [ -z "$setup_only" ]; then
 fi
 
 os_unstable_pre_check() {
@@ -638,9 +644,11 @@ os_unstable_pre_check() {
   Certain features may not work as intended or might be unavailable on this OS.
 
 EOF
-    printf " Continue? (y/n) "
-    if ! yesno; then
-      exit
+    if [ "$skipyesno" -ne 1 ]; then
+      printf " Continue? (y/n) "
+      if ! yesno; then
+        exit
+      fi
     fi
   fi
 }
@@ -661,9 +669,11 @@ preconfigured_system_msg() {
   do so after installation of Virtualmin, and only with extreme caution.
 
 EOF
-    printf " Continue? (y/n) "
-    if ! yesno; then
-      exit
+    if [ "$skipyesno" -ne 1 ]; then
+      printf " Continue? (y/n) "
+      if ! yesno; then
+        exit
+      fi
     fi
   fi
 }
@@ -690,13 +700,16 @@ already_installed_msg() {
   system package manager on the command line.
 
 EOF
-    printf " Continue? (y/n) "
-    if ! yesno; then
-      exit
+    if [ "$skipyesno" -ne 1 ]; then
+      printf " Continue? (y/n) "
+      if ! yesno; then
+        exit
+      fi
     fi
   fi
 }
-if [ "$skipyesno" -ne 1 ] && [ -z "$setup_only" ]; then
+
+if [ -z "$setup_only" ]; then
   if grade_b_system; then
     os_unstable_pre_check
   fi
