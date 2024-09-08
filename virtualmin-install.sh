@@ -52,10 +52,32 @@ usage() {
   echo
 }
 
+# Bind hooks
+bind_hook() {
+    hook="$1"
+    pre_hook="pre_hook__$hook"
+    post_hook="post_hook__$hook"
+    # Do we want to completely override the original function?
+    if command -v "hook__$hook" > /dev/null 2>&1; then
+        "hook__$hook"
+    # Or do we want to run the original function wrapped by third-party functions?
+    else
+        if command -v "$pre_hook" > /dev/null 2>&1; then
+            "$pre_hook"
+        fi
+        if command -v "$hook" > /dev/null 2>&1; then
+            "$hook"
+        fi
+        if command -v "$post_hook" > /dev/null 2>&1; then
+            "$post_hook"
+        fi
+    fi
+}
+
 while [ "$1" != "" ]; do
   case $1 in
   --help | -h)
-    usage
+    bind_hook "usage"
     exit 0
     ;;
   --bundle | -b)
@@ -126,7 +148,7 @@ while [ "$1" != "" ]; do
     ;;
   *)
     printf "Unrecognized option: $1\\n\\n"
-    usage
+    bind_hook "usage"
     exit 1
     ;;
   esac
@@ -574,28 +596,6 @@ phase() {
     done
     log_debug "Phase ${phase_number} of ${phases_total}: ${description}"
     printf "${NORMAL} Phase ${YELLOW}${phase_number}${NORMAL} of ${GREEN}${phases_total}${NORMAL}: ${description}\\n"
-}
-
-# Bind hooks
-bind_hook() {
-    hook="$1"
-    pre_hook="pre_hook__$hook"
-    post_hook="post_hook__$hook"
-    # Do we want to completely override the original function?
-    if command -v "hook__$hook" > /dev/null 2>&1; then
-        "hook__$hook"
-    # Or do we want to run the original function wrapped by third-party functions?
-    else
-        if command -v "$pre_hook" > /dev/null 2>&1; then
-            "$pre_hook"
-        fi
-        if command -v "$hook" > /dev/null 2>&1; then
-            "$hook"
-        fi
-        if command -v "$post_hook" > /dev/null 2>&1; then
-            "$post_hook"
-        fi
-    fi
 }
 
 if [ "$mode" = "uninstall" ]; then
