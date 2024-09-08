@@ -33,7 +33,8 @@ skipyesno=0
 
 usage() {
   # shellcheck disable=SC2046
-  printf "Usage: %s %s [options]\\n" "${CYAN}" $(basename "$0")
+  echo
+  printf "Usage: %s [options]\\n" $(basename "$0")
   echo
   echo "  If called without arguments, installs Virtualmin."
   echo
@@ -150,7 +151,7 @@ parse_args() {
       log_file_name="${uninstall_log_file_name:-virtualmin-uninstall}"
       ;;
     *)
-      printf "Unrecognized option: $1\\n\\n"
+      printf "Unrecognized option: $1\\n"
       bind_hook "usage"
       exit 1
       ;;
