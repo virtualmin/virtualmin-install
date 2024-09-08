@@ -16,7 +16,9 @@ Script to configure AWS S3 and Virtualmin scheduled backups. This script
 configures AWS S3 and Virtualmin scheduled backups with given S3 bucket details.
 
 ##### Script Parameters
-Parameters can be set as environment variables.
+Parameters can be set as environment variables or sourced from a file named
+`virtualmin-install-module-s3-scheduled-backups.source`, placed in the same
+directory as the script before running the installation script.
 
 Required parameters are:
 
