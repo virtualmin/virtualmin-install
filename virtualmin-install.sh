@@ -55,104 +55,111 @@ usage() {
 # Bind hooks
 bind_hook() {
     hook="$1"
+    shift
     pre_hook="pre_hook__$hook"
     post_hook="post_hook__$hook"
     # Do we want to completely override the original function?
     if command -v "hook__$hook" > /dev/null 2>&1; then
-        "hook__$hook"
+        "hook__$hook" "$@"
     # Or do we want to run the original function wrapped by third-party functions?
     else
         if command -v "$pre_hook" > /dev/null 2>&1; then
-            "$pre_hook"
+            "$pre_hook" "$@"
         fi
         if command -v "$hook" > /dev/null 2>&1; then
-            "$hook"
+            "$hook" "$@"
         fi
         if command -v "$post_hook" > /dev/null 2>&1; then
-            "$post_hook"
+            "$post_hook" "$@"
         fi
     fi
 }
 
-while [ "$1" != "" ]; do
-  case $1 in
-  --help | -h)
-    bind_hook "usage"
-    exit 0
-    ;;
-  --bundle | -b)
-    shift
-    case "$1" in
-    LAMP)
-      shift
-      bundle='LAMP'
+# Default function to parse arguments
+parse_args() {
+  while [ "$1" != "" ]; do
+    case $1 in
+    --help | -h)
+      bind_hook "usage"
+      exit 0
       ;;
-    LEMP)
+    --bundle | -b)
       shift
-      bundle='LEMP'
+      case "$1" in
+      LAMP)
+        shift
+        bundle='LAMP'
+        ;;
+      LEMP)
+        shift
+        bundle='LEMP'
+        ;;
+      *)
+        printf "Unknown bundle $1: exiting\\n"
+        exit 1
+        ;;
+      esac
+      ;;
+    --minimal | -m)
+      shift
+      mode='minimal'
+      ;;
+    --insecure-downloads | -i)
+      shift
+      insecure_download_wget_flag=' --no-check-certificate'
+      insecure_download_curl_flag=' -k'
+      ;;
+    --no-package-updates | -x)
+      shift
+      noupdates=1
+      ;;
+    --setup | -s)
+      shift
+      setup_only=1
+      mode='setup'
+      unstable='unstable'
+      log_file_name="${setup_log_file_name:-virtualmin-repos-setup}"
+      ;;
+    --unstable | -e)
+      shift
+      unstable='unstable'
+      virtualmin_config_system_excludes=""
+      virtualmin_stack_custom_packages=""
+      ;;
+    --module | -o)
+      shift
+      module_name=$1
+      shift
+      ;;
+    --hostname | -n)
+      shift
+      forcehostname=$1
+      shift
+      ;;
+    --force | -f | --yes | -y)
+      shift
+      skipyesno=1
+      ;;
+    --verbose | -v)
+      shift
+      VERBOSE=1
+      ;;
+    --uninstall | -u)
+      shift
+      mode="uninstall"
+      log_file_name="${uninstall_log_file_name:-virtualmin-uninstall}"
       ;;
     *)
-      printf "Unknown bundle $1: exiting\\n"
+      printf "Unrecognized option: $1\\n\\n"
+      bind_hook "usage"
       exit 1
       ;;
     esac
-    ;;
-  --minimal | -m)
-    shift
-    mode='minimal'
-    ;;
-  --insecure-downloads | -i)
-    shift
-    insecure_download_wget_flag=' --no-check-certificate'
-    insecure_download_curl_flag=' -k'
-    ;;
-  --no-package-updates | -x)
-    shift
-    noupdates=1
-    ;;
-  --setup | -s)
-    shift
-    setup_only=1
-    mode='setup'
-    unstable='unstable'
-    log_file_name="${setup_log_file_name:-virtualmin-repos-setup}"
-    ;;
-  --unstable | -e)
-    shift
-    unstable='unstable'
-    virtualmin_config_system_excludes=""
-    virtualmin_stack_custom_packages=""
-    ;;
-  --module | -o)
-    shift
-    module_name=$1
-    shift
-    ;;
-  --hostname | -n)
-    shift
-    forcehostname=$1
-    shift
-    ;;
-  --force | -f | --yes | -y)
-    shift
-    skipyesno=1
-    ;;
-  --verbose | -v)
-    shift
-    VERBOSE=1
-    ;;
-  --uninstall | -u)
-    shift
-    mode="uninstall"
-    log_file_name="${uninstall_log_file_name:-virtualmin-uninstall}"
-    ;;
-  *)
-    printf "Unrecognized option: $1\\n\\n"
-    bind_hook "usage"
-    exit 1
-    ;;
-  esac
-done
+  done
+}
+
+# Hook arguments
+bind_hook "parse_args" "$@"
 
 # Force setup mode, if script name is `setup-repos.sh` as it
 # is used by Virtualmin API, to make sure users won't run an
