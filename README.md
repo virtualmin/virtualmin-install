@@ -144,6 +144,24 @@ post_hook__already_installed_msg() {
   :
 }
 
+hook__already_installed_block() {
+  # If defined, it will override the default block message about
+  # installed Virtualmin
+  :
+}
+
+pre_hook__already_installed_block() {
+  # If defined, it will inject a message before the default block message
+  # about already installed Virtualmin
+  :
+}
+
+post_hook__already_installed_block() {
+  # If defined, it will inject a message after the default block message
+  # about already installed Virtualmin
+  :
+}
+
 pre_hook__phase1_pre() {
   # If defined, it will run before the default phase 1
   :

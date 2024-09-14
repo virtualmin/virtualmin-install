@@ -162,6 +162,16 @@ parse_args() {
 # Hook arguments
 bind_hook "parse_args" "$@"
 
+# Check if already installed successfully
+already_installed_block() {
+  log_error "Your system already has a successful Virtualmin installation deployed."
+  log_error "Re-installation is neither possible nor necessary. This script must be"
+  log_error "run on a freshly installed supported operating system. It does not fit"
+  log_error "for package updates or license changes. For further assistance, please"
+  log_error "visit the Virtualmin Community forum."
+  exit 100
+}
+
 # Force setup mode, if script name is `setup-repos.sh` as it
 # is used by Virtualmin API, to make sure users won't run an
 # actuall install script under any circumstances
@@ -373,12 +383,7 @@ LOG_LEVEL_LOG="DEBUG"
 
 # If already installed successfully, do not allow running again
 if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] && [ "$skipyesno" -ne 1 ]; then
-  log_error "Your system already has a successful Virtualmin installation deployed."
-  log_error "Re-installation is neither possible nor necessary. This script must be"
-  log_error "run on a freshly installed supported operating system. It does not fit"
-  log_error "for package updates or license changes. For further assistance, please"
-  log_error "visit the Virtualmin Community forum."
-  exit 100
+  bind_hook "already_installed_block"
 fi
 if [ -n "$setup_only" ]; then
   log_info "Setup log is written to $LOG_PATH"
