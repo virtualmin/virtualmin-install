@@ -718,10 +718,11 @@ preconfigured_system_msg() {
 
   Pre-installed software detected: $is_preconfigured_rs
 
-  It is highly advised ${BOLD}${RED}not to pre-install or pre-configure${NORMAL} any additional packages on your OS.
-  The installer expects a freshly installed OS, and anything you do differently might cause
-  conflicts or configuration errors. If you need to enable third-party package repositories,
-  do so after installation of Virtualmin, and only with extreme caution.
+  It is highly advised ${BOLD}${RED}not to pre-install${NORMAL} any additional packages on your
+  OS. The installer expects a freshly installed OS, and anything you do
+  differently might cause conflicts or configuration errors. If you need
+  to enable third-party package repositories, do so after installation
+  of Virtualmin, and only with extreme caution.
 
 EOF
     if [ "$skipyesno" -ne 1 ]; then
