@@ -64,6 +64,18 @@ The Virtualmin install script is highly customizable and includes various hooks 
 
 ## Usage example for your project in a wrapper script
 ```sh
+hook__usage() {
+  # If defined, it will override the default usage message
+  :
+}
+
+hook__parse_arguments() {
+  # If defined, it will override the default argument parsing, and will not
+  # parse default arguments if this hook is defined, relying on the custom
+  # code to parse the arguments and set default values
+  :
+}
+
 hook__install_msg() {
   # If defined, it will override the default welcome message
   :
