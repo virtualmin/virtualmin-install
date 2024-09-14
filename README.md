@@ -69,7 +69,7 @@ hook__usage() {
   :
 }
 
-hook__parse_arguments() {
+hook__parse_args() {
   # If defined, it will override the default argument parsing, and will not
   # parse default arguments if this hook is defined, relying on the custom
   # code to parse the arguments and set default values
