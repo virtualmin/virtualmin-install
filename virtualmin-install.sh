@@ -594,7 +594,7 @@ uninstall() {
 # Phase control
 phase() {
     phases_total="${phases_total:-4}"
-    description="$1"
+    phase_description="$1"
     phase_number="$2"
     # Print completed phases (green)
     printf "${GREEN}"
@@ -607,8 +607,8 @@ phase() {
     for i in $(seq $(( phase_number + 1 )) "$phases_total"); do
         printf "${CYAN}◻"
     done
-    log_debug "Phase ${phase_number} of ${phases_total}: ${description}"
-    printf "${NORMAL} Phase ${YELLOW}${phase_number}${NORMAL} of ${GREEN}${phases_total}${NORMAL}: ${description}\\n"
+    log_debug "Phase ${phase_number} of ${phases_total}: ${phase_description}"
+    printf "${NORMAL} Phase ${YELLOW}${phase_number}${NORMAL} of ${GREEN}${phases_total}${NORMAL}: ${phase_description}\\n"
 }
 
 if [ "$mode" = "uninstall" ]; then
