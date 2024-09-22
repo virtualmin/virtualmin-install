@@ -1451,7 +1451,7 @@ if [ "$mode" = "minimal" ]; then
   bundle="Mini${bundle}"
 fi
 # shellcheck disable=SC2086
-virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes
+virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes --log "$log"
 sleep 1
 # kill the virtualmin config-system command, if it's still running
 kill $! 1>/dev/null 2>&1
