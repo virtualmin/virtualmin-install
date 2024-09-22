@@ -1490,7 +1490,9 @@ if [ -n "$hooks__phases" ]; then
     }
     bind_hook "phases_pre"
     unset current_phase
-    printf '%s\n' "$hooks__phases" | sed '/^$/d' | while read -r line; do
+    phases_error_occurred=0
+    printf '%s\n' "$hooks__phases" | sed '/^$/d' > hooks__phases_tmp
+    while IFS= read -r line; do
         # Split the line into components
         phase_number=$(trim "${line%%	*}")
         rest="${line#*	}"
@@ -1498,17 +1500,22 @@ if [ -n "$hooks__phases" ]; then
         rest="${rest#*	}"
         command=$(trim "${rest%%	*}")
         description=$(trim "${rest#*	}")
-        
         # If it's a new phase, display phase progress
         if [ "$phase_number" != "$current_phase" ]; then
             echo
             phase "$phase_name" "$phase_number"
             current_phase="$phase_number"
         fi
-
-        # Execute the command using run_ok
-        run_ok "$command" "$description"
-    done
+        # Run the command
+        if ! run_ok "$command" "$description"; then
+            phases_error_occurred=1
+            break
+        fi
+    done < hooks__phases_tmp
+    # Exit if an error occurred
+    if [ "$phases_error_occurred" -eq 1 ]; then
+        exit 1
+    fi
     bind_hook "phases_post"
 fi
 
