@@ -212,6 +212,16 @@ hook__phases_all_post() {
   :
 }
 
+hook__modules_pre() {
+  # If defined, it will run before the embedded modules installation phase
+  :
+}
+
+hook__modules_post() {
+  # If defined, it will run after the embedded modules installation phase
+  :
+}
+
 hook__clean_pre() {
   # If defined, it will run before the cleanup phase
   :

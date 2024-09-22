@@ -1417,8 +1417,11 @@ if [ "$?" != "0" ]; then
   errors=$((errors + 1))
 fi
 
+bind_hook "phase3_post"
+
 # Initialize embedded module if any
 if [ -n "$module_name" ]; then
+  bind_hook "modules_pre"
   # If module is available locally in the same directory use it
   if [ -f "$pwd/${module_name}.sh" ]; then
     chmod +x "$pwd/${module_name}.sh"
@@ -1427,6 +1430,7 @@ if [ -n "$module_name" ]; then
   else
     log_warning "Requested module with the filename $pwd/${module_name}.sh does not exist."
   fi
+  bind_hook "modules_post"
 fi
 
 # Reap any clingy processes (like spinner forks)
@@ -1440,7 +1444,6 @@ done
 # apt processes disappear before we start, as they're huge and memory is a
 # problem. XXX This is hacky. I'm not sure what's really causing random fails.
 sleep 1
-bind_hook "phase3_post"
 echo
 phase "Configuration" 4
 bind_hook "phase4_pre"
