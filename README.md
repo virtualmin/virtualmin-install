@@ -162,43 +162,63 @@ post_hook__already_installed_block() {
   :
 }
 
-pre_hook__phase1_pre() {
+hook__phases_all_pre() {
+  # If defined, it will run before all phases
+  :
+}
+
+hook__phase1_pre() {
   # If defined, it will run before the default phase 1
   :
 }
 
-post_hook__phase1_post() {
+hook__phase1_post() {
   # If defined, it will run after the default phase 1
   :
 }
 
-pre_hook__phase2_pre() {
+hook__phase2_pre() {
   # If defined, it will run before the default phase 2
   :
 }
 
-post_hook__phase2_post() {
+hook__phase2_post() {
   # If defined, it will run after the default phase 2
   :
 }
 
-pre_hook__phase3_pre() {
+hook__phase3_pre() {
   # If defined, it will run before the default phase 3
   :
 }
 
-post_hook__phase3_post() {
+hook__phase3_post() {
   # If defined, it will run after the default phase 3
   :
 }
 
-pre_hook__phase4_pre() {
+hook__phase4_pre() {
   # If defined, it will run before the default phase 4
   :
 }
 
-post_hook__phase4_post() {
+hook__phase4_post() {
   # If defined, it will run after the default phase 4
+  :
+}
+
+hook__phases_all_post() {
+  # If defined, it will run after all phases
+  :
+}
+
+hook__clean_pre() {
+  # If defined, it will run before the cleanup phase
+  :
+}
+
+hook__clean_post() {
+  # If defined, it will run after the cleanup phase
   :
 }
 

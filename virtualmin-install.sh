@@ -960,6 +960,8 @@ if [ "$(id -u)" -ne 0 ]; then
   fi
 fi
 
+bind_hook "phases_all_pre"
+
 if [ -n "$setup_only" ]; then
   pre_check_perl
   pre_check_http_client
@@ -1478,6 +1480,8 @@ rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | a
   ;;
 esac
 
+bind_hook "phase4_post"
+
 # Process additional phases if set in third-party functions
 if [ -n "$hooks__phases" ]; then
     # Trim leading and trailing whitespace
@@ -1508,6 +1512,8 @@ if [ -n "$hooks__phases" ]; then
     bind_hook "phases_post"
 fi
 
+bind_hook "phases_all_post"
+
 # Make sure the cursor is back (if spinners misbehaved)
 tput cnorm 1>/dev/null 2>&1
 
@@ -1517,6 +1523,7 @@ if [ -d "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_success" ]; then
 fi
 
 # Cleanup the tmp files
+bind_hook "clean_pre"
 printf "${GREEN}▣▣▣${NORMAL} Cleaning up\\n"
 if [ "$VIRTUALMIN_INSTALL_TEMPDIR" != "" ] && [ "$VIRTUALMIN_INSTALL_TEMPDIR" != "/" ]; then
   log_debug "Cleaning up temporary files in $VIRTUALMIN_INSTALL_TEMPDIR."
@@ -1529,7 +1536,7 @@ if [ -n "$QUOTA_FAILED" ]; then
   log_warning "Quotas were not configurable. A reboot may be required. Or, if this is"
   log_warning "a VM, configuration may be required at the host level."
 fi
-bind_hook "phase4_post"
+bind_hook "clean_post"
 echo
 if [ $errors -eq "0" ]; then
   hostname=$(hostname -f)
