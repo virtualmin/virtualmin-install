@@ -1075,7 +1075,7 @@ install_virtualmin_release() {
     if command -pv dnf 1>/dev/null 2>&1; then
       install_cmd="dnf"
       install="$install_cmd -y install"
-      update="$install_cmd -y update"
+      upgrade="$install_cmd -y update"
       install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="$install_cmd config-manager"
@@ -1086,7 +1086,7 @@ install_virtualmin_release() {
     else
       install_cmd="yum"
       install="$install_cmd -y install"
-      update="$install_cmd -y update"
+      upgrade="$install_cmd -y update"
       if [ "$os_major_version" -ge 7 ]; then
         # Do not use package manager when fixing repos
         if [ -z "$setup_only" ]; then
@@ -1202,7 +1202,7 @@ install_virtualmin_release() {
     # XXX Is this still enabled by default on Debian/Ubuntu systems?
     run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
-    update="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
+    upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
@@ -1235,7 +1235,7 @@ fi
 install_with_apt() {
   # Install system package upgrades, if any
   if [ -z "$noupdates" ]; then
-    run_ok "$update" "Checking and installing system package updates"
+    run_ok "$upgrade" "Checking and installing system package updates"
   fi
 
   # Silently purge packages that may cause issues upon installation
@@ -1328,7 +1328,7 @@ install_with_yum() {
 
   # Upgrade system packages first
   if [ -z "$noupdates" ]; then
-    run_ok "$update" "Checking and installing system package updates"
+    run_ok "$upgrade" "Checking and installing system package updates"
   fi
 
   # Install custom stack packages
