@@ -1076,6 +1076,7 @@ install_virtualmin_release() {
       install_cmd="dnf"
       install="$install_cmd -y install"
       upgrade="$install_cmd -y update"
+      update="$install_cmd clean all ; $install_cmd makecache"
       install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="$install_cmd config-manager"
@@ -1087,6 +1088,7 @@ install_virtualmin_release() {
       install_cmd="yum"
       install="$install_cmd -y install"
       upgrade="$install_cmd -y update"
+      update="$install_cmd clean all ; $install_cmd makecache"
       if [ "$os_major_version" -ge 7 ]; then
         # Do not use package manager when fixing repos
         if [ -z "$setup_only" ]; then
@@ -1203,6 +1205,7 @@ install_virtualmin_release() {
     run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
+    update="/usr/bin/apt-get clean ; /usr/bin/apt-get update"
     #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
