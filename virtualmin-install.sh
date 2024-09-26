@@ -55,6 +55,7 @@ usage() {
   printf "  --force|-f|--yes|-y      assume \"yes\" to all prompts\\n"
   printf "  --no-banner|-nb          suppress installation messages and warnings\\n"
   printf "  --verbose|-v             enable verbose mode\\n"
+  printf "  --version|-V             show installer version\\n"
   printf "  --help|-h                show this help\\n"
   echo
 }
@@ -155,6 +156,10 @@ parse_args() {
       shift
       VERBOSE=1
       ;;
+    --version | -V)
+      shift
+      showversion=1
+      ;;
     --uninstall | -u)
       shift
       mode="uninstall"
@@ -171,6 +176,17 @@ parse_args() {
 
 # Hook arguments
 bind_hook "parse_args" "$@"
+
+# Default function to show installer version
+show_version() {
+  echo "$VER"
+  exit 0
+}
+
+# Hook version
+if [ -n "$showversion" ]; then
+  bind_hook "show_version"
+fi
 
 # Check if already installed successfully
 already_installed_block() {
