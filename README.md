@@ -76,6 +76,11 @@ hook__parse_args() {
   :
 }
 
+hook__show_version() {
+  # If defined, it will override the installer default version
+  :
+}
+
 hook__install_msg() {
   # If defined, it will override the default welcome message
   :
