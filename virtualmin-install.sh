@@ -36,20 +36,26 @@ usage() {
   echo
   printf "Usage: %s [options]\\n" $(basename "$0")
   echo
-  echo "  If called without arguments, installs Virtualmin."
+  echo "  If called without arguments, installs Virtualmin with default options."
   echo
-  printf "  --help|-h                       display this help and exit\\n"
-  printf "  --bundle|-b <LAMP|LEMP>         choose bundle to install (defaults to LAMP)\\n"
-  printf "  --minimal|-m                    install a smaller subset of packages for low-memory/low-resource systems\\n"
-  printf "  --module|-o                     source a custom shell module during the post-installation phase\\n"
-  printf "  --unstable|-e                   enable support for Grade B systems (not recommended, see documentation)\\n"
-  printf "  --insecure-downloads|-i         skip remote server SSL certificate check upon downloads (not recommended)\\n"
-  printf "  --no-package-updates|-x         skip installing system package updates (not recommended)\\n"
-  printf "  --setup|-s                      setup Virtualmin software repositories and exit\\n"
-  printf "  --hostname|-n                   set fully qualified hostname\\n"
-  printf "  --force|-f                      assume \"yes\" as answer to all prompts\\n"
-  printf "  --verbose|-v                    increase verbosity\\n"
-  printf "  --uninstall|-u                  removes all Virtualmin packages (do not use on a production system)\\n"
+  printf "  --bundle|-b <LAMP|LEMP>  choose bundle to install (defaults to LAMP)\\n"
+  printf "  --minimal|-m             install a minimal package set for low-memory systems\\n"
+  printf "  --unstable|-e            enable Grade B system support (see documentation)\\n"
+  printf "  --module|-o              source custom shell module in post-install phase\\n"
+  echo
+  printf "  --hostname|-n            force hostname during installation\\n"
+  printf "  --no-package-updates|-x  skip package updates during installation\\n"
+  echo
+  printf "  --setup|-s               reconfigure Virtualmin repos without installation\\n"
+  echo
+  printf "  --insecure-downloads|-i  skip SSL certificate check for remote downloads\\n"
+  echo
+  printf "  --uninstall|-u           remove all Virtualmin packages and dependencies\\n"
+  echo
+  printf "  --force|-f|--yes|-y      assume \"yes\" to all prompts\\n"
+  printf "  --no-banner|-nb          suppress installation messages and warnings\\n"
+  printf "  --verbose|-v             enable verbose mode\\n"
+  printf "  --help|-h                show this help\\n"
   echo
 }
 
