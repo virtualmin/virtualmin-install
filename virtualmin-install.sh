@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC2034
 # virtualmin-install.sh
 # Copyright 2005-2024 Virtualmin
 # Simple script to install Virtualmin on a supported OS
@@ -34,7 +34,7 @@ skipyesno=0
 usage() {
   # shellcheck disable=SC2046
   echo
-  printf "Usage: %s [options]\\n" $(basename "$0")
+  printf "Usage: %s [options]\\n" "$(basename "$0")"
   echo
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
