@@ -141,6 +141,10 @@ parse_args() {
       shift
       skipyesno=1
       ;;
+    --no-banner | -nb)
+      shift
+      skipbanner=1
+      ;;
     --verbose | -v)
       shift
       VERBOSE=1
@@ -687,7 +691,7 @@ EOF
   fi
 }
 
-if [ -z "$setup_only" ]; then
+if [ -z "$setup_only" ] && [ -z "$skipbanner" ]; then
     bind_hook "install_msg"
 fi
 
@@ -779,7 +783,7 @@ post_install_message() {
   fi
 }
 
-if [ -z "$setup_only" ]; then
+if [ -z "$setup_only" ] && [ -z "$skipbanner" ]; then
   if grade_b_system; then
     bind_hook "os_unstable_pre_check"
   fi
