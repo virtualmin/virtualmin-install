@@ -1553,9 +1553,6 @@ fi
 
 bind_hook "phases_all_post"
 
-# Make sure the cursor is back (if spinners misbehaved)
-tput cnorm 1>/dev/null 2>&1
-
 # Was LE SSL for hostname request successful?
 if [ -d "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_success" ]; then
   ssl_host_success=1
