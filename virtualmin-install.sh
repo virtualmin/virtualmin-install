@@ -53,6 +53,7 @@ usage() {
   printf "  --uninstall|-u           remove all Virtualmin packages and dependencies\\n"
   echo
   printf "  --force|-f|--yes|-y      assume \"yes\" to all prompts\\n"
+  printf "  --force-reinstall|-fr    force reinstall Virtualmin (not recommended)\\n"
   printf "  --no-banner|-nb          suppress installation messages and warnings\\n"
   printf "  --verbose|-v             enable verbose mode\\n"
   printf "  --version|-V             show installer version\\n"
@@ -147,6 +148,10 @@ parse_args() {
     --force | -f | --yes | -y)
       shift
       skipyesno=1
+      ;;
+    --force-reinstall | -fr)
+      shift
+      forcereinstall=1
       ;;
     --no-banner | -nb)
       shift
@@ -408,7 +413,7 @@ fi
 LOG_LEVEL_LOG="DEBUG"
 
 # If already installed successfully, do not allow running again
-if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] && [ "$skipyesno" -ne 1 ]; then
+if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] && [ -z "$forcereinstall" ]; then
   bind_hook "already_installed_block"
 fi
 if [ -n "$setup_only" ]; then
