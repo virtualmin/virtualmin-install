@@ -45,7 +45,7 @@ We strongly recommend you use the latest version of your preferred **Grade A** s
 
 # How to run it
 
-**Never run the install script on anything other than a freshly installed OS. It is for installation, not upgrading.**
+> Never run the install script on anything other than a **freshly installed OS**. It is for installation, _not upgrading_!
 
 ## Upstream Version
 
@@ -63,6 +63,9 @@ Please file tickets, either here or at [Virtualmin Forum](https://forum.virtualm
 The Virtualmin install script is highly customizable and includes various hooks that can be inserted at any stage of the installation process. If you're integrating the script into your own project, you can use these hooks to inject custom code, add new phases, or control the text displayed to the user throughout the installation.
 
 ## Usage example for your project in a wrapper script
+<details>
+  <summary><strong>Detailed description of hooks</strong></summary>
+
 ```sh
 hook__usage() {
   # If defined, it will override the default usage message
@@ -282,6 +285,9 @@ hooks__phases='
 '
 export hooks__phases
 ```
+</details>
+
+ \* A fully working third-party script example using hooks can be found [here](https://gitlab.com/wikisuite/wikisuite-packages/-/raw/main/wikisuite-installer.bash).
 
 # How to contribute
 
