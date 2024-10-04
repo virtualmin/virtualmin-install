@@ -21,7 +21,11 @@ download_virtualmin_host_lib="$download_virtualmin_host/lib"
 pwd="$PWD"
 
 # Script name
-script_name=$(basename "${0:-virtualmin-install.sh}")
+if [ "$0" = "--" ] || [ -z "$0" ]; then
+  script_name="virtualmin-install.sh"
+else
+  script_name=$(basename -- "$0")
+fi
 
 # Set log type
 log_file_name="${install_log_file_name:-virtualmin-install}"
