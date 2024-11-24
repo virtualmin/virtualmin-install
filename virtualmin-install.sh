@@ -439,7 +439,7 @@ log_fatal() {
 # Test if grade B system
 grade_b_system() {
   case "$os_type" in
-  rhel | centos | rocky | almalinux | debian | ubuntu)
+  rhel | centos | rocky | almalinux | openEuler | debian | ubuntu)
     return 1
     ;;
   esac
@@ -455,7 +455,7 @@ fi
 
 remove_virtualmin_release() {
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
+  rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
     rm -f /etc/yum.repos.d/virtualmin.repo
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
@@ -566,7 +566,7 @@ uninstall() {
   {
     # Detect the package manager
     case "$os_type" in
-    rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
+    rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
       package_type=rpm
       if command -pv dnf 1>/dev/null 2>&1; then
         uninstall_cmd="dnf remove -y"
@@ -680,11 +680,12 @@ install_msg() {
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 38 and above on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 40 and above on x86_64\\n \
      - CentOS Stream 8 and 9 on x86_64\\n \
+     - Amazon Linux 2023 and above on x86_64\\n \
      - Oracle Linux 8 and 9 on x86_64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
-     - Amazon Linux 2023 and above on x86_64\\n \
+     - openEuler 24.03 and above on x86_64\\n \
           ${NORMAL}"
     unstable_deb="${YELLOW}- Kali Linux Rolling 2023 and above on x86_64\\n \
           ${NORMAL}"
@@ -1056,7 +1057,7 @@ install_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
   case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn )
+  rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
     case "$os_type" in
     rhel | centos | centos_stream)
       if [ "$os_type" = "centos_stream" ]; then
@@ -1071,7 +1072,7 @@ install_virtualmin_release() {
         fi
       fi
       ;;
-    rocky | almalinux | ol)
+    rocky | almalinux | openEuler | ol)
       if [ "$os_major_version" -lt 8 ]; then
         printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
@@ -1518,7 +1519,7 @@ disable_selinux() {
 
 # Changes that are specific to OS
 case "$os_type" in
-rhel | fedora | centos | centos_stream | rocky | almalinux | ol | cloudlinux | amzn)
+rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn)
   disable_selinux
   ;;
 esac
