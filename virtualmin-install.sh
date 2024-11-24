@@ -730,11 +730,13 @@ os_unstable_pre_check() {
 
   ${YELLOWBG}${BLACK}${BOLD} INSTALLATION WARNING! ${NORMAL}
 
-  You are about to install Virtualmin $PRODUCT on a ${BOLD}Grade B${NORMAL} operating system. Please
-  be advised that this OS version is not recommended for servers, and may have
-  bugs that could affect the performance and stability of the system.
+  You are about to install Virtualmin $PRODUCT on a ${BOLD}Grade B${NORMAL} operating
+  system. Be advised that this OS version is not recommended for servers,
+  and may have bugs that could affect the performance and stability of
+  the system.
 
-  Certain features may not work as intended or might be unavailable on this OS.
+  Certain features may not work as intended or might be unavailable on
+  this OS.
 
 EOF
     if [ "$skipyesno" -ne 1 ]; then
