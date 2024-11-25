@@ -439,7 +439,7 @@ log_fatal() {
 # Test if grade B system
 grade_b_system() {
   case "$os_type" in
-  rhel | centos | rocky | almalinux | openEuler | debian | ubuntu)
+  rhel | centos | rocky | almalinux | debian | ubuntu)
     return 1
     ;;
   esac
