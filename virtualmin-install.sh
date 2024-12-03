@@ -10,7 +10,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.5.2
+VER=7.5.1
 vm_version=7
 
 # Server
