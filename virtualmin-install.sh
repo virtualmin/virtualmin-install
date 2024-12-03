@@ -1,7 +1,7 @@
 #!/bin/sh
 # shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC2034
 # virtualmin-install.sh
-# Copyright 2005-2024 Virtualmin
+# Copyright 2005-2025 Virtualmin
 # Simple script to install Virtualmin on a supported OS
 
 # Different installation guides are available at:
@@ -10,7 +10,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.5.1
+VER=7.5.2
 vm_version=7
 
 # Server
