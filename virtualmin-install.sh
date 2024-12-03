@@ -439,11 +439,23 @@ log_fatal() {
 # Test if grade B system
 grade_b_system() {
   case "$os_type" in
-  rhel | centos | rocky | almalinux | debian | ubuntu)
-    return 1
-    ;;
+    rhel | centos | rocky | almalinux | debian)
+      return 1
+      ;;
+    ubuntu)
+      case "$os_version" in
+        *\.10|*[13579].04) # non-LTS versions are unstable
+          return 0
+          ;;
+        *)
+          return 1
+          ;;
+      esac
+      ;;
+    *)
+      return 0
+      ;;
   esac
-  return 0
 }
 
 if grade_b_system && [ "$unstable" != 'unstable' ]; then
@@ -688,6 +700,7 @@ EOF
      - openEuler 24.03 and above on x86_64\\n \
           ${NORMAL}"
     unstable_deb="${YELLOW}- Kali Linux Rolling 2023 and above on x86_64\\n \
+     - Ubuntu interim (non-LTS) on i386 and amd64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
@@ -1170,10 +1183,14 @@ install_virtualmin_release() {
   debian | ubuntu | kali)
     case "$os_type" in
     ubuntu)
-      if [ "$os_version" != "18.04" ] && [ "$os_version" != "20.04" ] && [ "$os_version" != "22.04" ] && [ "$os_version" != "24.04" ]; then
-        printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
-        exit 1
-      fi
+      case "$os_version:$unstable" in
+        18.04:*|20.04:*|22.04:*|24.04:*|*\.10:unstable|*[13579].04:unstable)
+          : ;; # Do nothing for supported or allowed unstable versions
+        *)
+          printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
+          exit 1
+          ;;
+      esac
       ;;
     debian)
       if [ "$os_major_version" -lt 10 ]; then
