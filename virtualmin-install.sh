@@ -1092,7 +1092,7 @@ install_virtualmin_release() {
       ;;
     amzn)
       if [ "$os_major_version" -lt 2023 ] && [ "$os_type" = "amzn" ]  ; then
-        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by stable installer.\\n"
+        printf "${RED}${os_real} ${os_version}${NORMAL} is not supported by this installer.\\n"
         exit 1
       fi
       ;;
