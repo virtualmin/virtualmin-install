@@ -51,6 +51,7 @@ usage() {
   printf "  --no-package-updates|-x  skip package updates during installation\\n"
   echo
   printf "  --setup|-s               reconfigure Virtualmin repos without installation\\n"
+  printf "  --connect|-C <ipv4|ipv6> test connectivity to the repos without installation\\n"
   echo
   printf "  --insecure-downloads|-i  skip SSL certificate check for remote downloads\\n"
   echo
@@ -86,6 +87,77 @@ bind_hook() {
             "$post_hook" "$@"
         fi
     fi
+}
+
+test_connection() {
+  input="$1"
+  ip_version="$2"
+  ip_version_nice=$(echo "$ip_version" | sed 's/ip/IP/')
+  timeout=5
+  http_protocol="http"
+  http_protocol_nice=$(echo "$http_protocol" | tr '[:lower:]' '[:upper:]')
+
+  # Setup colors for messages
+  GREEN="" BLACK="" RED="" RESET="" BOLD="" GRBG="" REDBG=""
+  if command -pv 'tput' > /dev/null; then
+    GREEN=$(tput setaf 2)
+    BLACK=$(tput setaf 0)
+    RED=$(tput setaf 1)
+    RESET=$(tput sgr0)
+    BOLD=$(tput bold)
+    GRBG=$(tput setab 22; tput setaf 10)
+    REDBG=$(tput setab 52; tput setaf 9)
+  fi
+
+  # Extract the domain from the input
+  domain=$(echo "$input" | awk -F[/:] '{print $4}')
+  [ -z "$domain" ] && domain="$input"
+
+  # Validate parameters
+  if [ -z "$domain" ] || [ -z "$ip_version" ]; then
+    echo "${RED}[ERROR]  ${RESET} Domain and IP version are required" >&2
+    return 1
+  fi
+
+  # Setup protocol-specific flags
+  case "$ip_version" in
+    ipv4)
+      if ! getent ahostsv4 "$domain" >/dev/null 2>&1; then
+        echo "${RED}[ERROR]  ${RESET} ${BOLD}$domain${RESET} — cannot find IPv4 address" >&2
+        return 1
+      fi
+      ping_cmd="ping -c 1 -W $timeout $domain"
+      http_cmd="curl -sS --ipv4 --max-time $timeout --head $http_protocol://$domain \
+        || wget --spider -4 -T $timeout $http_protocol://$domain"
+      ;;
+    ipv6)
+      if ! getent ahostsv6 "$domain" >/dev/null 2>&1; then
+        echo "${RED}[ERROR]  ${RESET} ${BOLD}$domain${RESET} — cannot find IPv6 address" >&2
+        return 1
+      fi
+      ping_cmd="ping6 -c 1 -W $timeout $domain"
+      http_cmd="curl -sS --ipv6 --max-time $timeout --head $http_protocol://$domain \
+        || wget --spider -6 -T $timeout $http_protocol://$domain"
+      ;;
+  esac
+
+  # Try ping first
+  if eval "$ping_cmd" >/dev/null 2>&1; then
+    echo "${GREEN}[SUCCESS]${RESET} ${GRBG}[$ip_version_nice]${RESET} ${GRBG}[ICMP]${RESET} ${BOLD}$domain${RESET}"
+  else
+    echo "${RED}[ERROR]  ${RESET} ${REDBG}[$ip_version_nice]${RESET} ${REDBG}[ICMP]${RESET} ${BOLD}$domain${RESET}"
+  fi
+
+  # HTTP test as well
+  if command -v 'curl' > /dev/null || command -v 'wget' > /dev/null; then
+    if eval "$http_cmd" >/dev/null 2>&1; then
+      echo "${GREEN}[SUCCESS]${RESET} ${GRBG}[$ip_version_nice]${RESET} ${GRBG}[$http_protocol_nice]${RESET} ${BOLD}$domain${RESET}"
+      return 0
+    else
+      echo "${RED}[ERROR]  ${RESET} ${REDBG}[$ip_version_nice]${RESET} ${REDBG}[$http_protocol_nice]${RESET} ${BOLD}$domain${RESET}"
+      return 1
+    fi
+  fi
 }
 
 # Default function to parse arguments
@@ -132,6 +204,21 @@ parse_args() {
       mode='setup'
       unstable='unstable'
       log_file_name="${setup_log_file_name:-virtualmin-repos-setup}"
+      ;;
+    --connect | -C)
+      shift
+      if [ -z "$1" ]; then
+        test_connection "$download_virtualmin_host" "ipv4"
+        test_connection "$download_virtualmin_host" "ipv6"
+        exit 0
+      else
+        if [ "$1" != "ipv4" ] && [ "$1" != "ipv6" ]; then
+          usage
+          exit 1
+        fi
+        test_connection "$download_virtualmin_host" "$1"
+        exit 0
+      fi
       ;;
     --unstable | -e)
       shift
