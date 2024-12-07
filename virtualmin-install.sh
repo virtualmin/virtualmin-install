@@ -504,7 +504,9 @@ fi
 LOG_LEVEL_LOG="DEBUG"
 
 # If already installed successfully, do not allow running again
-if [ -f "/etc/webmin/virtual-server/installed-auto" ] && [ -z "$setup_only" ] && [ -z "$forcereinstall" ]; then
+if [ -f "/etc/webmin/virtual-server/installed-auto" ] && 
+   [ -z "$setup_only" ] && [ -z "$forcereinstall" ] &&
+   [ "$mode" != "uninstall" ]; then
   bind_hook "already_installed_block"
 fi
 if [ -n "$setup_only" ]; then
