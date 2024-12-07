@@ -722,7 +722,6 @@ uninstall() {
   printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Uninstall\\n"
   run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
   run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
-  exit 0
 }
 
 # Phase control
@@ -747,6 +746,7 @@ phase() {
 
 if [ "$mode" = "uninstall" ]; then
   bind_hook "uninstall"
+  exit 0
 fi
 
 # Calculate disk space requirements (this is a guess, for now)
