@@ -692,7 +692,8 @@ uninstall() {
       ;;
     deb)
       $uninstall_cmd "virtualmin*" "webmin*" "usermin*"
-      apt-get autoremove --assume-yes
+      uninstall_cmd_auto="apt-get autoremove --assume-yes"
+      $uninstall_cmd_auto
       os_type="debian"
       return 0
       ;;
