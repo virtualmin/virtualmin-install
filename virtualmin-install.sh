@@ -720,7 +720,11 @@ uninstall() {
     echo "Virtualmin uninstallation complete."
   }
   
-  printf "${YELLOW}▣${NORMAL} Phase ${YELLOW}1${NORMAL} of ${GREEN}1${NORMAL}: Uninstall\\n"
+  phase_number=${phase_number:-1}
+  phases_total=${phases_total:-1}
+  uninstall_phase_description=${uninstall_phase_description:-"Uninstall"}
+  echo
+  phase "$uninstall_phase_description" "$phase_number"
   run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
   run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
 }
