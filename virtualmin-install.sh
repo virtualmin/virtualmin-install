@@ -817,7 +817,6 @@ install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
       - RHEL 8 and 9 on x86_64
       - Alma and Rocky 8 and 9 on x86_64
-      - CentOS 7 on x86_64${NORMAL}
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
       - Debian 10, 11 and 12 on i386 and amd64
