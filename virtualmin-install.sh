@@ -860,8 +860,12 @@ EOF
 
     ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
 
-  The selected package bundle is ${CYAN}${bundle}${NORMAL} and the size of install is
-  ${CYAN}${mode}${NORMAL}. It will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space.
+  The selected package bundle is ${CYAN}${bundle}${NORMAL} and the type of install is ${CYAN}${mode}${NORMAL}.
+  More details about the package bundles and types can be found here:
+
+    ${UNDERLINE}https://www.virtualmin.com/installation-variations${NORMAL}
+
+  Installation will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space.
 
 EOF
 
