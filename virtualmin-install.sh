@@ -44,18 +44,18 @@ usage() {
   echo
   printf "  --bundle|-b <LAMP|LEMP>          choose bundle to install (defaults to LAMP)\\n"
   printf "  --type|-t <full|mini|micro|nano> installation type (defaults to full)\\n"
-  printf "  --unstable|-e                    enable Grade B system support (see documentation)\\n"
-  printf "  --module|-o                      source custom shell module in post-install phase\\n"
+  printf "  --unstable|-e                    enable unstable OS support (not recommended)\\n"
+  printf "  --module|-o                      load custom module in post-install phase\\n"
   echo
   printf "  --hostname|-n                    force hostname during installation\\n"
   printf "  --no-package-updates|-x          skip package updates during installation\\n"
   echo
-  printf "  --setup|-s                       reconfigure Virtualmin repos without installing\\n"
-  printf "  --connect|-C <ipv4|ipv6>         test connectivity to the repos without installing\\n"
+  printf "  --setup|-s                       reconfigure repos without installing\\n"
+  printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
   echo
-  printf "  --insecure-downloads|-i          skip SSL certificate check for remote downloads\\n"
+  printf "  --insecure-downloads|-i          skip SSL certificate check for downloads\\n"
   echo
-  printf "  --uninstall|-u                   remove all Virtualmin packages and dependencies\\n"
+  printf "  --uninstall|-u                   remove all packages and dependencies\\n"
   echo
   printf "  --force|-f|--yes|-y              assume \"yes\" to all prompts\\n"
   printf "  --force-reinstall|-fr            force reinstall Virtualmin (not recommended)\\n"
