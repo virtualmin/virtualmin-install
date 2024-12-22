@@ -31,8 +31,8 @@ fi
 log_file_name="${install_log_file_name:-virtualmin-install}"
 
 # Set defaults
-bundle='LAMP' # Other option is LEMP
-mode='full'   # Other option is minimal
+bundle='LAMP'        # Other option is LEMP
+mode="${mode:-full}" # Other options are mini/micro/nano
 skipyesno=0
 
 usage() {
@@ -42,27 +42,27 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
-  printf "  --bundle|-b <LAMP|LEMP>  choose bundle to install (defaults to LAMP)\\n"
-  printf "  --minimal|-m             install a minimal package set for low-memory systems\\n"
-  printf "  --unstable|-e            enable Grade B system support (see documentation)\\n"
-  printf "  --module|-o              source custom shell module in post-install phase\\n"
+  printf "  --bundle|-b <LAMP|LEMP>          choose bundle to install (defaults to LAMP)\\n"
+  printf "  --type|-t <full|mini|micro|nano> installation type (defaults to full)\\n"
+  printf "  --unstable|-e                    enable Grade B system support (see documentation)\\n"
+  printf "  --module|-o                      source custom shell module in post-install phase\\n"
   echo
-  printf "  --hostname|-n            force hostname during installation\\n"
-  printf "  --no-package-updates|-x  skip package updates during installation\\n"
+  printf "  --hostname|-n                    force hostname during installation\\n"
+  printf "  --no-package-updates|-x          skip package updates during installation\\n"
   echo
-  printf "  --setup|-s               reconfigure Virtualmin repos without installation\\n"
-  printf "  --connect|-C <ipv4|ipv6> test connectivity to the repos without installation\\n"
+  printf "  --setup|-s                       reconfigure Virtualmin repos without installing\\n"
+  printf "  --connect|-C <ipv4|ipv6>         test connectivity to the repos without installing\\n"
   echo
-  printf "  --insecure-downloads|-i  skip SSL certificate check for remote downloads\\n"
+  printf "  --insecure-downloads|-i          skip SSL certificate check for remote downloads\\n"
   echo
-  printf "  --uninstall|-u           remove all Virtualmin packages and dependencies\\n"
+  printf "  --uninstall|-u                   remove all Virtualmin packages and dependencies\\n"
   echo
-  printf "  --force|-f|--yes|-y      assume \"yes\" to all prompts\\n"
-  printf "  --force-reinstall|-fr    force reinstall Virtualmin (not recommended)\\n"
-  printf "  --no-banner|-nb          suppress installation messages and warnings\\n"
-  printf "  --verbose|-v             enable verbose mode\\n"
-  printf "  --version|-V             show installer version\\n"
-  printf "  --help|-h                show this help\\n"
+  printf "  --force|-f|--yes|-y              assume \"yes\" to all prompts\\n"
+  printf "  --force-reinstall|-fr            force reinstall Virtualmin (not recommended)\\n"
+  printf "  --no-banner|-nb                  suppress installation messages and warnings\\n"
+  printf "  --verbose|-v                     enable verbose mode\\n"
+  printf "  --version|-V                     show installer version\\n"
+  printf "  --help|-h                        show this help\\n"
   echo
 }
 
@@ -180,14 +180,41 @@ parse_args() {
         bundle='LEMP'
         ;;
       *)
-        printf "Unknown bundle $1: exiting\\n"
+        printf "Unknown bundle: $1\\n"
+        bind_hook "usage"
         exit 1
         ;;
       esac
       ;;
     --minimal | -m)
       shift
-      mode='minimal'
+      mode='mini'
+      ;;
+    --type | -t)
+      shift
+      case "$1" in
+      full)
+        shift
+        mode='full'
+        ;;
+      mini)
+        shift
+        mode='mini'
+        ;;
+      micro)
+        shift
+        mode='micro'
+        ;;
+      nano)
+        shift
+        mode='nano'
+        ;;
+      *)
+        printf "Unknown type: $1\\n"
+        bind_hook "usage"
+        exit 1
+        ;;
+      esac
       ;;
     --insecure-downloads | -i)
       shift
@@ -353,17 +380,41 @@ if [ "$mode" = 'full' ]; then
     debdeps="virtualmin-lemp-stack"
     ubudeps="virtualmin-lemp-stack"
   fi
-elif [ "$mode" = 'minimal' ]; then
+elif [ "$mode" = 'mini' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
-    rhgrouptext="Virtualmin $vm_version LAMP stack minimal"
+    rhgrouptext="Virtualmin $vm_version LAMP stack mini"
     debdeps="virtualmin-lamp-stack-minimal"
     ubudeps="virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
-    rhgrouptext="Virtualmin $vm_version LEMP stack minimal'"
+    rhgrouptext="Virtualmin $vm_version LEMP stack mini'"
     debdeps="virtualmin-lemp-stack-minimal"
     ubudeps="virtualmin-lemp-stack-minimal"
+  fi
+elif [ "$mode" = 'micro' ]; then
+  if [ "$bundle" = 'LAMP' ]; then
+    rhgroup="'Virtualmin LAMP Stack Micro'"
+    rhgrouptext="Virtualmin $vm_version LAMP stack micro"
+    debdeps="virtualmin-lamp-stack-micro"
+    ubudeps="virtualmin-lamp-stack-micro"
+  elif [ "$bundle" = 'LEMP' ]; then
+    rhgroup="'Virtualmin LEMP Stack Micro'"
+    rhgrouptext="Virtualmin $vm_version LEMP stack micro"
+    debdeps="virtualmin-lemp-stack-micro"
+    ubudeps="virtualmin-lemp-stack-micro"
+  fi
+elif [ "$mode" = 'nano' ]; then
+  if [ "$bundle" = 'LAMP' ]; then
+    rhgroup="'Virtualmin LAMP Stack Nano'"
+    rhgrouptext="Virtualmin $vm_version LAMP stack nano"
+    debdeps="virtualmin-lamp-stack-nano"
+    ubudeps="virtualmin-lamp-stack-nano"
+  elif [ "$bundle" = 'LEMP' ]; then
+    rhgroup="'Virtualmin LEMP Stack Nano'"
+    rhgrouptext="Virtualmin $vm_version LEMP stack nano"
+    debdeps="virtualmin-lemp-stack-nano"
+    ubudeps="virtualmin-lemp-stack-nano"
   fi
 fi
 
@@ -685,7 +736,7 @@ uninstall() {
     
     case "$package_type" in
     rpm)
-      $uninstall_cmd_group "Virtualmin Core" "Virtualmin LAMP Stack" "Virtualmin LEMP Stack" "Virtualmin LAMP Stack Minimal" "Virtualmin LEMP Stack Minimal"
+      $uninstall_cmd_group "Virtualmin Core" "Virtualmin LAMP Stack" "Virtualmin LEMP Stack" "Virtualmin LAMP Stack Minimal" "Virtualmin LEMP Stack Minimal" "Virtualmin LAMP Stack Micro" "Virtualmin LEMP Stack Micro" "Virtualmin LAMP Stack Nano" "Virtualmin LEMP Stack Nano"
       $uninstall_cmd wbm-* wbt-* webmin* usermin* virtualmin*
       os_type="rhel"
       return 0
@@ -755,7 +806,7 @@ if [ "$mode" = "uninstall" ]; then
 fi
 
 # Calculate disk space requirements (this is a guess, for now)
-if [ "$mode" = 'minimal' ]; then
+if [ "$mode" != 'full' ]; then
   disk_space_required=1
 else
   disk_space_required=2
@@ -1599,8 +1650,12 @@ sleep 1
 echo
 phase "Configuration" 4
 bind_hook "phase4_pre"
-if [ "$mode" = "minimal" ]; then
+if [ "$mode" = "mini" ]; then
   bundle="Mini${bundle}"
+elif [ "$mode" = "micro" ]; then
+  bundle="Micro${bundle}"
+elif [ "$mode" = "nano" ]; then
+  bundle="Nano${bundle}"
 fi
 # shellcheck disable=SC2086
 virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes --log "$log"
