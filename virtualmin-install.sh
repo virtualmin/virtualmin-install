@@ -819,7 +819,7 @@ install_msg() {
       - Alma and Rocky 8 and 9 on x86_64
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 10, 11 and 12 on i386 and amd64
+      - Debian 11 and 12 on i386 and amd64
       - Ubuntu 20.04 LTS, 22.04 LTS and 24.04 LTS on i386 and amd64${NORMAL}
       UNSTABLEDEB"
 
