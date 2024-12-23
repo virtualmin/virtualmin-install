@@ -831,6 +831,15 @@ install_msg() {
   perform updates or upgrades (use your system package manager) or license
   changes (use the "virtualmin change-license" command).
 
+EOF
+  if [ "$skipyesno" -ne 1 ]; then
+    printf " Continue? (y/n) "
+    if ! yesno; then
+      exit
+    fi
+    echo
+  fi
+  cat <<EOF
   The systems currently supported by the install script are:
 
 EOF
@@ -859,12 +868,11 @@ EOF
 
     ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
 
-  The selected package bundle is ${CYAN}${bundle}${NORMAL} and the type of install is ${CYAN}${mode}${NORMAL}.
-  More details about the package bundles and types can be found here:
+  The installation will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space. The selected
+  package bundle is ${CYAN}${bundle}${NORMAL} and the type of install is ${CYAN}${mode}${NORMAL}. More details
+  about the package bundles and types can be found here:
 
     ${UNDERLINE}https://www.virtualmin.com/installation-variations${NORMAL}
-
-  Installation will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space.
 
 EOF
 
