@@ -832,12 +832,16 @@ install_msg() {
   changes (use the "virtualmin change-license" command).
 
 EOF
-  if [ "$skipyesno" -ne 1 ]; then
-    printf " Continue? (y/n) "
-    if ! yesno; then
-      exit
-    fi
-    echo
+  screen_height=$(tput lines 2>/dev/null || echo 0)
+  # Check if screen height can fit the message entirely
+  if { [ "$screen_height" -gt 0 ] &&
+       [ "$screen_height" -lt 33 ]; } ||
+     [ "$screen_height" -eq 0 ]; then
+      printf " Continue? (y/n) "
+      if ! yesno; then
+          exit
+      fi
+      echo
   fi
   cat <<EOF
   The systems currently supported by the install script are:
