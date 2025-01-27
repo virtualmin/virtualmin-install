@@ -44,6 +44,7 @@ usage() {
   echo
   printf "  --bundle|-b <LAMP|LEMP>           bundle to install (default: LAMP)\\n"
   printf "  --type|-t <full|mini|micro|nano>  install type (default: full)\\n"
+  printf "  --branch|-B <unstable|prerelease> install branch (default: stable)\\n"
   printf "  --os-grade|-g <A|B>               operating system support grade (default: A)\\n"
   printf "  --module|-o                       load custom module in post-install phase\\n"
   echo
@@ -211,6 +212,28 @@ parse_args() {
         ;;
       *)
         printf "Unknown type: $1\\n"
+        bind_hook "usage"
+        exit 1
+        ;;
+      esac
+      ;;
+    --branch | -B)
+      shift
+      case "$1" in
+      unstable|testing|development|devel|dev|nightly|bleeding-edge|cutting-edge)
+        shift
+        branch='unstable'
+        ;;
+      prerelease|pre-release|rc|release-candidate)
+        shift
+        branch='prerelease'
+        ;;
+      stable|production|release)
+        shift
+        branch=''
+        ;;
+      *)
+        printf "Unknown branch: $1\\n"
         bind_hook "usage"
         exit 1
         ;;
@@ -595,6 +618,102 @@ log_fatal() {
   log_error "$1"
 }
 
+# Handle unstable or prerelease repositories
+handle_branches() {
+  del_cmd="" found_type="" reinstalling=0
+  found_both=0 found_unstable=0 found_prerelease=0
+
+  # Set paths based on package type
+  case "$package_type" in
+    deb)
+      repo_dir="/etc/apt/sources.list.d"
+      auth_dir="/etc/apt/auth.conf.d"
+      repo_ext="list"
+      ;;
+    rpm)
+      repo_dir="/etc/yum.repos.d"
+      repo_ext="repo"
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+
+  # Remove existing unstable or prerelease repos if found
+  for repo in virtualmin-unstable virtualmin-prerelease webmin-unstable \
+              webmin-prerelease webmin-testing; do
+    repo_file="${repo_dir}/${repo}.${repo_ext}"
+    if [ -f "$repo_file" ]; then
+      del_cmd="${del_cmd:+$del_cmd && }rm -f $repo_file"
+      case "$repo" in
+        *unstable* | *testing*)
+          found_unstable=1
+          found_type="unstable"
+          ;;
+        *prerelease*)
+          found_prerelease=1
+          found_type="prerelease"
+          ;;
+      esac
+    fi
+
+    # Auth file check for deb
+    if [ "$package_type" = "deb" ]; then
+      case "$repo" in
+        virtualmin-*) 
+          auth_file="${auth_dir}/${repo}.conf"
+          [ -f "$auth_file" ] && del_cmd="${del_cmd:+$del_cmd && }rm -f $auth_file"
+          ;;
+      esac
+    fi
+  done
+
+  # Execute removal if exists
+  if [ -n "$del_cmd" ]; then
+    if [ "$found_unstable" -eq 1 ] && [ "$found_prerelease" -eq 1 ]; then
+      msg="Uninstalling Virtualmin $vm_version unstable and prerelease repositories"
+      found_both=1
+    elif [ "$found_unstable" -eq 1 ]; then
+      msg="Uninstalling Virtualmin $vm_version unstable repository"
+    else
+      msg="Uninstalling Virtualmin $vm_version prerelease repository"
+    fi
+    # Remove silently if reinstalling
+    if [ -n "$branch" ] && [ "$found_both" -eq 0 ] && [ "$found_type" = "$branch" ]; then
+      eval "$del_cmd"
+      reinstalling=1
+    else
+      run_ok "$del_cmd" "$msg"
+    fi
+  fi
+
+  # Setup new branch if requested
+  if [ -n "$branch" ]; then
+    if [ "$reinstalling" -eq 1 ]; then
+      install_pre_msg="Reinstalling Virtualmin $vm_version"
+    else
+      install_pre_msg="Installing Virtualmin $vm_version"
+    fi
+    down_cmd="$download https://$download_virtualmin_host_dev/install"
+    case "$branch" in
+      unstable)
+        cmd="$down_cmd && sh install webmin unstable && \
+             sh install virtualmin unstable"
+        msg="$install_pre_msg unstable repository"
+        ;;
+      prerelease)
+        cmd="$down_cmd && sh install webmin prerelease && \
+             sh install virtualmin prerelease"
+        msg="$install_pre_msg prerelease repository"
+        ;;
+      *)
+        return 1
+        ;;
+    esac
+    run_ok "$cmd" "$msg"
+  fi
+}
+
 # Test if grade B system
 grade_b_system() {
   case "$os_type" in
@@ -797,6 +916,7 @@ uninstall() {
   phase "$uninstall_phase_description" "$phase_number"
   run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
   run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
+  handle_branches
 }
 
 # Phase control
@@ -941,6 +1061,41 @@ EOF
   fi
 }
 
+unstable_repos_system_msg() {
+  if [ -n "$branch" ]; then
+    if [ "$branch" = "unstable" ]; then
+      cat <<EOF
+
+  ${REDBG}${WHITE}${BOLD} DANGER ${NORMAL}
+
+  You have enabled the unstable development branch, where packages are built
+  automatically with every commit to the repositories of each product we
+  offer. This branch is strictly for testing and development purposes
+  and must not be used in a production environment!
+
+EOF
+    elif [ "$branch" = "prerelease" ]; then
+      cat <<EOF
+
+  ${YELLOWBG}${BLACK}${BOLD} NOTICE ${NORMAL}
+
+  You have enabled the prerelease branch, where packages are automatically
+  built for tagged releases of each product we offer. This branch provides
+  early access to features and updates before they are included in the
+  stable branch.
+
+EOF
+    fi
+    
+    if [ "$skipyesno" -ne 1 ]; then
+      printf " Continue with $branch branch? (y/n) "
+      if ! yesno; then
+        exit
+      fi
+    fi
+  fi
+}
+
 preconfigured_system_msg() {
   # Double check if installed, just in case above error ignored.
   is_preconfigured_rs=$(is_preconfigured)
@@ -1013,6 +1168,7 @@ if [ -z "$setup_only" ] && [ -z "$skipbanner" ]; then
   if grade_b_system; then
     bind_hook "os_unstable_pre_check"
   fi
+  bind_hook "unstable_repos_system_msg"
   bind_hook "preconfigured_system_msg"
   bind_hook "already_installed_msg"
 fi
@@ -1459,6 +1615,7 @@ install_virtualmin_release() {
 # Setup repos only
 if [ -n "$setup_only" ]; then
   if install_virtualmin_release; then
+    handle_branches
     log_success "Repository configuration successful. You can now install Virtualmin"
     log_success "components using your OS package manager."
   else
@@ -1636,6 +1793,7 @@ yum_check_skipped() {
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
 install_virtualmin_release
+handle_branches
 bind_hook "phase2_post"
 echo
 phase "Installation" 3
