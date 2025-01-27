@@ -921,7 +921,7 @@ os_unstable_pre_check() {
   if [ -n "$unstable" ]; then
     cat <<EOF
 
-  ${YELLOWBG}${BLACK}${BOLD} INSTALLATION WARNING! ${NORMAL}
+  ${YELLOWBG}${BLACK}${BOLD} INSTALLATION WARNING ${NORMAL}
 
   You are about to install Virtualmin $PRODUCT on a ${BOLD}Grade B${NORMAL} operating
   system. Be advised that this OS version is not recommended for servers,
@@ -947,7 +947,7 @@ preconfigured_system_msg() {
   if [ -n "$is_preconfigured_rs" ]; then
     cat <<EOF
 
-  ${WHITEBG}${RED}${BOLD} ATTENTION! ${NORMAL}
+  ${WHITEBG}${RED}${BOLD} ATTENTION ${NORMAL}
 
   Pre-installed software detected: $is_preconfigured_rs
 
@@ -972,7 +972,7 @@ already_installed_msg() {
   if is_installed; then
     cat <<EOF
 
-  ${WHITEBG}${RED}${BOLD} WARNING! ${NORMAL}
+  ${WHITEBG}${RED}${BOLD} WARNING ${NORMAL}
 
   Virtualmin may already be installed. This can happen if an installation
   failed, and can be ignored in that case.
