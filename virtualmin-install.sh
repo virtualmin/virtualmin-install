@@ -16,6 +16,8 @@ vm_version=7
 # Server
 download_virtualmin_host="${download_virtualmin_host:-software.virtualmin.com}"
 download_virtualmin_host_lib="$download_virtualmin_host/lib"
+download_virtualmin_host_dev="${download_virtualmin_host_dev:-software.virtualmin.dev}"
+download_webmin_host_dev="${download_webmin_host_dev:-download.webmin.dev}"
 
 # Save current working directory
 pwd="$PWD"
