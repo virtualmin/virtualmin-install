@@ -716,9 +716,9 @@ uninstall() {
     printf "  ${REDBG}${BLACK}${BOLD} WARNING ${NORMAL}\\n"
     echo
     echo "  This operation is highly disruptive and cannot be undone. It removes all of"
-    echo "  the packages and configuration files installed by the Virtualmin installer."
+    echo "  the packages and configuration files installed by the Virtualmin installer!"
     echo
-    echo "  It must never be executed on a live production system."
+    echo "  It must never be executed on a live production system!"
     echo
     printf " ${RED}Uninstall?${NORMAL} (y/N) "
     if ! yesno; then
