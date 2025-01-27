@@ -259,17 +259,16 @@ parse_args() {
       ;;
     --connect | -C)
       shift
-      if [ -z "$1" ]; then
-        test_connection "$download_virtualmin_host" "ipv4"
-        test_connection "$download_virtualmin_host" "ipv6"
-        exit 0
+      if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
+        test_connection_type="ipv4 ipv6"
       else
         if [ "$1" != "ipv4" ] && [ "$1" != "ipv6" ]; then
-          usage
+          printf "Invalid protocol: $1\\n"
+          bind_hook "usage"
           exit 1
         fi
-        test_connection "$download_virtualmin_host" "$1"
-        exit 0
+        test_connection_type="$1"
+        shift
       fi
       ;;
     --os-grade | -g)
@@ -353,6 +352,18 @@ show_version() {
 # Hook version
 if [ -n "$showversion" ]; then
   bind_hook "show_version"
+fi
+
+# If connectivity test is requested
+if [ -n "$test_connection_type" ]; then
+  for test_type in $test_connection_type; do
+    test_connection "$download_virtualmin_host" "$test_type"
+    if [ -n "$branch" ]; then
+      test_connection "$download_virtualmin_host_dev" "$test_type"
+      test_connection "$download_webmin_host_dev" "$test_type"
+    fi
+  done
+  exit 0
 fi
 
 # Force setup mode, if script name is `setup-repos.sh` as it
