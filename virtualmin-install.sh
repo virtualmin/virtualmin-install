@@ -42,13 +42,13 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
-  printf "  --bundle|-b <LAMP|LEMP>           choose bundle to install (default: LAMP)\\n"
-  printf "  --type|-t <full|mini|micro|nano>  installation type (default: full)\\n"
-  printf "  --os-grade|-g <A|B>               OS grade support (default: A)\\n"
+  printf "  --bundle|-b <LAMP|LEMP>           bundle to install (default: LAMP)\\n"
+  printf "  --type|-t <full|mini|micro|nano>  install type (default: full)\\n"
+  printf "  --os-grade|-g <A|B>               operating system support grade (default: A)\\n"
   printf "  --module|-o                       load custom module in post-install phase\\n"
   echo
-  printf "  --hostname|-n                     force hostname during installation\\n"
-  printf "  --no-package-updates|-x           skip package updates during installation\\n"
+  printf "  --hostname|-n                     force hostname during install\\n"
+  printf "  --no-package-updates|-x           skip package updates during install\\n"
   echo
   printf "  --setup|-s                        reconfigure repos without installing\\n"
   printf "  --connect|-C <ipv4|ipv6>          test connectivity without installing\\n"
