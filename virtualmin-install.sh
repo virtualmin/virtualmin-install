@@ -1446,9 +1446,9 @@ install_virtualmin_release() {
     sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
     ;;
   *)
-    log_error " Your OS is not currently supported by this installer."
-    log_error " You can probably run Virtualmin Professional on your system, anyway,"
-    log_error " but you'll have to install it using the manual installation process."
+    log_error " Your OS is not currently supported by this installer. Nevertheless, you"
+    log_error " should still be able to run Virtualmin on your system by following the"
+    log_error " manual installation process."
     exit 1
     ;;
   esac
