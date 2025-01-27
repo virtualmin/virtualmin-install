@@ -713,7 +713,7 @@ uninstall() {
 
   if [ "$skipyesno" -ne 1 ]; then
     echo
-    printf "  ${REDBG}WARNING${NORMAL}\\n"
+    printf "  ${REDBG}${BLACK}${BOLD} WARNING ${NORMAL}\\n"
     echo
     echo "  This operation is highly disruptive and cannot be undone. It removes all of"
     echo "  the packages and configuration files installed by the Virtualmin installer."
