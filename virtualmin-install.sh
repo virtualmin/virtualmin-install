@@ -42,27 +42,27 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
-  printf "  --bundle|-b <LAMP|LEMP>          choose bundle to install (default: LAMP)\\n"
-  printf "  --type|-t <full|mini|micro|nano> installation type (default: full)\\n"
-  printf "  --os-grade|-g <A|B>              OS grade support (default: A)\\n"
-  printf "  --module|-o                      load custom module in post-install phase\\n"
+  printf "  --bundle|-b <LAMP|LEMP>           choose bundle to install (default: LAMP)\\n"
+  printf "  --type|-t <full|mini|micro|nano>  installation type (default: full)\\n"
+  printf "  --os-grade|-g <A|B>               OS grade support (default: A)\\n"
+  printf "  --module|-o                       load custom module in post-install phase\\n"
   echo
-  printf "  --hostname|-n                    force hostname during installation\\n"
-  printf "  --no-package-updates|-x          skip package updates during installation\\n"
+  printf "  --hostname|-n                     force hostname during installation\\n"
+  printf "  --no-package-updates|-x           skip package updates during installation\\n"
   echo
-  printf "  --setup|-s                       reconfigure repos without installing\\n"
-  printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
+  printf "  --setup|-s                        reconfigure repos without installing\\n"
+  printf "  --connect|-C <ipv4|ipv6>          test connectivity without installing\\n"
   echo
-  printf "  --insecure-downloads|-i          skip SSL certificate check for downloads\\n"
+  printf "  --insecure-downloads|-i           skip SSL certificate check for downloads\\n"
   echo
-  printf "  --uninstall|-u                   remove all packages and dependencies\\n"
+  printf "  --uninstall|-u                    remove all packages and dependencies\\n"
   echo
-  printf "  --force|-f|--yes|-y              assume \"yes\" to all prompts\\n"
-  printf "  --force-reinstall|-fr            force complete reinstall (not recommended)\\n"
-  printf "  --no-banner|-nb                  suppress installation messages and warnings\\n"
-  printf "  --verbose|-v                     enable verbose mode\\n"
-  printf "  --version|-V                     show installer version\\n"
-  printf "  --help|-h                        show this help\\n"
+  printf "  --force|-f|--yes|-y               assume \"yes\" to all prompts\\n"
+  printf "  --force-reinstall|-fr             force complete reinstall (not recommended)\\n"
+  printf "  --no-banner|-nb                   suppress installation messages and warnings\\n"
+  printf "  --verbose|-v                      enable verbose mode\\n"
+  printf "  --version|-V                      show installer version\\n"
+  printf "  --help|-h                         show this help\\n"
   echo
 }
 
