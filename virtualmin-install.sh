@@ -42,9 +42,7 @@ usage() {
   echo
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
-  printf "  --bundle|-b <LAMP|LEMP>          choose bundle to install (defaults to LAMP)\\n"
-  printf "  --type|-t <full|mini|micro|nano> installation type (defaults to full)\\n"
-  printf "  --unstable|-e                    enable unstable OS support (not recommended)\\n"
+  printf "  --os-grade|-g <A|B>              OS grade support (default: A)\\n"
   printf "  --module|-o                      load custom module in post-install phase\\n"
   echo
   printf "  --hostname|-n                    force hostname during installation\\n"
@@ -246,6 +244,25 @@ parse_args() {
         test_connection "$download_virtualmin_host" "$1"
         exit 0
       fi
+      ;;
+    --os-grade | -g)
+      shift
+      case "$1" in
+      A|a)
+        shift
+        ;;
+      B|b)
+        shift
+        unstable='unstable'
+        virtualmin_config_system_excludes=""
+        virtualmin_stack_custom_packages=""
+        ;;
+      *)
+        printf "Unknown OS grade: $1\\n"
+        bind_hook "usage"
+        exit 1
+        ;;
+      esac
       ;;
     --unstable | -e)
       shift
