@@ -657,7 +657,7 @@ handle_branches() {
 
   # Remove existing unstable or prerelease repos if found
   for repo in virtualmin-unstable virtualmin-prerelease webmin-unstable \
-              webmin-prerelease webmin-testing; do
+              webmin-prerelease webmin-testing webmin-nightly; do
     repo_file="${repo_dir}/${repo}.${repo_ext}"
     if [ -f "$repo_file" ]; then
       del_cmd="${del_cmd:+$del_cmd && }rm -f $repo_file"
