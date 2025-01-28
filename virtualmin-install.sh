@@ -694,6 +694,12 @@ handle_branches() {
     else
       msg="Uninstalling Virtualmin $vm_version prerelease repository"
     fi
+
+    # If removing only, update metadata
+    if [ -z "$branch" ]; then
+      del_cmd="$del_cmd && $update"
+    fi
+
     # Remove silently if reinstalling
     if [ -n "$branch" ] && [ "$found_both" -eq 0 ] && [ "$found_type" = "$branch" ]; then
       eval "$del_cmd"
@@ -877,14 +883,17 @@ uninstall() {
       if command -pv dnf 1>/dev/null 2>&1; then
         uninstall_cmd="dnf remove -y"
         uninstall_cmd_group="dnf groupremove -y"
+        update="dnf clean all ; dnf makecache"
       else
         uninstall_cmd="yum remove -y"
         uninstall_cmd_group="yum groupremove -y"
+        update="yum clean all ; yum makecache"
       fi
       ;;
     debian | ubuntu | kali)
       package_type=deb
       uninstall_cmd="apt-get remove --assume-yes --purge"
+      update="apt-get clean ; apt-get update"
       ;;
     esac
     
