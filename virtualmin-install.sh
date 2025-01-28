@@ -662,7 +662,7 @@ handle_branches() {
     if [ -f "$repo_file" ]; then
       del_cmd="${del_cmd:+$del_cmd && }rm -f $repo_file"
       case "$repo" in
-        *unstable* | *testing*)
+        *unstable* | *testing* | *nightly*)
           found_unstable=1
           found_type="unstable"
           ;;
