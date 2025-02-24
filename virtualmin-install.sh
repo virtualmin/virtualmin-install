@@ -371,7 +371,7 @@ fi
 
 # Force setup mode, if script name is `setup-repos.sh` as it
 # is used by Virtualmin API, to make sure users won't run an
-# actuall install script under any circumstances
+# actual install script under any circumstances
 if [ "$script_name" = "setup-repos.sh" ]; then
   setup_only=1
   mode='setup'
