@@ -1511,33 +1511,35 @@ install_virtualmin_release() {
       install_config_manager="yum-config-manager"
     fi
 
-    # Download release file
-    rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
-    download "https://${LOGIN}$download_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
-    
-    # Remove existing pkg files as they will not
-    # be replaced upon replease package upgrade
-    if [ -x "/usr/bin/rpm" ]; then
-      rpm_release_files="$(rpm -qal virtualmin*release)"
-      rpm_release_files=$(echo "$rpm_release_files" | tr '\n' ' ')
-      if [ -n "$rpm_release_files" ]; then
-        for rpm_release_file in $rpm_release_files; do
-           rm -f "$rpm_release_file"
-        done
+    # Download release file unless a different branch is specified
+    if [ -z "$branch" ]; then
+      rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
+      download "https://${LOGIN}$download_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
+      
+      # Remove existing pkg files as they will not
+      # be replaced upon replease package upgrade
+      if [ -x "/usr/bin/rpm" ]; then
+        rpm_release_files="$(rpm -qal virtualmin*release)"
+        rpm_release_files=$(echo "$rpm_release_files" | tr '\n' ' ')
+        if [ -n "$rpm_release_files" ]; then
+          for rpm_release_file in $rpm_release_files; do
+            rm -f "$rpm_release_file"
+          done
+        fi
       fi
-    fi
 
-    # Remove releases first, as the system can
-    # end up having both GPL and Pro installed
-    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release 2>/dev/null)" >> "$RUN_LOG" 2>&1
+      # Remove releases first, as the system can
+      # end up having both GPL and Pro installed
+      rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release 2>/dev/null)" >> "$RUN_LOG" 2>&1
 
-    # Install release file
-    run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
+      # Install release file
+      run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
 
-    # Fix login credentials if fixing repos
-    if [ -n "$setup_only" ]; then
-      sed -i "s/SERIALNUMBER:LICENSEKEY@/$LOGIN/" /etc/yum.repos.d/virtualmin.repo
-      sed -i 's/http:\/\//https:\/\//' /etc/yum.repos.d/virtualmin.repo
+      # Fix login credentials if fixing repos
+      if [ -n "$setup_only" ]; then
+        sed -i "s/SERIALNUMBER:LICENSEKEY@/$LOGIN/" /etc/yum.repos.d/virtualmin.repo
+        sed -i 's/http:\/\//https:\/\//' /etc/yum.repos.d/virtualmin.repo
+      fi
     fi
     ;;
   debian | ubuntu | kali)
@@ -1582,31 +1584,33 @@ install_virtualmin_release() {
     remove_virtualmin_release
     
     # Set correct keys name for Debian vs derivatives
-    repoid_debian_like=debian
-    if [ -n "${os_type}" ]; then
-      repoid_debian_like="${os_type}"
-    fi
-
-    # Setup repo file
-    apt_auth_dir='/etc/apt/auth.conf.d'
-    LOGINREAL=$LOGIN
-    if [ -d "$apt_auth_dir" ]; then
-      if [ -n "$LOGIN" ]; then
-        LOGINREAL=""
-        printf "machine $download_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
+    # Download release file unless a different branch is specified
+    if [ -z "$branch" ]; then
+      repoid_debian_like=debian
+      if [ -n "${os_type}" ]; then
+        repoid_debian_like="${os_type}"
       fi
-    fi
-    for repo in $repos; do
-      printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$download_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
-    done
 
-    # Install our keys
-    log_debug "Installing Webmin and Virtualmin package signing keys .."
-    download "https://$download_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-    run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
-    run_ok "apt-get update" "Downloading repository metadata"
+      # Setup repo file
+      apt_auth_dir='/etc/apt/auth.conf.d'
+      LOGINREAL=$LOGIN
+      if [ -d "$apt_auth_dir" ]; then
+        if [ -n "$LOGIN" ]; then
+          LOGINREAL=""
+          printf "machine $download_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
+        fi
+      fi
+      for repo in $repos; do
+        printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$download_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
+      done
+
+      # Install our keys
+      log_debug "Installing Webmin and Virtualmin package signing keys .."
+      download "https://$download_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
+      run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
+      run_ok "apt-get update" "Downloading repository metadata"
+    fi
     # Make sure universe repos are available
-    # XXX Test to make sure this run_ok syntax works as expected (with single quotes inside double)
     if [ "$os_type" = "ubuntu" ]; then
       if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then
         run_ok "add-apt-repository -y universe" \
@@ -1616,12 +1620,11 @@ install_virtualmin_release() {
           "Enabling universe repositories, if not already available"
       fi
     fi
-    # XXX Is this still enabled by default on Debian/Ubuntu systems?
+    # Is this still enabled by default on Debian/Ubuntu systems?
     run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     update="/usr/bin/apt-get clean ; /usr/bin/apt-get update"
-    #export DEBIAN_FRONTEND=noninteractive
     install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
     sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
