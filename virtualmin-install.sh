@@ -768,21 +768,21 @@ fi
 remove_virtualmin_release() {
   case "$os_type" in
   rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
-    rm -f /etc/yum.repos.d/virtualmin.repo
+    rm -f /etc/yum.repos.d/virtualmin*
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
-    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin
+    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin*
     ;;
   debian | ubuntu | kali)
     grep -v "virtualmin" /etc/apt/sources.list >"$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list
     mv "$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list /etc/apt/sources.list
-    rm -f /etc/apt/sources.list.d/virtualmin.list
-    rm -f /etc/apt/auth.conf.d/virtualmin.conf
+    rm -f /etc/apt/sources.list.d/virtualmin*
+    rm -f /etc/apt/auth.conf.d/virtualmin*
     rm -f /usr/share/keyrings/debian-virtualmin*
-    rm -f /usr/share/keyrings/debian-webmin
+    rm -f /usr/share/keyrings/debian-webmin*
     rm -f /usr/share/keyrings/ubuntu-virtualmin*
-    rm -f /usr/share/keyrings/ubuntu-webmin
+    rm -f /usr/share/keyrings/ubuntu-webmin*
     rm -f /usr/share/keyrings/kali-virtualmin*
-    rm -f /usr/share/keyrings/kali-webmin
+    rm -f /usr/share/keyrings/kali-webmin*
     ;;
   esac
 }
