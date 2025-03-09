@@ -1003,7 +1003,7 @@ install_msg() {
 
   cat <<EOF
 
-  Welcome to the Virtualmin ${GREEN}$PRODUCT${NORMAL} installer, version ${GREEN}$VER${NORMAL}
+  Welcome to the ${GREEN}${BOLD}Virtualmin $PRODUCT${NORMAL} installer, version ${GREEN}${BOLD}$VER${NORMAL}
 
   This script must be run on a freshly installed supported OS. It does not
   perform updates or upgrades (use your system package manager) or license
