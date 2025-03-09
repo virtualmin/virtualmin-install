@@ -56,7 +56,7 @@ jobs:
           # Bootstrap build
           source bootstrap.bash $([[ "$IS_RELEASE" == "true" ]] || echo "--testing")
 
-          # Get package version and testing flag
+          # Get package version
           pkg_version=$(get_remote_git_tag_version "$GH_REPO" "$GH_TOKEN" "$IS_RELEASE")
 
           # Prepare build
