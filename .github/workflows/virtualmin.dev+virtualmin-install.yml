@@ -1,0 +1,69 @@
+name: "virtualmin.dev: virtualmin/virtualmin-install"
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types:
+      - published
+      - edited
+
+env:
+  GH_REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  IS_RELEASE: ${{ github.event_name == 'release' }}
+
+  BUILD_DEPS: "curl"
+  BUILD_BOOTSTRAP: "https://raw.githubusercontent.com/webmin/webmin-ci-cd/main/build/bootstrap.bash"
+
+jobs:
+  build-amd64:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.head_commit.message, '[no-build]') }}
+    env:
+      TZ: Europe/Nicosia
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with: 
+          packages: ${{ env.BUILD_DEPS }}
+          version: 1.0
+
+      - name: Fetch dependencies
+        run: curl -O ${{ env.BUILD_BOOTSTRAP }}
+
+      - name: Set timezone
+        run: sudo timedatectl set-timezone ${{ env.TZ }}
+
+      - name: Upload file
+        env:
+          CLOUD__GPG_PH: ${{ secrets.DEV_GPG_PH }}
+          CLOUD__IP_ADDR: ${{ secrets.DEV_IP_ADDR }}
+          CLOUD__IP_KNOWN_HOSTS: ${{ secrets.DEV_IP_KNOWN_HOSTS }}
+          CLOUD__UPLOAD_SSH_USER: ${{ secrets.DEV_UPLOAD_SSH_USER }}
+          CLOUD__UPLOAD_SSH_DIR: ${{ env.IS_RELEASE == 'true' && secrets.PRERELEASE_UPLOAD_SSH_DIR || secrets.DEV_UPLOAD_SSH_DIR }}
+          CLOUD__SSH_PRV_KEY: ${{ secrets.DEV_SSH_PRV_KEY }}
+          CLOUD__SIGN_BUILD_REPOS_CMD: ${{ secrets.DEV_SIGN_BUILD_REPOS_CMD }}
+        run: |-
+
+          # Fail on error
+          set -euo pipefail
+          
+          # Bootstrap build
+          source bootstrap.bash $([[ "$IS_RELEASE" == "true" ]] || echo "--testing")
+
+          # Get package version and testing flag
+          pkg_version=$(get_remote_git_tag_version "$GH_REPO" "$GH_TOKEN" "$IS_RELEASE")
+
+          # Prepare build
+          virtualmin_install_versioned="virtualmin-install-$pkg_version.sh"
+          cp -p virtualmin-install.sh "$virtualmin_install_versioned"
+
+          # Delete previous versions and upload new files
+          upload_list=("virtualmin-install.sh" "$virtualmin_install_versioned")
+          delete_list=("$CLOUD_UPLOAD_SSH_DIR virtualmin-install * *sh")
+          cloud_upload upload_list delete_list
