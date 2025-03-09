@@ -24,6 +24,9 @@ download_webmin_host_rc="${download_webmin_host_rc:-rc.download.webmin.dev}"
 # Save current working directory
 pwd="$PWD"
 
+# License file
+virtualmin_license_file="/etc/virtualmin-license"
+
 # Script name
 if [ "$0" = "--" ] || [ -z "$0" ]; then
   script_name="virtualmin-install.sh"
@@ -406,9 +409,9 @@ fi
 # If Pro user downloads GPL version of `install.sh` script
 # to fix repos check if there is an active license exists
 if [ -n "$setup_only" ]; then
-  if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f /etc/virtualmin-license ]; then
-    virtualmin_license_existing_serial="$(grep 'SerialNumber=' /etc/virtualmin-license | sed 's/SerialNumber=//')"
-    virtualmin_license_existing_key="$(grep 'LicenseKey=' /etc/virtualmin-license | sed 's/LicenseKey=//')"
+  if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f "$virtualmin_license_file" ]; then
+    virtualmin_license_existing_serial="$(grep 'SerialNumber=' "$virtualmin_license_file" | sed 's/SerialNumber=//')"
+    virtualmin_license_existing_key="$(grep 'LicenseKey=' "$virtualmin_license_file" | sed 's/LicenseKey=//')"
     if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
       SERIAL="$virtualmin_license_existing_serial"
       KEY="$virtualmin_license_existing_key"
@@ -847,7 +850,7 @@ is_preconfigured() {
 # folks run the install script on a production system; either to attempt
 # to upgrade, or to "fix" something. That's never the right thing.
 is_installed() {
-  if [ -f /etc/virtualmin-license ]; then
+  if [ -f "$virtualmin_license_file" ]; then
     # looks like it's been installed before
     return 0
   fi
@@ -935,7 +938,6 @@ uninstall() {
   {
     echo "Removing Virtualmin $vm_version repo configuration"
     remove_virtualmin_release
-    virtualmin_license_file="/etc/virtualmin-license"
     if [ -f "$virtualmin_license_file" ]; then
       echo "Removing Virtualmin license"
       rm "$virtualmin_license_file"
@@ -1425,11 +1427,11 @@ if [ -z "$setup_only" ]; then
   fi
 fi
 
-# Insert the serial number and password into /etc/virtualmin-license
-log_debug "Installing serial number and license key into /etc/virtualmin-license"
-echo "SerialNumber=$SERIAL" >/etc/virtualmin-license
-echo "LicenseKey=$KEY" >>/etc/virtualmin-license
-chmod 700 /etc/virtualmin-license
+# Insert the serial number and password into license file
+log_debug "Installing serial number and license key into '$virtualmin_license_file'"
+echo "SerialNumber=$SERIAL" > "$virtualmin_license_file"
+echo "LicenseKey=$KEY" >> "$virtualmin_license_file"
+chmod 700 "$virtualmin_license_file"
 cd ..
 
 # Populate some distro version globals
