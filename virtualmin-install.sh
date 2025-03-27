@@ -1697,7 +1697,7 @@ install_with_yum() {
   # Enable CodeReady and EPEL on RHEL 8+
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "rhel" ]; then
     # Important Perl packages are now hidden in CodeReady repo
-    run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-x86_64-rpms" "Enabling Red Hat CodeReady package repository"
+    run_ok "$install_config_manager --set-enabled codeready-builder-for-rhel-$os_major_version-$arch-rpms" "Enabling Red Hat CodeReady package repository"
     # Install EPEL
     download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>"$log" 2>&1
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
