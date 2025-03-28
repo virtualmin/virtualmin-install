@@ -1497,12 +1497,16 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
+    allow_skip_broken=" --skip-broken"
+    if [ "$unstable" != 'unstable' ]; then
+      allow_skip_broken=""
+    fi
     if command -pv dnf 1>/dev/null 2>&1; then
       install_cmd="dnf"
       install="$install_cmd -y install"
       upgrade="$install_cmd -y update"
       update="$install_cmd clean all ; $install_cmd makecache"
-      install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet$allow_skip_broken group install --setopt=group_package_types=mandatory,default"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="$install_cmd config-manager"
       # Do not use package manager when fixing repos
@@ -1520,7 +1524,7 @@ install_virtualmin_release() {
           run_ok "$install_cmd --quiet groups mark convert" "Updating groups metadata"
         fi
       fi
-      install_group_opts="-y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet$allow_skip_broken groupinstall --setopt=group_package_types=mandatory,default"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="yum-config-manager"
     fi
