@@ -1195,9 +1195,14 @@ EOF
 }
 
 post_install_message() {
+  # Login at message
+  login_at="https://${hostname}:10000"
+  if [ -z "$ssl_host_success" ]; then
+    login_at="https://${hostname}:10000 (or https://${address}:10000)"
+  fi
   log_success "Installation Complete!"
   log_success "If there were no errors above, Virtualmin should be ready to configure"
-  log_success "at https://${hostname}:10000 (or https://${address}:10000)."
+  log_success "at $login_at."
   if [ -z "$ssl_host_success" ]; then
     log_success "You will see a security warning in the browser on your first visit."
   fi
