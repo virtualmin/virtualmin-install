@@ -437,6 +437,7 @@ fi
 
 # Virtualmin-provided packages
 vmgroup="'Virtualmin Core'"
+vmgroupid="virtualmincore"
 vmgrouptext="Virtualmin $vm_version provided packages"
 debvmpackages="virtualmin-core"
 deps=
@@ -444,11 +445,13 @@ deps=
 if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
+    rhgroupid="virtualmin-lamp"
     rhgrouptext="Virtualmin $vm_version LAMP stack"
     debdeps="virtualmin-lamp-stack"
     ubudeps="virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
+    rhgroupid="virtualmin-lemp"
     rhgrouptext="Virtualmin $vm_version LEMP stack"
     debdeps="virtualmin-lemp-stack"
     ubudeps="virtualmin-lemp-stack"
@@ -456,11 +459,13 @@ if [ "$mode" = 'full' ]; then
 elif [ "$mode" = 'mini' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
+    rhgroupid="virtualmin-lamp-minimal"
     rhgrouptext="Virtualmin $vm_version LAMP stack mini"
     debdeps="virtualmin-lamp-stack-minimal"
     ubudeps="virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
+    rhgroupid="virtualmin-lemp-minimal"
     rhgrouptext="Virtualmin $vm_version LEMP stack mini'"
     debdeps="virtualmin-lemp-stack-minimal"
     ubudeps="virtualmin-lemp-stack-minimal"
@@ -468,11 +473,13 @@ elif [ "$mode" = 'mini' ]; then
 elif [ "$mode" = 'micro' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Micro'"
+    rhgroupid="virtualmin-lamp-micro"
     rhgrouptext="Virtualmin $vm_version LAMP stack micro"
     debdeps="virtualmin-lamp-stack-micro"
     ubudeps="virtualmin-lamp-stack-micro"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Micro'"
+    rhgroupid="virtualmin-lemp-micro"
     rhgrouptext="Virtualmin $vm_version LEMP stack micro"
     debdeps="virtualmin-lemp-stack-micro"
     ubudeps="virtualmin-lemp-stack-micro"
@@ -480,11 +487,13 @@ elif [ "$mode" = 'micro' ]; then
 elif [ "$mode" = 'nano' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Nano'"
+    rhgroupid="virtualmin-lamp-nano"
     rhgrouptext="Virtualmin $vm_version LAMP stack nano"
     debdeps="virtualmin-lamp-stack-nano"
     ubudeps="virtualmin-lamp-stack-nano"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Nano'"
+    rhgroupid="virtualmin-lemp-nano"
     rhgrouptext="Virtualmin $vm_version LEMP stack nano"
     debdeps="virtualmin-lemp-stack-nano"
     ubudeps="virtualmin-lemp-stack-nano"
@@ -1782,8 +1791,8 @@ install_with_yum() {
   fi
 
   # Install core and stack
-  run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
+  run_ok "$install_group $rhgroupid" "Installing dependencies and system packages"
+  run_ok "$install_group $vmgroupid" "Installing Virtualmin $vm_version and all related packages"
   rs=$?
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $rs"
