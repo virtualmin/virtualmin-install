@@ -1511,7 +1511,7 @@ install_virtualmin_release() {
       install="$install_cmd -y install"
       upgrade="$install_cmd -y update"
       update="$install_cmd clean all ; $install_cmd makecache"
-      install_group_opts="-y --quiet$allow_skip_broken group install --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet group install --setopt=group_package_types=mandatory,default$allow_skip_broken"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="$install_cmd config-manager"
       # Do not use package manager when fixing repos
