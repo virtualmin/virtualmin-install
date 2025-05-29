@@ -1657,7 +1657,6 @@ install_virtualmin_release() {
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     update="/usr/bin/apt-get clean ; /usr/bin/apt-get update"
-    install_updates="$install $deps"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
     sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
     ;;
@@ -1861,14 +1860,6 @@ bind_hook "phase3_pre"
 install_virtualmin
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Package installation returned an error.\\n"
-  errors=$((errors + 1))
-fi
-
-# We want to make sure we're running our version of packages if we have
-# our own version.  There's no good way to do this, but we'll
-run_ok "$install_updates" "Installing Virtualmin $vm_version related package updates"
-if [ "$?" != "0" ]; then
-  errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Installing updates returned an error.\\n"
   errors=$((errors + 1))
 fi
 
