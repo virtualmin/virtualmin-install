@@ -1002,8 +1002,8 @@ fi
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8 and 9 on x86_64
-      - Alma and Rocky 8 and 9 on x86_64
+      - RHEL 8, 9 and 10 on x86_64
+      - Alma and Rocky 8, 9 and 10 on x86_64
       UNSTABLERHEL${NORMAL}
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
       - Debian 11 and 12 on i386 and amd64
