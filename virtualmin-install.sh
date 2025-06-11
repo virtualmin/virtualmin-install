@@ -39,7 +39,7 @@ log_file_name="${install_log_file_name:-virtualmin-install}"
 
 # Set defaults
 bundle='LAMP'        # Other option is LEMP
-mode="${mode:-full}" # Other options are mini/micro/nano
+mode="${mode:-full}" # Other option is mini
 skipyesno=0
 
 usage() {
@@ -50,7 +50,7 @@ usage() {
   echo "  If called without arguments, installs Virtualmin with default options."
   echo
   printf "  --bundle|-b <LAMP|LEMP>          bundle to install (default: LAMP)\\n"
-  printf "  --type|-t <full|mini|micro|nano> install type (default: full)\\n"
+  printf "  --type|-t <full|mini>            install type (default: full)\\n"
   echo
   printf "  --branch|-B <stable|unstable|prerelease>\\n"
   printf "                                   install branch (default: stable)\\n"
@@ -211,14 +211,6 @@ parse_args() {
       mini)
         shift
         mode='mini'
-        ;;
-      micro)
-        shift
-        mode='micro'
-        ;;
-      nano)
-        shift
-        mode='nano'
         ;;
       *)
         printf "Unknown type: $1\\n"
@@ -469,34 +461,6 @@ elif [ "$mode" = 'mini' ]; then
     rhgrouptext="Virtualmin $vm_version LEMP stack mini'"
     debdeps="virtualmin-lemp-stack-minimal"
     ubudeps="virtualmin-lemp-stack-minimal"
-  fi
-elif [ "$mode" = 'micro' ]; then
-  if [ "$bundle" = 'LAMP' ]; then
-    rhgroup="'Virtualmin LAMP Stack Micro'"
-    rhgroupid="virtualmin-lamp-micro"
-    rhgrouptext="Virtualmin $vm_version LAMP stack micro"
-    debdeps="virtualmin-lamp-stack-micro"
-    ubudeps="virtualmin-lamp-stack-micro"
-  elif [ "$bundle" = 'LEMP' ]; then
-    rhgroup="'Virtualmin LEMP Stack Micro'"
-    rhgroupid="virtualmin-lemp-micro"
-    rhgrouptext="Virtualmin $vm_version LEMP stack micro"
-    debdeps="virtualmin-lemp-stack-micro"
-    ubudeps="virtualmin-lemp-stack-micro"
-  fi
-elif [ "$mode" = 'nano' ]; then
-  if [ "$bundle" = 'LAMP' ]; then
-    rhgroup="'Virtualmin LAMP Stack Nano'"
-    rhgroupid="virtualmin-lamp-nano"
-    rhgrouptext="Virtualmin $vm_version LAMP stack nano"
-    debdeps="virtualmin-lamp-stack-nano"
-    ubudeps="virtualmin-lamp-stack-nano"
-  elif [ "$bundle" = 'LEMP' ]; then
-    rhgroup="'Virtualmin LEMP Stack Nano'"
-    rhgroupid="virtualmin-lemp-nano"
-    rhgrouptext="Virtualmin $vm_version LEMP stack nano"
-    debdeps="virtualmin-lemp-stack-nano"
-    ubudeps="virtualmin-lemp-stack-nano"
   fi
 fi
 
@@ -923,7 +887,7 @@ uninstall() {
     
     case "$package_type" in
     rpm)
-      $uninstall_cmd_group "Virtualmin Core" "Virtualmin LAMP Stack" "Virtualmin LEMP Stack" "Virtualmin LAMP Stack Minimal" "Virtualmin LEMP Stack Minimal" "Virtualmin LAMP Stack Micro" "Virtualmin LEMP Stack Micro" "Virtualmin LAMP Stack Nano" "Virtualmin LEMP Stack Nano"
+      $uninstall_cmd_group "Virtualmin Core" "Virtualmin LAMP Stack" "Virtualmin LEMP Stack" "Virtualmin LAMP Stack Minimal" "Virtualmin LEMP Stack Minimal"
       $uninstall_cmd wbm-* wbt-* webmin* usermin* virtualmin*
       os_type="rhel"
       return 0
@@ -1895,10 +1859,6 @@ phase "Configuration" 4
 bind_hook "phase4_pre"
 if [ "$mode" = "mini" ]; then
   bundle="Mini${bundle}"
-elif [ "$mode" = "micro" ]; then
-  bundle="Micro${bundle}"
-elif [ "$mode" = "nano" ]; then
-  bundle="Nano${bundle}"
 fi
 # shellcheck disable=SC2086
 virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes --log "$log"
