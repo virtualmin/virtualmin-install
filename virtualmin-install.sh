@@ -966,12 +966,12 @@ fi
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8, 9 and 10 on x86_64
-      - Alma and Rocky 8, 9 and 10 on x86_64
+      - RHEL 8, 9 and 10 on x86_64 and aarch64
+      - Alma and Rocky 8, 9 and 10 on x86_64 and aarch64
       UNSTABLERHEL${NORMAL}
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 11 and 12 on i386 and amd64
-      - Ubuntu 20.04 LTS, 22.04 LTS and 24.04 LTS on i386 and amd64${NORMAL}
+      - Debian 11 and 12 on i386, amd64 and arm64
+      - Ubuntu 20.04, 22.04 and 24.04 on i386, amd64 and arm64${NORMAL}
       UNSTABLEDEB${NORMAL}"
 
   cat <<EOF
@@ -1000,15 +1000,15 @@ EOF
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 40 and above on x86_64\\n \
-     - CentOS Stream 8 and 9 on x86_64\\n \
-     - Amazon Linux 2023 and above on x86_64\\n \
-     - Oracle Linux 8 and 9 on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 42 and above on x86_64 and aarch64\\n \
+     - CentOS Stream 8, 9 and 10 on x86_64 and aarch64\\n \
+     - Oracle Linux 8, 9 and 10 on x86_64 and aarch64\\n \
+     - Amazon Linux 2023 and above on x86_64 and aarch64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
-     - openEuler 24.03 and above on x86_64\\n \
+     - openEuler 24.03 and above on x86_64 and aarch64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Kali Linux Rolling 2023 and above on x86_64\\n \
-     - Ubuntu interim (non-LTS) on i386 and amd64\\n \
+    unstable_deb="${YELLOW}- Kali Linux Rolling 2025 and above on amd64 and arm64\\n \
+     - Ubuntu interim (non-LTS) on i386, amd64 and arm64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
