@@ -10,8 +10,8 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=7.8.0
-vm_version=7
+VER=8.0.0
+vm_version=8
 
 # Server
 download_virtualmin_host="${download_virtualmin_host:-software.virtualmin.com}"
