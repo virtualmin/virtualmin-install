@@ -1684,11 +1684,11 @@ install_with_yum() {
     run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on RHEL 7
   elif [ "$os_major_version" -eq 7 ] && [ "$os_type" = "rhel" ]; then
-    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm" >>"$log" 2>&1
-    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-7.noarch.rpm" "Installing EPEL 7 release package"
+    download "https://dl.fedoraproject.org/pub/epel/epel-release-latest-$os_major_version.noarch.rpm" >>"$log" 2>&1
+    run_ok "rpm -U --replacepkgs --quiet epel-release-latest-$os_major_version.noarch.rpm" "Installing EPEL $os_major_version release package"
   # Install EPEL on CentOS/Alma/Rocky
   elif [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ]; then  
-    run_ok "$install epel-release" "Installing EPEL release package"
+    run_ok "$install epel-release" "Installing EPEL $os_major_version release package"
   # CloudLinux EPEL 
   elif [ "$os_type" = "cloudlinux" ]; then
     # Install EPEL on CloudLinux
