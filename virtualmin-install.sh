@@ -565,7 +565,7 @@ download_slib() {
 already_installed_block() {
   log_error "Your system already has a successful Virtualmin installation deployed."
   log_error "Re-installation is neither possible nor necessary. This script must be"
-  log_error "run on a freshly installed supported operating system. It does not fit"
+  log_error "run on a freshly installed supported operating system. It is not meant"
   log_error "for package updates or license changes. For further assistance, please"
   log_error "visit the Virtualmin Community forum."
   exit 100
