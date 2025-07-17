@@ -337,6 +337,7 @@ fi
 
 # Virtualmin-provided packages
 vmgroup="'Virtualmin Core'"
+vmgroupid="virtualmincore"
 vmgrouptext="Virtualmin $vm_version provided packages"
 debvmpackages="virtualmin-core"
 deps=
@@ -344,11 +345,13 @@ deps=
 if [ "$mode" = 'full' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack'"
+    rhgroupid="virtualmin-lamp"
     rhgrouptext="Virtualmin $vm_version LAMP stack"
     debdeps="virtualmin-lamp-stack"
     ubudeps="virtualmin-lamp-stack"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack'"
+    rhgroupid="virtualmin-lemp"
     rhgrouptext="Virtualmin $vm_version LEMP stack"
     debdeps="virtualmin-lemp-stack"
     ubudeps="virtualmin-lemp-stack"
@@ -356,11 +359,13 @@ if [ "$mode" = 'full' ]; then
 elif [ "$mode" = 'minimal' ]; then
   if [ "$bundle" = 'LAMP' ]; then
     rhgroup="'Virtualmin LAMP Stack Minimal'"
+    rhgroupid="virtualmin-lamp-minimal"
     rhgrouptext="Virtualmin $vm_version LAMP stack minimal"
     debdeps="virtualmin-lamp-stack-minimal"
     ubudeps="virtualmin-lamp-stack-minimal"
   elif [ "$bundle" = 'LEMP' ]; then
     rhgroup="'Virtualmin LEMP Stack Minimal'"
+    rhgroupid="virtualmin-lemp-minimal"
     rhgrouptext="Virtualmin $vm_version LEMP stack minimal'"
     debdeps="virtualmin-lemp-stack-minimal"
     ubudeps="virtualmin-lemp-stack-minimal"
@@ -764,9 +769,8 @@ fi
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8 and 9 on x86_64
-      - Alma and Rocky 8 and 9 on x86_64
-      - CentOS 7 on x86_64${NORMAL}
+      - RHEL 8, 9 and 10 on x86_64
+      - Alma and Rocky 8, 9 and 10 on x86_64
       UNSTABLERHEL
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
       - Debian 10, 11 and 12 on i386 and amd64
@@ -1217,12 +1221,16 @@ install_virtualmin_release() {
       fi
     fi
     package_type="rpm"
+    allow_skip_broken=" --skip-broken"
+    if [ "$unstable" != 'unstable' ]; then
+      allow_skip_broken=""
+    fi
     if command -pv dnf 1>/dev/null 2>&1; then
       install_cmd="dnf"
       install="$install_cmd -y install"
       upgrade="$install_cmd -y update"
       update="$install_cmd clean all ; $install_cmd makecache"
-      install_group_opts="-y --quiet --skip-broken group install --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet group install --setopt=group_package_types=mandatory,default$allow_skip_broken"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="$install_cmd config-manager"
       # Do not use package manager when fixing repos
@@ -1240,7 +1248,7 @@ install_virtualmin_release() {
           run_ok "$install_cmd --quiet groups mark convert" "Updating groups metadata"
         fi
       fi
-      install_group_opts="-y --quiet --skip-broken groupinstall --setopt=group_package_types=mandatory,default"
+      install_group_opts="-y --quiet$allow_skip_broken groupinstall --setopt=group_package_types=mandatory,default"
       install_group="$install_cmd $install_group_opts"
       install_config_manager="yum-config-manager"
     fi
@@ -1489,8 +1497,8 @@ install_with_yum() {
   fi
 
   # Install core and stack
-  run_ok "$install_group $rhgroup" "Installing dependencies and system packages"
-  run_ok "$install_group $vmgroup" "Installing Virtualmin $vm_version and all related packages"
+  run_ok "$install_group $rhgroupid" "Installing dependencies and system packages"
+  run_ok "$install_group $vmgroupid" "Installing Virtualmin $vm_version and all related packages"
   rs=$?
   if [ $? -ne 0 ]; then
     fatal "Installation failed: $rs"
