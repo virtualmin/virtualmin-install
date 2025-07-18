@@ -1169,13 +1169,27 @@ EOF
 
 post_install_message() {
   # Login at message
-  login_at="https://${hostname}:10000"
+  login_at1="https://${hostname}:10000."
   if [ -z "$ssl_host_success" ]; then
-    login_at="https://${hostname}:10000 (or https://${address}:10000)"
+    login_at_combined="https://${hostname}:10000 (or https://${address}:10000)."
+    login_at_len=${#login_at_combined}
+    if [ "$login_at_len" -gt 64 ]; then
+        # Split into two lines
+        login_at1="https://${hostname}:10000 (or"
+        login_at2="https://${address}:10000)."
+    else
+        # Single line
+        login_at1=$login_at_combined
+        login_at2=
+    fi
+    
   fi
   log_success "Installation Complete!"
-  log_success "If there were no errors above, Virtualmin should be ready to configure"
-  log_success "at $login_at."
+  log_success "If there were no errors above, Virtualmin is ready to be configured"
+  log_success "at $login_at1"
+  if [ -n "$login_at2" ]; then
+    log_success "$login_at2"
+  fi
   if [ -z "$ssl_host_success" ]; then
     log_success "You will see a security warning in the browser on your first visit."
   fi
