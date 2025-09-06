@@ -21,25 +21,26 @@ the standard package needs tweaks, we provide it in our repository and fetch it 
 The **Grade A** systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
-      - RHEL 8 and 9 on x86_64
-      - Alma and Rocky 8 and 9 on x86_64
-      - CentOS 7 on x86_64 (no longer recommended)
+      - Alma and Rocky 8, 9 and 10 on x86_64 and aarch64
+      - RHEL 8, 9 and 10 on x86_64 and aarch64
       
     Debian Linux and derivatives
-      - Debian 10, 11 and 12 on i386 and amd64
-      - Ubuntu 20.04 LTS, 22.04 LTS and 24.04 LTS on i386 and amd64
+      - Debian 11, 12 and 13 on i386, amd64 and arm64
+      - Ubuntu 20.04, 22.04 and 24.04 on i386, amd64 and arm64
 
 The _Grade B_ systems currently supported by install script are:
 
     Red Hat Enterprise Linux and derivatives
-      - Fedora Server 38 and above on x86_64
-      - CentOS Stream 8 and 9 on x86_64
-      - Oracle Linux 8 and 9 on x86_64
+      - Fedora Server 42 and above on x86_64 and aarch64
+      - CentOS Stream 8, 9 and 10 on x86_64 and aarch64
+      - Oracle Linux 8, 9 and 10 on x86_64 and aarch64
+      - Amazon Linux 2023 and above on x86_64 and aarch64
       - CloudLinux 8 and 9 on x86_64
-      - Amazon Linux 2023 and above on x86_64
+      - openEuler 24.03 and above on x86_64 and aarch64
   
     Debian Linux and derivatives
-      - Kali Linux Rolling 2023 and above on x86_64
+      - Kali Linux Rolling 2025 and above on x86_64
+      - Ubuntu interim (non-LTS) on i386, amd64 and arm64
 
 We strongly recommend you use the latest version of your preferred **Grade A** supported distribution. The latest release gets the most active testing and bug fixing.
 
