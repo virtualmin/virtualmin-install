@@ -966,11 +966,11 @@ fi
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - RHEL 8, 9 and 10 on x86_64 and aarch64
       - Alma and Rocky 8, 9 and 10 on x86_64 and aarch64
+      - RHEL 8, 9 and 10 on x86_64 and aarch64
       UNSTABLERHEL${NORMAL}
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 11 and 12 on i386, amd64 and arm64
+      - Debian 11, 12 and 13 on i386, amd64 and arm64
       - Ubuntu 20.04, 22.04 and 24.04 on i386, amd64 and arm64${NORMAL}
       UNSTABLEDEB${NORMAL}"
 
