@@ -761,8 +761,10 @@ remove_virtualmin_release() {
     rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin*
     ;;
   debian | ubuntu | kali)
-    grep -v "virtualmin" /etc/apt/sources.list >"$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list
-    mv "$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list /etc/apt/sources.list
+    if [ -f /etc/apt/sources.list ]; then
+      grep -v "virtualmin" /etc/apt/sources.list >"$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list
+      mv "$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list /etc/apt/sources.list
+    fi
     rm -f /etc/apt/sources.list.d/virtualmin*
     rm -f /etc/apt/auth.conf.d/virtualmin*
     rm -f /usr/share/keyrings/debian-virtualmin*
@@ -1625,18 +1627,22 @@ install_virtualmin_release() {
       if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then
         run_ok "add-apt-repository -y universe" \
           "Enabling universe repositories, if not already available"
-      else
+      elif [ -f /etc/apt/sources.list ]; then
         run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
           "Enabling universe repositories, if not already available"
       fi
     fi
     # Is this still enabled by default on Debian/Ubuntu systems?
-    run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
+    if [ -f /etc/apt/sources.list ]; then
+      run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
+    fi
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     update="/usr/bin/apt-get clean ; /usr/bin/apt-get update"
     run_ok "apt-get clean" "Cleaning up software repo metadata"
-    sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
+    if [ -f /etc/apt/sources.list ]; then
+      sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
+    fi
     ;;
   *)
     log_error " Your OS is not currently supported by this installer. Nevertheless, you"
