@@ -40,7 +40,6 @@ jobs:
 
       - name: Upload file
         env:
-          CLOUD__GPG_PH: ${{ secrets.DEV_GPG_PH }}
           CLOUD__IP_ADDR: ${{ secrets.DEV_IP_ADDR }}
           CLOUD__IP_KNOWN_HOSTS: ${{ secrets.DEV_IP_KNOWN_HOSTS }}
           CLOUD__UPLOAD_SSH_USER: ${{ secrets.DEV_UPLOAD_SSH_USER }}
