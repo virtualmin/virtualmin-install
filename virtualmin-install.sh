@@ -1,5 +1,5 @@
 #!/bin/sh
-# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC2034
+# shellcheck disable=SC2059 disable=SC2181 disable=SC2154 disable=SC2317 disable=SC2034 disable=SC2329
 # virtualmin-install.sh
 # Copyright 2005-2025 Virtualmin
 # Simple script to install Virtualmin on a supported OS
