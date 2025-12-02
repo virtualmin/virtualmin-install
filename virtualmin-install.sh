@@ -14,8 +14,8 @@ VER=8.0.0
 vm_version=8
 
 # Server
-download_virtualmin_host="${download_virtualmin_host:-software.virtualmin.com}"
-download_virtualmin_host_lib="$download_virtualmin_host/lib"
+download_virtualmin_host="${download_virtualmin_host:-download.virtualmin.com}"
+download_virtualmin_host_lib="$download_virtualmin_host"
 download_virtualmin_host_dev="${download_virtualmin_host_dev:-software.virtualmin.dev}"
 download_virtualmin_host_rc="${download_virtualmin_host_rc:-rc.software.virtualmin.dev}"
 download_webmin_host_dev="${download_webmin_host_dev:-download.webmin.dev}"
@@ -38,6 +38,7 @@ fi
 log_file_name="${install_log_file_name:-virtualmin-install}"
 
 # Set defaults
+branch='stable'
 bundle='LAMP'        # Other option is LEMP
 mode="${mode:-full}" # Other option is mini
 skipyesno=0
@@ -52,7 +53,7 @@ usage() {
   printf "  --bundle|-b <LAMP|LEMP>          bundle to install (default: LAMP)\\n"
   printf "  --type|-t <full|mini>            install type (default: full)\\n"
   echo
-  printf "  --branch|-B <stable|unstable|prerelease>\\n"
+  printf "  --branch|-B <stable|prerelease|unstable>\\n"
   printf "                                   install branch (default: stable)\\n"
   printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n"
   echo
@@ -232,7 +233,7 @@ parse_args() {
         ;;
       stable|production|release)
         shift
-        branch=''
+        branch='stable'
         ;;
       *)
         printf "Unknown branch: $1\\n"
@@ -622,8 +623,9 @@ log_fatal() {
   log_error "$1"
 }
 
-# Handle unstable or prerelease repositories
-handle_branches() {
+# Configure Virtualmin repositories (stable, prerelease, or unstable) and keep
+# matching Webmin repositories in sync.
+manage_virtualmin_branch_repos() {
   del_cmd="" found_type="" reinstalling=0
   found_both=0 found_unstable=0 found_prerelease=0
 
@@ -643,14 +645,14 @@ handle_branches() {
       ;;
   esac
 
-  # Remove existing unstable or prerelease repos if found
-  for repo in virtualmin-unstable virtualmin-prerelease webmin-unstable \
-              webmin-prerelease webmin-testing webmin-nightly; do
+  # Remove existing unstable, prerelease or stable repos if found
+  for repo in virtualmin-unstable virtualmin-prerelease virtualmin-stable virtualmin \
+              webmin-unstable webmin-prerelease webmin-stable webmin; do
     repo_file="${repo_dir}/${repo}.${repo_ext}"
     if [ -f "$repo_file" ]; then
       del_cmd="${del_cmd:+$del_cmd && }rm -f $repo_file"
       case "$repo" in
-        *unstable* | *testing* | *nightly*)
+        *unstable*)
           found_unstable=1
           found_type="unstable"
           ;;
@@ -658,13 +660,17 @@ handle_branches() {
           found_prerelease=1
           found_type="prerelease"
           ;;
+        *)
+          found_stable=1
+          found_type="stable"
+          ;;
       esac
     fi
 
     # Auth file check for deb
     if [ "$package_type" = "deb" ]; then
       case "$repo" in
-        virtualmin-*) 
+        virtualmin*) 
           auth_file="${auth_dir}/${repo}.conf"
           [ -f "$auth_file" ] && del_cmd="${del_cmd:+$del_cmd && }rm -f $auth_file"
           ;;
@@ -679,14 +685,19 @@ handle_branches() {
       found_both=1
     elif [ "$found_unstable" -eq 1 ]; then
       msg="Uninstalling Virtualmin $vm_version unstable repository"
-    else
+    elif [ "$found_prerelease" -eq 1 ]; then
       msg="Uninstalling Virtualmin $vm_version prerelease repository"
+    elif [ "$found_stable" -eq 1 ]; then
+      msg="Uninstalling Virtualmin $vm_version stable repository"
     fi
 
     # If removing only, update metadata
     if [ -z "$branch" ]; then
       del_cmd="$del_cmd && $update"
     fi
+
+    # Remove any existing repo configs and keys first
+    remove_virtualmin_release
 
     # Remove silently if reinstalling
     if [ -n "$branch" ] && [ "$found_both" -eq 0 ] && [ "$found_type" = "$branch" ]; then
@@ -704,17 +715,24 @@ handle_branches() {
     else
       install_pre_msg="Installing Virtualmin $vm_version"
     fi
-    down_cmd="$download https://$download_virtualmin_host_dev/install"
     case "$branch" in
       unstable)
+        down_cmd="$download https://$download_virtualmin_host_dev/install"
         cmd="$down_cmd && sh install webmin unstable && \
              sh install virtualmin unstable"
         msg="$install_pre_msg unstable repository"
         ;;
       prerelease)
+        down_cmd="$download https://$download_virtualmin_host_rc/install"
         cmd="$down_cmd && sh install webmin prerelease && \
              sh install virtualmin prerelease"
         msg="$install_pre_msg prerelease repository"
+        ;;
+      stable)
+        down_cmd="$download https://$download_virtualmin_host/install"
+        cmd="$down_cmd && sh install webmin stable && \
+             sh install virtualmin stable"
+        msg="$install_pre_msg stable repository"
         ;;
       *)
         return 1
@@ -754,27 +772,44 @@ if grade_b_system && [ "$unstable" != 'unstable' ]; then
 fi
 
 remove_virtualmin_release() {
-  case "$os_type" in
-  rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
-    rm -f /etc/yum.repos.d/virtualmin*
-    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-virtualmin*
-    rm -f /etc/pki/rpm-gpg/RPM-GPG-KEY-webmin*
-    ;;
-  debian | ubuntu | kali)
-    if [ -f /etc/apt/sources.list ]; then
-      grep -v "virtualmin" /etc/apt/sources.list >"$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list
-      mv "$VIRTUALMIN_INSTALL_TEMPDIR"/sources.list /etc/apt/sources.list
-    fi
-    rm -f /etc/apt/sources.list.d/virtualmin*
-    rm -f /etc/apt/auth.conf.d/virtualmin*
-    rm -f /usr/share/keyrings/debian-virtualmin*
-    rm -f /usr/share/keyrings/debian-webmin*
-    rm -f /usr/share/keyrings/ubuntu-virtualmin*
-    rm -f /usr/share/keyrings/ubuntu-webmin*
-    rm -f /usr/share/keyrings/kali-virtualmin*
-    rm -f /usr/share/keyrings/kali-webmin*
-    ;;
-  esac
+  # Directories where Virtualmin and Webmin config or keys may live
+  for d in \
+    /etc/apt/sources.list.d \
+    /etc/apt/auth.conf.d \
+    /usr/share/keyrings \
+    /etc/apt/keyrings \
+    /etc/pki/rpm-gpg \
+    /etc/yum.repos.d
+  do
+    [ -d "$d" ] || continue
+
+    case "$d" in
+      /etc/yum.repos.d)
+        # Repo files
+        patterns="virtualmin* webmin*"
+        ;;
+      /etc/pki/rpm-gpg)
+        # RPM GPG keys and/or any style keys
+        patterns="RPM-GPG-KEY-virtualmin* RPM-GPG-KEY-webmin* *-virtualmin* *-webmin*"
+        ;;
+      *)
+        # APT dirs / keyring dirs, etc.
+        patterns="virtualmin* webmin* *-virtualmin* *-webmin*"
+        ;;
+    esac
+
+    for p in $patterns; do
+      # shellcheck disable=SC2086
+      rm -f "$d"/$p 2>/dev/null || :
+    done
+  done
+
+  # Clean APT main sources file if it exists
+  if [ -f /etc/apt/sources.list ]; then
+    tmp="${VIRTUALMIN_INSTALL_TEMPDIR:-/tmp}/sources.list.$$"
+    grep -vi "virtualmin\|webmin" /etc/apt/sources.list >"$tmp" || :
+    mv "$tmp" /etc/apt/sources.list
+  fi
 }
 
 fatal() {
@@ -911,16 +946,17 @@ uninstall() {
   # Uninstall repos and helper command
   uninstall_repos()
   {
-    echo "Removing Virtualmin $vm_version repo configuration"
-    remove_virtualmin_release
     if [ -f "$virtualmin_license_file" ]; then
-      echo "Removing Virtualmin license"
-      rm "$virtualmin_license_file"
+      log_debug "Removing Virtualmin license"
+      rm -f "$virtualmin_license_file" 2>/dev/null || :
     fi
-
-    echo "Removing Virtualmin helper command"
-    rm "/usr/sbin/virtualmin"
-    echo "Virtualmin uninstallation complete."
+  
+    log_debug "Removing Virtualmin helper command"
+    rm -f "/usr/sbin/virtualmin" 2>/dev/null || :
+  
+    remove_virtualmin_release
+  
+    log_debug "Virtualmin uninstallation complete"
   }
   
   phase_number=${phase_number:-1}
@@ -929,8 +965,8 @@ uninstall() {
   echo
   phase "$uninstall_phase_description" "$phase_number"
   run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
-  run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version release package"
-  handle_branches
+  run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version configuration and license"
+  manage_virtualmin_branch_repos
 }
 
 # Phase control
@@ -1434,9 +1470,11 @@ log_debug "Operating system version: $os_version"
 log_debug "Operating system type:    $os_type"
 log_debug "Operating system major:   $os_major_version"
 
-install_virtualmin_release() {
+preconfigure_virtualmin_release() {
   # Grab virtualmin-release from the server
   log_debug "Configuring package manager for ${os_real} ${os_version} .."
+
+  # EL-based systems handling
   case "$os_type" in
   rhel | fedora | centos | centos_stream | rocky | almalinux | openEuler | ol | cloudlinux | amzn )
     case "$os_type" in
@@ -1523,37 +1561,23 @@ install_virtualmin_release() {
       install_config_manager="yum-config-manager"
     fi
 
-    # Download release file unless a different branch is specified
-    if [ -z "$branch" ]; then
-      rpm_release_file_download="virtualmin-$packagetype-release.noarch.rpm"
-      download "https://${LOGIN}$download_virtualmin_host/vm/$vm_version/rpm/$rpm_release_file_download" "Downloading Virtualmin $vm_version release package"
-      
-      # Remove existing pkg files as they will not
-      # be replaced upon replease package upgrade
-      if [ -x "/usr/bin/rpm" ]; then
-        rpm_release_files="$(rpm -qal virtualmin*release)"
-        rpm_release_files=$(echo "$rpm_release_files" | tr '\n' ' ')
-        if [ -n "$rpm_release_files" ]; then
-          for rpm_release_file in $rpm_release_files; do
-            rm -f "$rpm_release_file"
-          done
-        fi
-      fi
-
-      # Remove releases first, as the system can
-      # end up having both GPL and Pro installed
-      rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release 2>/dev/null)" >> "$RUN_LOG" 2>&1
-
-      # Install release file
-      run_ok "rpm -U --replacepkgs --replacefiles --quiet $rpm_release_file_download" "Installing Virtualmin $vm_version release package"
-
-      # Fix login credentials if fixing repos
-      if [ -n "$setup_only" ]; then
-        sed -i "s/SERIALNUMBER:LICENSEKEY@/$LOGIN/" /etc/yum.repos.d/virtualmin.repo
-        sed -i 's/http:\/\//https:\/\//' /etc/yum.repos.d/virtualmin.repo
+    # Remove any existing obsolete package release
+    if [ -x "/usr/bin/rpm" ]; then
+      rpm_release_files="$(rpm -qal virtualmin*release)"
+      rpm_release_files=$(echo "$rpm_release_files" | tr '\n' ' ')
+      if [ -n "$rpm_release_files" ]; then
+        for rpm_release_file in $rpm_release_files; do
+          rm -f "$rpm_release_file"
+        done
       fi
     fi
+    rpm -e --nodeps --quiet "$(rpm -qa virtualmin*release 2>/dev/null)" >> "$RUN_LOG" 2>&1
+    
+    # Repo setup is done by "manage_virtualmin_branch_repos" using a unified
+    # logic
     ;;
+  
+  # Debian-based systems handling
   debian | ubuntu | kali)
     case "$os_type" in
     ubuntu)
@@ -1587,41 +1611,7 @@ install_virtualmin_release() {
       deps="$debdeps"
       repos="virtualmin"
     fi
-    log_debug "apt-get repos: ${repos}"
-    if [ -z "$repos" ]; then # Probably unstable with no version number
-      log_fatal "No repositories available for this OS. Are you running unstable/testing?"
-      exit 1
-    fi
-    # Remove any existing repo config, in case it's a reinstall
-    remove_virtualmin_release
     
-    # Set correct keys name for Debian vs derivatives
-    # Download release file unless a different branch is specified
-    if [ -z "$branch" ]; then
-      repoid_debian_like=debian
-      if [ -n "${os_type}" ]; then
-        repoid_debian_like="${os_type}"
-      fi
-
-      # Setup repo file
-      apt_auth_dir='/etc/apt/auth.conf.d'
-      LOGINREAL=$LOGIN
-      if [ -d "$apt_auth_dir" ]; then
-        if [ -n "$LOGIN" ]; then
-          LOGINREAL=""
-          printf "machine $download_virtualmin_host login $SERIAL password $KEY\\n" >"$apt_auth_dir/virtualmin.conf"
-        fi
-      fi
-      for repo in $repos; do
-        printf "deb [signed-by=/usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg] https://${LOGINREAL}$download_virtualmin_host/vm/${vm_version}/${repopath}apt ${repo} main\\n" >/etc/apt/sources.list.d/virtualmin.list
-      done
-
-      # Install our keys
-      log_debug "Installing Webmin and Virtualmin package signing keys .."
-      download "https://$download_virtualmin_host_lib/RPM-GPG-KEY-virtualmin-$vm_version" "Downloading Virtualmin $vm_version key"
-      run_ok "gpg --import RPM-GPG-KEY-virtualmin-$vm_version && cat RPM-GPG-KEY-virtualmin-$vm_version | gpg --dearmor > /usr/share/keyrings/$repoid_debian_like-virtualmin-$vm_version.gpg" "Installing Virtualmin $vm_version key"
-      run_ok "apt-get update" "Downloading repository metadata"
-    fi
     # Make sure universe repos are available
     if [ "$os_type" = "ubuntu" ]; then
       if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then
@@ -1632,6 +1622,7 @@ install_virtualmin_release() {
           "Enabling universe repositories, if not already available"
       fi
     fi
+
     # Is this still enabled by default on Debian/Ubuntu systems?
     if [ -f /etc/apt/sources.list ]; then
       run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
@@ -1643,6 +1634,9 @@ install_virtualmin_release() {
     if [ -f /etc/apt/sources.list ]; then
       sed -i "s/\\(deb[[:space:]]file.*\\)/#\\1/" /etc/apt/sources.list
     fi
+    
+    # Repo setup is done by "manage_virtualmin_branch_repos" using a unified
+    # logic
     ;;
   *)
     log_error " Your OS is not currently supported by this installer. Nevertheless, you"
@@ -1657,10 +1651,9 @@ install_virtualmin_release() {
 
 # Setup repos only
 if [ -n "$setup_only" ]; then
-  if install_virtualmin_release; then
-    handle_branches
-    log_success "Repository configuration successful. You can now install Virtualmin"
-    log_success "components using your OS package manager."
+  if preconfigure_virtualmin_release; then
+    manage_virtualmin_branch_repos
+    log_success "Virtualmin repository is configured successfully."
   else
     log_error "Errors occurred during setup of Virtualmin software repositories. You may find more"
     log_error "information in ${RUN_LOG}."
@@ -1835,8 +1828,8 @@ yum_check_skipped() {
 # virtualmin-release only exists for one platform...but it's as good a function
 # name as any, I guess.  Should just be "setup_repositories" or something.
 errors=$((0))
-install_virtualmin_release
-handle_branches
+preconfigure_virtualmin_release
+manage_virtualmin_branch_repos
 bind_hook "phase2_post"
 echo
 phase "Installation" 3
