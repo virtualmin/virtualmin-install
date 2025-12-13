@@ -47,7 +47,6 @@ jobs:
           CLOUD__UPLOAD_SSH_USER: ${{ secrets.DEV_UPLOAD_SSH_USER }}
           CLOUD__UPLOAD_SSH_DIR: ${{ env.IS_RELEASE == 'true' && secrets.PRERELEASE_UPLOAD_SSH_DIR || secrets.DEV_UPLOAD_SSH_DIR }}
           CLOUD__SSH_PRV_KEY: ${{ secrets.DEV_SSH_PRV_KEY }}
-          CLOUD__SIGN_BUILD_REPOS_CMD: ${{ secrets.DEV_SIGN_BUILD_REPOS_CMD }}
         run: |-
 
           # Fail on error
