@@ -1451,8 +1451,9 @@ log_debug "Install mode: $mode"
 log_debug "Product: Virtualmin $PRODUCT"
 log_debug "virtualmin-install.sh version: $VER"
 
-# Check for a fully qualified hostname
-if [ -z "$setup_only" ]; then
+# Check for a fully qualified hostname unless setting up repos or doing a
+# minimal install
+if [ -z "$setup_only" ] && [ "$mode" != "mini" ]; then
   log_debug "Checking for fully qualified hostname .."
   name="$(hostname -f)"
   if [ $? -ne 0 ]; then
