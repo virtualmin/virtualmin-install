@@ -1149,7 +1149,7 @@ EOF
 EOF
     fi
     
-    if [ "$skipyesno" -ne 1 ]; then
+    if [ "$skipyesno" -ne 1 ] && [ "$branch" != "stable" ]; then
       printf " Continue with $branch branch? (y/n) "
       if ! yesno; then
         exit
