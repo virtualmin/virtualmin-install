@@ -16,8 +16,8 @@ vm_version=8
 # Server
 download_virtualmin_host="${download_virtualmin_host:-download.virtualmin.com}"
 download_virtualmin_host_lib="$download_virtualmin_host"
-download_virtualmin_host_dev="${download_virtualmin_host_dev:-software.virtualmin.dev}"
-download_virtualmin_host_rc="${download_virtualmin_host_rc:-rc.software.virtualmin.dev}"
+download_virtualmin_host_dev="${download_virtualmin_host_dev:-download.virtualmin.dev}"
+download_virtualmin_host_rc="${download_virtualmin_host_rc:-rc.download.virtualmin.dev}"
 download_webmin_host="${download_webmin_host:-download.webmin.com}"
 download_webmin_host_dev="${download_webmin_host_dev:-download.webmin.dev}"
 download_webmin_host_rc="${download_webmin_host_rc:-rc.download.webmin.dev}"
