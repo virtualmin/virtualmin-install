@@ -403,17 +403,14 @@ if [ -e "$log" ]; then
   done
 fi
 
-# If Pro user downloads GPL version of `install.sh` script
-# to fix repos check if there is an active license exists
-if [ -n "$setup_only" ]; then
-  if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f "$virtualmin_license_file" ]; then
-    virtualmin_license_existing_serial="$(grep 'SerialNumber=' "$virtualmin_license_file" | sed 's/SerialNumber=//')"
-    virtualmin_license_existing_key="$(grep 'LicenseKey=' "$virtualmin_license_file" | sed 's/LicenseKey=//')"
-    if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
-      SERIAL="$virtualmin_license_existing_serial"
-      KEY="$virtualmin_license_existing_key"
-    fi    
-  fi
+# If license file exists and both serial and key are set use them
+if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f "$virtualmin_license_file" ]; then
+  virtualmin_license_existing_serial="$(grep 'SerialNumber=' "$virtualmin_license_file" | sed 's/SerialNumber=//')"
+  virtualmin_license_existing_key="$(grep 'LicenseKey=' "$virtualmin_license_file" | sed 's/LicenseKey=//')"
+  if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
+    SERIAL="$virtualmin_license_existing_serial"
+    KEY="$virtualmin_license_existing_key"
+  fi    
 fi
 
 arch="$(uname -m)"
