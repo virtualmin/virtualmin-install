@@ -309,7 +309,7 @@ parse_args() {
       shift
       noupdates=1
       ;;
-    --no-hostname-ssl)
+    --no-hostname-ssl | -nhs)
       shift
       add_config_excludes "SSL"
       ;;
