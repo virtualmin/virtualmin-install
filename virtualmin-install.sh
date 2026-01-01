@@ -1637,17 +1637,6 @@ preconfigure_virtualmin_release() {
       deps="$debdeps"
       repos="virtualmin"
     fi
-    
-    # Make sure universe repos are available
-    if [ "$os_type" = "ubuntu" ]; then
-      if [ -x "/bin/add-apt-repository" ] || [ -x "/usr/bin/add-apt-repository" ]; then
-        run_ok "add-apt-repository -y universe" \
-          "Enabling universe repositories, if not already available"
-      elif [ -f /etc/apt/sources.list ]; then
-        run_ok "sed -ie '/backports/b; s/#*[ ]*deb \\(.*\\) universe$/deb \\1 universe/' /etc/apt/sources.list" \
-          "Enabling universe repositories, if not already available"
-      fi
-    fi
 
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
