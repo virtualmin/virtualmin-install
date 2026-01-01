@@ -44,6 +44,7 @@ bundle='LAMP'        # Other option is LEMP
 mode="${mode:-full}" # Other option is mini
 skipyesno=0
 config_excludes="${config_excludes:-}"
+extra_packages="${extra_packages:-}"
 
 usage() {
   # shellcheck disable=SC2046
@@ -58,6 +59,7 @@ usage() {
   printf "  --branch|-B <stable|prerelease|unstable>\\n"
   printf "                                   install branch (default: stable)\\n"
   printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n\\n"
+  printf "  --extra|-E <name[,name..]>       install extra packages before stack install\\n"
   printf "  --exclude|-e <name[,name..]>     exclude plugin from configuration phase\\n"
   echo
   printf "  --module|-o                      load custom module in post-install phase\\n"
@@ -174,6 +176,31 @@ test_connection() {
       return 1
     fi
   fi
+}
+
+# Function to add extra packages to install before stack install
+add_extra_packages() {
+  old_ifs=$IFS
+  IFS=,
+  set -f
+  for raw in $1; do
+    p=$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    [ -n "$p" ] || continue
+
+    # Don't allow leading dash or whitespace
+    case "$p" in
+      \*|-*|*[[:space:]]*)
+        printf "Invalid extra package name: %s\n" "$p" >&2
+        bind_hook "usage"
+        exit 1
+        ;;
+    esac
+
+    # Store as a shell-quoted token so globbing won't expand later
+    extra_packages="${extra_packages}${extra_packages:+ }'$p'"
+  done
+  set +f
+  IFS=$old_ifs
 }
 
 # Function to add config excludes
@@ -329,6 +356,16 @@ parse_args() {
       shift
       unstable='unstable'
       virtualmin_stack_custom_packages=""
+      ;;
+    --extra | -E)
+      shift
+      if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
+        printf "Missing value for extra flag\n"
+        bind_hook "usage"
+        exit 1
+      fi
+      add_extra_packages "$1"
+      shift
       ;;
     --exclude | -e)
       shift
@@ -1724,6 +1761,11 @@ install_with_apt() {
   # Silently purge packages that may cause issues upon installation
   /usr/bin/apt-get --quiet --assume-yes purge ufw >> "$RUN_LOG" 2>&1
 
+  # Install extra packages if any
+  if [ -n "$extra_packages" ]; then
+    run_ok "$install $extra_packages" "Installing selected extra packages"
+  fi
+
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
   # Do it all in one go for the nicer UI
@@ -1767,7 +1809,7 @@ install_with_yum() {
   elif [ "$os_type" = "amzn" ]; then
     # Set for installation packages whichever available on Amazon Linux as they
     # go with different name, e.g. mariadb105-server instead of mariadb-server
-    virtualmin_stack_custom_packages="mariadb*-server"
+    add_extra_packages "mariadb*-server"
     # Exclude from config what's not available on Amazon Linux
     add_config_excludes "AWStats,Etckeeper,Fail2banFirewalld,ProFTPd"
   fi
@@ -1814,9 +1856,9 @@ install_with_yum() {
     run_ok "$upgrade" "Checking and installing system package updates"
   fi
 
-  # Install custom stack packages
-  if [ -n "$virtualmin_stack_custom_packages" ]; then
-    run_ok "$install $virtualmin_stack_custom_packages" "Installing missing stack packages"
+  # Install extra packages if any
+  if [ -n "$extra_packages" ]; then
+    run_ok "$install $extra_packages" "Installing selected extra packages"
   fi
 
   # Install core and stack
