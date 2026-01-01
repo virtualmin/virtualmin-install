@@ -1894,12 +1894,6 @@ sleep 1
 # Do we still need to kill stuck spinners?
 kill $! 1>/dev/null 2>&1
 
-# Log SSL request status, if available
-if [ -f "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status" ]; then
-  virtualmin_ssl_host_status=$(cat "$VIRTUALMIN_INSTALL_TEMPDIR/virtualmin_ssl_host_status")
-  log_debug "$virtualmin_ssl_host_status"
-fi
-
 # Functions that are used in the OS specific modifications section
 disable_selinux() {
   seconfigfiles="/etc/selinux/config /etc/sysconfig/selinux"
