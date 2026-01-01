@@ -178,29 +178,29 @@ test_connection() {
 
 # Function to add config excludes
 add_config_excludes() {
-	old_ifs=$IFS
-	IFS=,
-	set -f
-	for raw in $1; do
-		# Trim leading/trailing whitespace
-		x=$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
-		[ -n "$x" ] || continue
-		case "$x" in
+  old_ifs=$IFS
+  IFS=,
+  set -f
+  for raw in $1; do
+    # Trim leading/trailing whitespace
+    x=$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    [ -n "$x" ] || continue
+    case "$x" in
       -*|*[!A-Za-z0-9]*)
-				printf "Invalid exclude name: %s\n" "$x" >&2
-				exit 1
-				;;
-		esac
+        printf "Invalid exclude name: %s\n" "$x" >&2
+        exit 1
+        ;;
+    esac
     # Converts for some formatted names
     case "$x" in
       MariaDB)
         x="MySQL"
         ;;
     esac
-		config_excludes="${config_excludes} --exclude $x"
-	done
-	set +f
-	IFS=$old_ifs
+    config_excludes="${config_excludes} --exclude $x"
+  done
+  set +f
+  IFS=$old_ifs
 }
 
 # Default function to parse arguments
@@ -1022,14 +1022,14 @@ uninstall() {
 
 # Disable CD-ROM repos on Debian-based systems
 pre_check_disable_cdrom_repos() {
-	[ -x /usr/bin/apt-get ] || return 0
-	[ -f /etc/apt/sources.list ] || return 0
+  [ -x /usr/bin/apt-get ] || return 0
+  [ -f /etc/apt/sources.list ] || return 0
 
-	grep -Eq '^[[:space:]]*deb(-src)?[[:space:]]+cdrom:' /etc/apt/sources.list || return 0
+  grep -Eq '^[[:space:]]*deb(-src)?[[:space:]]+cdrom:' /etc/apt/sources.list || return 0
 
-	# Comment out active CD-ROM repos
-	sed -i '/^[[:space:]]*#/! s/^[[:space:]]*\(deb\(-src\)\?[[:space:]]\+cdrom:\)/#\1/' \
-		/etc/apt/sources.list
+  # Comment out active CD-ROM repos
+  sed -i '/^[[:space:]]*#/! s/^[[:space:]]*\(deb\(-src\)\?[[:space:]]\+cdrom:\)/#\1/' \
+    /etc/apt/sources.list
 }
 
 # Phase control
