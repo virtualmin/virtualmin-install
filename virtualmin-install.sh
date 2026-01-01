@@ -978,6 +978,18 @@ uninstall() {
   manage_virtualmin_branch_repos
 }
 
+# Disable CD-ROM repos on Debian-based systems
+pre_check_disable_cdrom_repos() {
+	[ -x /usr/bin/apt-get ] || return 0
+	[ -f /etc/apt/sources.list ] || return 0
+
+	grep -Eq '^[[:space:]]*deb(-src)?[[:space:]]+cdrom:' /etc/apt/sources.list || return 0
+
+	# Comment out active CD-ROM repos
+	sed -i '/^[[:space:]]*#/! s/^[[:space:]]*\(deb\(-src\)\?[[:space:]]\+cdrom:\)/#\1/' \
+		/etc/apt/sources.list
+}
+
 # Phase control
 phase() {
     phases_total="${phases_total:-4}"
@@ -1378,6 +1390,9 @@ pre_check_gpg() {
 }
 
 pre_check_all() {
+
+  # Disable CD-ROM repos if any
+  pre_check_disable_cdrom_repos
   
   if [ -z "$setup_only" ]; then
     # Check system time
@@ -1427,6 +1442,7 @@ fi
 bind_hook "phases_all_pre"
 
 if [ -n "$setup_only" ]; then
+  pre_check_disable_cdrom_repos
   pre_check_perl
   pre_check_http_client
   pre_check_gpg
@@ -1633,10 +1649,6 @@ preconfigure_virtualmin_release() {
       fi
     fi
 
-    # Is this still enabled by default on Debian/Ubuntu systems?
-    if [ -f /etc/apt/sources.list ]; then
-      run_ok "sed -ie 's/^deb cdrom:/#deb cdrom:/' /etc/apt/sources.list" "Disabling cdrom: repositories"
-    fi
     install="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' install"
     upgrade="DEBIAN_FRONTEND='noninteractive' /usr/bin/apt-get --quiet --assume-yes --install-recommends -o Dpkg::Options::='--force-confdef' -o Dpkg::Options::='--force-confold' -o Dpkg::Pre-Install-Pkgs::='/usr/sbin/dpkg-preconfigure --apt' upgrade"
     update="/usr/bin/apt-get clean ; /usr/bin/apt-get update"
