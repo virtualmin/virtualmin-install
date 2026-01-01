@@ -62,6 +62,7 @@ usage() {
   echo
   printf "  --hostname|-n                    force hostname during install\\n"
   printf "  --no-package-updates|-x          skip package updates during install\\n"
+  printf "  --no-hostname-ssl|-nhs           skip SSL certificate request for hostname\\n"
   echo
   printf "  --setup|-s                       reconfigure repos without installing\\n"
   printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
@@ -251,6 +252,10 @@ parse_args() {
     --no-package-updates | -x)
       shift
       noupdates=1
+      ;;
+    --no-hostname-ssl)
+      shift
+      virtualmin_config_system_excludes="${virtualmin_config_system_excludes} -e SSL"
       ;;
     --setup | -s)
       shift
@@ -1727,7 +1732,7 @@ install_with_yum() {
     # go with different name, e.g. mariadb105-server instead of mariadb-server
     virtualmin_stack_custom_packages="mariadb*-server"
     # Exclude from config what's not available on Amazon Linux
-    virtualmin_config_system_excludes=" --exclude AWStats --exclude Etckeeper --exclude Fail2banFirewalld --exclude ProFTPd"
+    virtualmin_config_system_excludes="${virtualmin_config_system_excludes} -e AWStats -e Etckeeper -e Fail2banFirewalld -e ProFTPd"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
