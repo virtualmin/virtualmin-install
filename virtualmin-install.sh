@@ -43,6 +43,7 @@ branch='stable'
 bundle='LAMP'        # Other option is LEMP
 mode="${mode:-full}" # Other option is mini
 skipyesno=0
+config_excludes="${config_excludes:-}"
 
 usage() {
   # shellcheck disable=SC2046
@@ -56,7 +57,8 @@ usage() {
   echo
   printf "  --branch|-B <stable|prerelease|unstable>\\n"
   printf "                                   install branch (default: stable)\\n"
-  printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n"
+  printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n\\n"
+  printf "  --exclude|-e <name[,name..]>     exclude plugin from configuration phase\\n"
   echo
   printf "  --module|-o                      load custom module in post-install phase\\n"
   echo
@@ -174,6 +176,33 @@ test_connection() {
   fi
 }
 
+# Function to add config excludes
+add_config_excludes() {
+	old_ifs=$IFS
+	IFS=,
+	set -f
+	for raw in $1; do
+		# Trim leading/trailing whitespace
+		x=$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+		[ -n "$x" ] || continue
+		case "$x" in
+      -*|*[!A-Za-z0-9]*)
+				printf "Invalid exclude name: %s\n" "$x" >&2
+				exit 1
+				;;
+		esac
+    # Converts for some formatted names
+    case "$x" in
+      MariaDB)
+        x="MySQL"
+        ;;
+    esac
+		config_excludes="${config_excludes} --exclude $x"
+	done
+	set +f
+	IFS=$old_ifs
+}
+
 # Default function to parse arguments
 parse_args() {
   while [ "$1" != "" ]; do
@@ -255,7 +284,7 @@ parse_args() {
       ;;
     --no-hostname-ssl)
       shift
-      virtualmin_config_system_excludes="${virtualmin_config_system_excludes} -e SSL"
+      add_config_excludes "SSL"
       ;;
     --setup | -s)
       shift
@@ -287,7 +316,6 @@ parse_args() {
       B|b)
         shift
         unstable='unstable'
-        virtualmin_config_system_excludes=""
         virtualmin_stack_custom_packages=""
         ;;
       *)
@@ -297,11 +325,20 @@ parse_args() {
         ;;
       esac
       ;;
-    --unstable | -e)
+    --unstable | -U)
       shift
       unstable='unstable'
-      virtualmin_config_system_excludes=""
       virtualmin_stack_custom_packages=""
+      ;;
+    --exclude | -e)
+      shift
+      if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
+        printf "Missing value for exclude flag\\n"
+        bind_hook "usage"
+        exit 1
+      fi
+      add_config_excludes "$1"
+      shift
       ;;
     --module | -o)
       shift
@@ -1732,7 +1769,7 @@ install_with_yum() {
     # go with different name, e.g. mariadb105-server instead of mariadb-server
     virtualmin_stack_custom_packages="mariadb*-server"
     # Exclude from config what's not available on Amazon Linux
-    virtualmin_config_system_excludes="${virtualmin_config_system_excludes} -e AWStats -e Etckeeper -e Fail2banFirewalld -e ProFTPd"
+    add_config_excludes "AWStats,Etckeeper,Fail2banFirewalld,ProFTPd"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
@@ -1890,7 +1927,7 @@ if [ "$mode" = "mini" ]; then
   bundle="Mini${bundle}"
 fi
 # shellcheck disable=SC2086
-virtualmin-config-system --bundle "$bundle" $virtualmin_config_system_excludes --log "$log"
+virtualmin-config-system --bundle "$bundle" $config_excludes --log "$log"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
