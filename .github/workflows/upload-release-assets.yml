@@ -1,0 +1,38 @@
+name: Upload release asset
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  upload-assets:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Prepare asset
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          rm -rf assets
+          mkdir -p assets
+
+          cp -a virtualmin-install.sh assets/
+
+          ls -lah assets
+
+      - name: Upload asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ github.event.release.tag_name }}"
+          gh release upload "$tag" assets/* --clobber
