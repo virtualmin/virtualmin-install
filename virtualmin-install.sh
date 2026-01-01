@@ -189,7 +189,7 @@ add_extra_packages() {
 
     # Don't allow leading dash or whitespace
     case "$p" in
-      \*|-*|*[[:space:]]*)
+      \*|-*|*[[:space:]]*|*\'*)
         printf "Invalid extra package name: %s\n" "$p" >&2
         bind_hook "usage"
         exit 1
