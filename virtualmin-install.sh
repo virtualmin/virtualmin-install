@@ -1776,22 +1776,22 @@ install_with_yum() {
   if [ "$os_major_version" -ge 8 ] && [ "$os_type" = "centos" ] || [ "$os_type" = "centos_stream" ] || [ "$os_type" = "rocky" ] || [ "$os_type" = "almalinux" ] || [ "$os_type" = "cloudlinux" ]; then
     # Detect CRB/PowerTools repo name
     if [ "$os_major_version" -ge 9 ]; then
-      extra_packages=$(dnf repolist all | grep "^crb")
-      if [ -n "$extra_packages" ]; then
-        extra_packages="crb"
-        extra_packages_name="CRB"
+      crb_repo=$(dnf repolist all | grep "^crb")
+      if [ -n "$crb_repo" ]; then
+        crb_repo="crb"
+        crb_repo_name="CRB"
       fi
     else
-      extra_packages=$(dnf repolist all | grep "^powertools")
-      extra_packages_name="PowerTools"
-      if [ -n "$extra_packages" ]; then
-        extra_packages="powertools"
+      crb_repo=$(dnf repolist all | grep "^powertools")
+      crb_repo_name="PowerTools"
+      if [ -n "$crb_repo" ]; then
+        crb_repo="powertools"
       else
-        extra_packages="PowerTools"
+        crb_repo="PowerTools"
       fi
     fi
 
-    run_ok "$install_config_manager --set-enabled $extra_packages" "Enabling $extra_packages_name package repository"
+    run_ok "$install_config_manager --set-enabled $crb_repo" "Enabling $crb_repo_name package repository"
   fi
 
 
