@@ -1329,7 +1329,7 @@ post_install_message() {
     log_success "$login_at2"
   fi
   if [ -z "$ssl_host_success" ]; then
-    log_success "You will see a security warning in the browser on your first visit."
+    log_warning "You will see a security warning in the browser on your first visit."
   fi
 }
 
