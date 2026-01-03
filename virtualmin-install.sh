@@ -1305,6 +1305,54 @@ EOF
   fi
 }
 
+# Read the post-install messages file from the config system, print it, and then
+# delete it
+virtualmin_config_postinstall_messages() {
+  logpath="${LOG_PATH:-$log}"
+  msgdir=${logpath%/*}
+  [ "$msgdir" = "$logpath" ] && msgdir="."
+  msgfile="$msgdir/virtualmin-config-postinstall-messages.log"
+
+  [ -f "$msgfile" ] || return 0
+  echo
+  while IFS= read -r line || [ -n "$line" ]; do
+    line=$(printf '%s' "$line" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    [ -n "$line" ] || continue
+    case "$line" in \#*) continue ;; esac
+
+    msg="$line"
+    logger="log_warning"
+
+    case "$line" in
+      *\|*)
+        logger="${line##*|}"
+        msg="${line%|*}"
+        logger=$(printf '%s' "$logger" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        msg=$(printf '%s' "$msg" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+        # Validate logger name and existence
+        case "$logger" in
+          ""|*[!A-Za-z0-9_]*)
+            logger="log_warning"
+            ;;
+          *)
+            command -v "$logger" >/dev/null 2>&1 || logger="log_warning"
+            ;;
+        esac
+        ;;
+    esac
+
+    [ -n "$msg" ] || continue
+
+    # Wrap long lines to fit terminal width
+    printf '%s\n' "$msg" | fold -s -w 64 | while IFS= read -r ln; do
+      [ -n "$ln" ] || continue
+      "$logger" "$ln"
+    done
+  done < "$msgfile"
+
+  rm -f "$msgfile" 2>/dev/null || :
+}
+
 post_install_message() {
   # Login at message
   login_at1="https://${hostname}:10000."
@@ -1331,6 +1379,7 @@ post_install_message() {
   if [ -z "$ssl_host_success" ]; then
     log_warning "You will see a security warning in the browser on your first visit."
   fi
+  bind_hook "virtualmin_config_postinstall_messages"
 }
 
 if [ -z "$setup_only" ] && [ -z "$skipbanner" ]; then
