@@ -841,6 +841,9 @@ grade_b_system() {
         *\.10|*[13579].04) # non-LTS versions are unstable
           return 0
           ;;
+        26.04)             # 26.04 is in testing so far
+          return 0
+          ;;
         *)
           return 1
           ;;
@@ -853,9 +856,9 @@ grade_b_system() {
 }
 
 if grade_b_system && [ "$unstable" != 'unstable' ]; then
-  log_error "Unsupported operating system detected. You may be able to install with"
-  log_error "${BOLD}--unstable${NORMAL} flag, but this is not recommended. Consult the installation"
-  log_error "documentation."
+  log_error "Unsupported OS detected. For production, use a ${CYAN}${BOLD}Grade A${NORMAL} supported"
+  log_error "OS. If you want to proceed anyway, use ${YELLOW}${BOLD}--os-grade B${NORMAL} flag, but it"
+  log_error "is not recommended for production use."
   exit 1
 fi
 
@@ -1145,7 +1148,8 @@ EOF
      - CloudLinux 8 and 9 on x86_64\\n \
      - openEuler 24.03 and above on x86_64 and aarch64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Kali Linux Rolling 2025 and above on amd64 and arm64\\n \
+    unstable_deb="${YELLOW}- Ubuntu 26.04 developer preview on i386, amd64 and arm64\\n \
+     - Kali Linux Rolling 2025 and above on amd64 and arm64\\n \
      - Ubuntu interim (non-LTS) on i386, amd64 and arm64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
@@ -1194,12 +1198,11 @@ os_unstable_pre_check() {
   ${YELLOWBG}${BLACK}${BOLD} INSTALLATION WARNING ${NORMAL}
 
   You are about to install Virtualmin $PRODUCT on a ${BOLD}Grade B${NORMAL} operating
-  system. Be advised that this OS version is not recommended for servers,
-  and may have bugs that could affect the performance and stability of
-  the system.
+  system. This OS version is not recommended for production use,
+  and could affect the performance and stability of the system.
 
-  Certain features may not work as intended or might be unavailable on
-  this OS.
+  Certain features may not work as intended or might be
+  unavailable on this OS.
 
 EOF
     if [ "$skipyesno" -ne 1 ]; then
@@ -1736,7 +1739,7 @@ preconfigure_virtualmin_release() {
     case "$os_type" in
     ubuntu)
       case "$os_version:$unstable" in
-        18.04:*|20.04:*|22.04:*|24.04:*|*\.10:unstable|*[13579].04:unstable)
+        18.04:*|20.04:*|22.04:*|24.04:*|26.04:*|*\.10:unstable|*[13579].04:unstable)
           : ;; # Do nothing for supported or allowed unstable versions
         *)
           printf "${RED}${os_real} ${os_version} is not supported by this installer.${NORMAL}\\n"
