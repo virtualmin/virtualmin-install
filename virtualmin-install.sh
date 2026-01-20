@@ -1149,7 +1149,7 @@ EOF
      - CloudLinux Linux 8 and 9 on x86_64\\n \
           ${NORMAL}"
     unstable_deb="${YELLOW}- Ubuntu 26.04 developer preview on i386, amd64 and arm64\\n \
-     - Kali Linux Rolling on i386, amd64 and arm64\\n \
+     - Kali Linux Rolling on amd64 and arm64\\n \
      - Ubuntu interim (non-LTS) on i386, amd64 and arm64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
