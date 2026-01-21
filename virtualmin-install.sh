@@ -10,7 +10,7 @@
 # License and version
 SERIAL=GPL
 KEY=GPL
-VER=8.0.5
+VER=8.0.6
 vm_version=8
 
 # Server
