@@ -1106,13 +1106,13 @@ fi
 
 # Message to display in interactive mode
 install_msg() {
-  supported="    ${CYANBG}${BLACK}${BOLD}Red Hat Enterprise Linux and derivatives${NORMAL}${CYAN}
-      - Alma and Rocky 8, 9 and 10 on x86_64 and aarch64
-      - RHEL 8, 9 and 10 on x86_64 and aarch64
+  supported="    ${CYANBG}${BLACK}${BOLD}Enterprise Linux and derivatives${NORMAL}${CYAN}
+      - Red Hat Enterprise Linux 8, 9, and 10 on x86_64 and aarch64
+      - AlmaLinux and Rocky Linux 8, 9, and 10 on x86_64 and aarch64
       UNSTABLERHEL${NORMAL}
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
-      - Debian 12 and 13 on i386, amd64 and arm64
-      - Ubuntu 22.04 LTS and 24.04 LTS on i386, amd64 and arm64${NORMAL}
+      - Debian 12 and 13 on i386, amd64, and arm64
+      - Ubuntu 22.04 LTS and 24.04 LTS on i386, amd64, and arm64${NORMAL}
       UNSTABLEDEB${NORMAL}"
 
   cat <<EOF
@@ -1141,16 +1141,16 @@ EOF
 EOF
   supported_all=$supported
   if [ -n "$unstable" ]; then
-    unstable_rhel="${YELLOW}- Fedora Server 43 and above on x86_64 and aarch64\\n \
-     - CentOS Stream 8, 9 and 10 on x86_64 and aarch64\\n \
-     - Amazon Linux 2023 and above on x86_64 and aarch64\\n \
-     - Oracle Linux 8, 9 and 10 on x86_64 and aarch64\\n \
-     - openEuler 24.03 and above on x86_64 and aarch64\\n \
-     - CloudLinux Linux 8 and 9 on x86_64\\n \
+    unstable_rhel="${YELLOW}- Fedora Server 43 and later on x86_64 and aarch64\\n \
+     - CentOS Stream 8, 9, and 10 on x86_64 and aarch64\\n \
+     - Amazon Linux 2023 on x86_64 and aarch64\\n \
+     - Oracle Linux 8, 9, and 10 on x86_64 and aarch64\\n \
+     - openEuler 24.03 and later on x86_64 and aarch64\\n \
+     - CloudLinux 8 and 9 on x86_64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Ubuntu 26.04 developer preview on i386, amd64 and arm64\\n \
+    unstable_deb="${YELLOW}- Ubuntu 26.04 developer preview on i386, amd64, and arm64\\n \
      - Kali Linux Rolling on amd64 and arm64\\n \
-     - Ubuntu interim (non-LTS) on i386, amd64 and arm64\\n \
+     - Ubuntu interim (non-LTS) releases on i386, amd64, and arm64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLEDEB/$unstable_deb/")
