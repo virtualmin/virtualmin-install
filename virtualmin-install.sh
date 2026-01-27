@@ -44,6 +44,7 @@ bundle='LAMP'        # Other option is LEMP
 mode="${mode:-full}" # Other option is mini
 skipyesno=0
 config_excludes="${config_excludes:-}"
+config_includes="${config_includes:-}"
 extra_packages="${extra_packages:-}"
 
 usage() {
@@ -61,6 +62,7 @@ usage() {
   printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n\\n"
   printf "  --extra|-E <name[,name..]>       install extra packages before stack install\\n"
   printf "  --exclude|-e <name[,name..]>     exclude plugin from configuration phase\\n"
+  printf "  --include|-i <name[,name..]>     include plugin in configuration phase\\n"
   echo
   printf "  --module|-o                      load custom module in post-install phase\\n"
   echo
@@ -71,7 +73,7 @@ usage() {
   printf "  --setup|-s                       reconfigure repos without installing\\n"
   printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
   echo
-  printf "  --insecure-downloads|-i          skip SSL certificate check for downloads\\n"
+  printf "  --insecure-downloads|-I          skip SSL certificate check for downloads\\n"
   echo
   printf "  --uninstall|-u                   remove all packages and dependencies\\n"
   echo
@@ -230,6 +232,33 @@ add_config_excludes() {
   IFS=$old_ifs
 }
 
+# Function to add config includes
+add_config_includes() {
+  old_ifs=$IFS
+  IFS=,
+  set -f
+  for raw in $1; do
+    # Trim leading/trailing whitespace
+    x=$(printf '%s' "$raw" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
+    [ -n "$x" ] || continue
+    case "$x" in
+      -*|*[!A-Za-z0-9]*)
+        printf "Invalid include name: %s\n" "$x" >&2
+        exit 1
+        ;;
+    esac
+    # Converts for some formatted names
+    case "$x" in
+      MariaDB)
+        x="MySQL"
+        ;;
+    esac
+    config_includes="${config_includes} --include $x"
+  done
+  set +f
+  IFS=$old_ifs
+}
+
 # Default function to parse arguments
 parse_args() {
   while [ "$1" != "" ]; do
@@ -300,7 +329,7 @@ parse_args() {
         ;;
       esac
       ;;
-    --insecure-downloads | -i)
+    --insecure-downloads | -I)
       shift
       insecure_download_wget_flag=' --no-check-certificate'
       insecure_download_curl_flag=' -k'
@@ -343,7 +372,6 @@ parse_args() {
       B|b)
         shift
         unstable='unstable'
-        virtualmin_stack_custom_packages=""
         ;;
       *)
         printf "Unknown OS grade: $1\\n"
@@ -355,7 +383,6 @@ parse_args() {
     --unstable | -U)
       shift
       unstable='unstable'
-      virtualmin_stack_custom_packages=""
       ;;
     --extra | -E)
       shift
@@ -375,6 +402,16 @@ parse_args() {
         exit 1
       fi
       add_config_excludes "$1"
+      shift
+      ;;
+    --include | -i)
+      shift
+      if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
+        printf "Missing value for include flag\\n"
+        bind_hook "usage"
+        exit 1
+      fi
+      add_config_includes "$1"
       shift
       ;;
     --module | -o)
@@ -2021,7 +2058,7 @@ if [ "$mode" = "mini" ]; then
   bundle="Mini${bundle}"
 fi
 # shellcheck disable=SC2086
-virtualmin-config-system --bundle "$bundle" $config_excludes --log "$log"
+virtualmin-config-system --bundle "$bundle" $config_excludes $config_includes --log "$log"
 if [ "$?" != "0" ]; then
   errorlist="${errorlist}  ${YELLOW}◉${NORMAL} Postinstall configuration returned an error.\\n"
   errors=$((errors + 1))
