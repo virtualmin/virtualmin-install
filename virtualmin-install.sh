@@ -56,32 +56,29 @@ usage() {
   echo
   printf "  --bundle|-b <LAMP|LEMP>          bundle to install (default: LAMP)\\n"
   printf "  --type|-t <full|mini>            install type (default: full)\\n"
+  printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n"
+  printf "  --branch|-B <stable|rc|devel>    install branch (default: stable)\\n"
   echo
-  printf "  --branch|-B <stable|prerelease|unstable>\\n"
-  printf "                                   install branch (default: stable)\\n"
-  printf "  --os-grade|-g <A|B>              operating system support grade (default: A)\\n\\n"
   printf "  --extra|-E <name[,name..]>       install extra packages before stack install\\n"
   printf "  --exclude|-e <name[,name..]>     exclude plugin from configuration phase\\n"
   printf "  --include|-i <name[,name..]>     include plugin in configuration phase\\n"
-  echo
   printf "  --module|-o                      load custom module in post-install phase\\n"
   echo
   printf "  --hostname|-n                    force hostname during install\\n"
   printf "  --no-package-updates|-x          skip package updates during install\\n"
   printf "  --no-hostname-ssl|-nhs           skip SSL certificate request for hostname\\n"
   echo
+  printf "  --uninstall|-u                   remove all packages and dependencies\\n"
   printf "  --setup|-s                       reconfigure repos without installing\\n"
   printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
-  echo
   printf "  --insecure-downloads|-I          skip SSL certificate check for downloads\\n"
-  echo
-  printf "  --uninstall|-u                   remove all packages and dependencies\\n"
   echo
   printf "  --force|-f|--yes|-y              assume \"yes\" to all prompts\\n"
   printf "  --force-reinstall|-fr            force complete reinstall (not recommended)\\n"
   printf "  --no-banner|-nb                  suppress installation messages and warnings\\n"
-  printf "  --verbose|-v                     enable verbose mode\\n"
-  printf "  --version|-V                     show installer version\\n"
+  printf "  --verbose|-V                     enable verbose mode\\n"
+  echo
+  printf "  --version|-v                     show installer version\\n"
   printf "  --help|-h                        show this help\\n"
   echo
 }
@@ -436,11 +433,11 @@ parse_args() {
       shift
       skipbanner=1
       ;;
-    --verbose | -v)
+    --verbose | -V)
       shift
       VERBOSE=1
       ;;
-    --version | -V)
+    --version | -v)
       shift
       showversion=1
       ;;
