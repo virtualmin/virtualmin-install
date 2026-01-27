@@ -8,8 +8,8 @@
 # https://www.virtualmin.com/docs/installation/guides
 
 # License and version
-SERIAL=GPL
-KEY=GPL
+SERIAL="${SERIAL:-GPL}"
+KEY="${KEY:-GPL}"
 VER=8.0.6
 vm_version=8
 
