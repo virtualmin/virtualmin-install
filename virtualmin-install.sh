@@ -1844,14 +1844,19 @@ install_with_apt() {
   /usr/bin/apt-get --quiet --assume-yes purge ufw >> "$RUN_LOG" 2>&1
 
   # Install extra packages if any
+  extra_packages_cmd=''
   if [ -n "$extra_packages" ]; then
-    run_ok "$install $extra_packages" "Installing selected extra packages"
+    sim_install="${install% install} --simulate install"
+    run_ok "$sim_install webmin && $sim_install $extra_packages" \
+      "Checking availability of selected extra packages"
+    extra_packages_cmd=" && $install $extra_packages"
   fi
 
   # Install Webmin/Usermin first, because it needs to be already done
   # for the deps. Then install Virtualmin Core and then Stack packages
   # Do it all in one go for the nicer UI
-  run_ok "$install webmin && $install $debvmpackages && $install $deps" "Installing Virtualmin $vm_version and all related packages"
+  run_ok "$install webmin$extra_packages_cmd && $install $debvmpackages && $install $deps" \
+    "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
     log_warning "https://www.virtualmin.com/os-support"
