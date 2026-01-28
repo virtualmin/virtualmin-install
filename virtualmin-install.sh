@@ -1316,21 +1316,17 @@ already_installed_msg() {
 
   ${WHITEBG}${RED}${BOLD} WARNING ${NORMAL}
 
-  Virtualmin may already be installed. This can happen if an installation
-  failed, and can be ignored in that case.
-
-  However, if Virtualmin has already been successfully installed you
-  ${BOLD}${RED}must not${NORMAL} run this script again! It will cause breakage to your
-  existing configuration.
-
-  Virtualmin repositories can be fixed using ${WHITEBG}${BLACK}${BOLD}$script_name --setup${NORMAL}
+  If Virtualmin is already installed successfully, ${BOLD}${RED}do not${NORMAL} run this
+  script again to fix problems, upgrade, or change the license!
+  
+  Virtualmin repositories can be fixed using the ${WHITEBG}${BLACK}${BOLD}virtualmin setup-repos${NORMAL}
   command.
-
-  License can be changed using ${WHITEBG}${BLACK}${BOLD}virtualmin change-license${NORMAL} command.
-  Changing the license never requires re-installation.
-
-  Updates and upgrades must be performed from within either Virtualmin or
-  using system package manager on the command line.
+  
+  The license can be changed using the ${WHITEBG}${BLACK}${BOLD}virtualmin change-license${NORMAL}
+  command. Changing the license never requires re-installation.
+  
+  Updates and upgrades must be performed from within Virtualmin or by
+  using your system package manager on the command line.
 
 EOF
     if [ "$skipyesno" -ne 1 ]; then
