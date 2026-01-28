@@ -3,7 +3,7 @@ name: Upload release asset
 on:
   release:
     types:
-      - published
+      - released
 
 jobs:
   upload-assets:
