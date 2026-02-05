@@ -494,10 +494,9 @@ if [ -n "$test_connection_type" ]; then
   exit 0
 fi
 
-# Force setup mode, if script name is `setup-repos.sh` as it
-# is used by Virtualmin API, to make sure users won't run an
-# actual install script under any circumstances
-if [ "$script_name" = "setup-repos.sh" ]; then
+# Force setup mode when VIRTUALMIN_SETUP_ONLY is set, ensuring users will not
+# run an actual install script under any circumstances
+if [ "${VIRTUALMIN_SETUP_ONLY:-}" = "1" ]; then
   setup_only=1
   mode='setup'
   unstable='unstable'
