@@ -14,6 +14,7 @@ VER=8.1.1
 vm_version=8
 
 # Server
+download_old_virtualmin_host="software.virtualmin.com"
 download_virtualmin_host="${download_virtualmin_host:-download.virtualmin.com}"
 download_virtualmin_host_lib="$download_virtualmin_host"
 download_virtualmin_host_dev="${download_virtualmin_host_dev:-download.virtualmin.dev}"
@@ -650,6 +651,26 @@ pre_check_http_client() {
   fi
 }
 
+# Function to download content using available HTTP client
+download_content() {
+	url="$1"
+
+	if command -v curl >/dev/null 2>&1; then
+		curl -fsSL "$url" 2>/dev/null && return 0
+	fi
+
+	if command -v wget >/dev/null 2>&1; then
+		wget -qO- "$url" 2>/dev/null && return 0
+	fi
+
+	if command -v fetch >/dev/null 2>&1; then
+		fetch -qo - "$url" 2>/dev/null && return 0
+	fi
+
+	return 1
+}
+
+# Download slib.sh utility library
 download_slib() {
   # If slib.sh is available locally in the same directory use it
   if [ -f "$pwd/slib.sh" ]; then
@@ -744,6 +765,32 @@ write_virtualmin_branch() {
   printf '%s\n' "$branch" >"$branch_file" 2>/dev/null || :
   # Write major version
   printf '%s\n' "$vm_version" >>"$branch_file" 2>/dev/null || :
+}
+
+# Check for old Virtualmin repo presence
+is_old_virtualmin_repo() {
+  
+  # Check for old Virtualmin repo presence by looking for known host in existing
+  # repo configs
+  host="$download_old_virtualmin_host"
+	
+  # Check dnf repos
+	for d in /etc/yum.repos.d /etc/dnf/repos.d; do
+		[ -d "$d" ] || continue
+		if grep -RqsE "(^|[[:space:]])(baseurl|mirrorlist)=.*${host}" "$d"; then
+			return 0
+		fi
+	done
+
+	# Check apt sources
+	for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
+		[ -f "$f" ] || continue
+		if grep -qsE "^[[:space:]]*deb[[:space:]].*${host}" "$f"; then
+			return 0
+		fi
+	done
+
+	return 1
 }
 
 # Configure Virtualmin repositories (stable, prerelease, or unstable) and keep
@@ -1825,11 +1872,81 @@ preconfigure_virtualmin_release() {
 # Setup repos only
 if [ -n "$setup_only" ]; then
   if preconfigure_virtualmin_release; then
-    manage_virtualmin_branch_repos
-    log_success "Virtualmin repository is configured successfully."
+
+    # If old Virtualmin repo found, fetch Webmin migrate modular script and
+    # capture currently used modules before making any changes
+    migrate_script="" mods_file=""  
+    if is_old_virtualmin_repo; then
+      # If migrate-modular.sh is available locally in the same directory use it
+      if [ -f "$pwd/migrate-modular.sh" ]; then
+        migrate_script="$pwd/migrate-modular.sh"
+      # Otherwise download it
+      else
+        migrate_url="https://$download_virtualmin_host/migrate"
+        case "$branch" in
+          unstable)
+            migrate_url="https://$download_virtualmin_host_dev/migrate"
+            ;;
+          prerelease)
+            migrate_url="https://$download_virtualmin_host_rc/migrate"
+            ;;
+        esac
+        
+        migrate_script=$(mktemp)
+        download_content "$migrate_url" > "$migrate_script" 2>/dev/null
+        if [ ! -s "$migrate_script" ]; then
+          rm -f "$migrate_script"
+          migrate_script=""
+        fi
+      fi
+      
+      # Source and capture modules
+      if [ -n "$migrate_script" ] && [ -s "$migrate_script" ]; then
+        # shellcheck disable=SC1090
+        . "$migrate_script"
+        mods_file=$(pre_migration_capture "$download_old_virtualmin_host")
+        if [ -n "$mods_file" ] && [ -s "$mods_file" ]; then
+          mods_list=$(tr '\n' ' ' < "$mods_file" | sed 's/ $//')
+          log_debug "Captured Webmin modules to file: $mods_file ($mods_list)"
+        fi
+      fi
+    fi
+
+    # Setup repos for the selected branch
+    if manage_virtualmin_branch_repos; then
+      log_success "Virtualmin repository is configured successfully."
+    else
+      log_error "Error occurred during setup of Virtualmin repository."
+      log_error "You may find more information in ${RUN_LOG}."
+      exit 1
+    fi
+
+    # Apply Webmin package migration if the old repo is installed
+    if [ -n "$migrate_script" ] && [ -n "$mods_file" ] && \
+       [ -s "$mods_file" ]; then
+      migrate_host="$download_virtualmin_host"
+      case "$branch" in
+          prerelease) migrate_host="$download_virtualmin_host_rc" ;;
+          unstable)   migrate_host="$download_virtualmin_host_dev" ;;
+      esac
+      msg="Migrating Webmin to modular packages and restoring enabled modules"
+      if run_ok "post_migration_apply '$mods_file' '$migrate_host'" "$msg"; then
+        log_success "Webmin migration completed successfully."
+      else
+        log_warning "Webmin migration failed. You may need to migrate manually."
+      fi
+      
+      # Only remove if downloaded, not local
+      [ "$migrate_script" != "$pwd/migrate-modular.sh" ] && \
+        rm -f "$migrate_script"
+    # Remove if downloaded but failed to capture modules
+    elif [ -n "$migrate_script" ] && \
+         [ "$migrate_script" != "$pwd/migrate-modular.sh" ]; then
+      rm -f "$migrate_script"
+    fi
   else
-    log_error "Errors occurred during setup of Virtualmin software repositories. You may find more"
-    log_error "information in ${RUN_LOG}."
+    log_error "Error occurred during setup of Virtualmin repository."
+    log_error "You may find more information in ${RUN_LOG}."
   fi
   exit $?
 fi
