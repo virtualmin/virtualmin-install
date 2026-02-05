@@ -611,6 +611,7 @@ goto_tmpdir() {
 }
 goto_tmpdir
 
+# Function to check for HTTP client presence
 pre_check_http_client() {
   # Check for wget or curl or fetch
   printf "Checking for HTTP client .." >>"$log"
@@ -749,7 +750,7 @@ write_virtualmin_branch() {
 # matching Webmin repositories in sync.
 manage_virtualmin_branch_repos() {
   del_cmd="" found_type="" reinstalling=0
-  found_both=0 found_unstable=0 found_prerelease=0
+  found_both=0 found_unstable=0 found_prerelease=0 found_stable=0
 
   # Set paths based on package type
   case "$package_type" in
@@ -1091,7 +1092,7 @@ uninstall() {
   phase "$uninstall_phase_description" "$phase_number"
   run_ok "uninstall_packages" "Uninstalling Virtualmin $vm_version and all stack packages"
   run_ok "uninstall_repos" "Uninstalling Virtualmin $vm_version configuration and license"
-  manage_virtualmin_branch_repos
+  run_ok "remove_virtualmin_release" "Removing Virtualmin $vm_version repository configuration"
 }
 
 # Disable CD-ROM repos on Debian-based systems
