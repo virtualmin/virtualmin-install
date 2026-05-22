@@ -1,4 +1,4 @@
-name: "virtualmin.dev: virtualmin/virtualmin-install"
+name: Build
 
 on:
   push:
