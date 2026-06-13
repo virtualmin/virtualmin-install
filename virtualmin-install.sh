@@ -1870,12 +1870,17 @@ preconfigure_virtualmin_release() {
 
 # Setup repos only
 if [ -n "$setup_only" ]; then
+  old_virtualmin_repo_found=0
+  if is_old_virtualmin_repo; then
+    old_virtualmin_repo_found=1
+  fi
+
   if preconfigure_virtualmin_release; then
 
     # If old Virtualmin repo found, fetch Webmin migrate modular script and
     # capture currently used modules before making any changes
     migrate_script="" mods_file=""  
-    if is_old_virtualmin_repo; then
+    if [ "$old_virtualmin_repo_found" -eq 1 ]; then
       # If migrate-modular.sh is available locally in the same directory use it
       if [ -f "$pwd/migrate-modular.sh" ]; then
         migrate_script="$pwd/migrate-modular.sh"
@@ -1903,7 +1908,7 @@ if [ -n "$setup_only" ]; then
       if [ -n "$migrate_script" ] && [ -s "$migrate_script" ]; then
         # shellcheck disable=SC1090
         . "$migrate_script"
-        mods_file=$(pre_migration_capture "$download_old_virtualmin_host")
+        mods_file=$(pre_migration_capture "$download_old_virtualmin_host" "$old_virtualmin_repo_found")
         if [ -n "$mods_file" ] && [ -s "$mods_file" ]; then
           mods_list=$(tr '\n' ' ' < "$mods_file" | sed 's/ $//')
           log_debug "Captured Webmin modules to file: $mods_file ($mods_list)"
@@ -1922,7 +1927,7 @@ if [ -n "$setup_only" ]; then
 
     # Apply Webmin package migration if the old repo is installed
     if [ -n "$migrate_script" ] && [ -n "$mods_file" ] && \
-       [ -s "$mods_file" ]; then
+       [ -r "$mods_file" ]; then
       migrate_host="$download_virtualmin_host"
       case "$branch" in
           prerelease) migrate_host="$download_virtualmin_host_rc" ;;
