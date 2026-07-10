@@ -1962,8 +1962,8 @@ install_with_apt() {
     run_ok "$upgrade" "Checking and installing system package updates"
   fi
 
-  # Silently purge packages that may cause issues upon installation
-  /usr/bin/apt-get --quiet --assume-yes purge ufw >> "$RUN_LOG" 2>&1
+  # Silently purge firewall packages that may cause issues upon installation
+  /usr/bin/apt-get --quiet --assume-yes purge ufw firewalld >> "$RUN_LOG" 2>&1
 
   # Install extra packages if any
   extra_packages_cmd=''
@@ -2064,6 +2064,9 @@ install_with_yum() {
   if [ -z "$noupdates" ]; then
     run_ok "$upgrade" "Checking and installing system package updates"
   fi
+
+  # Remove the firewalld package silently to avoid compatibility issues
+  $install_cmd -y remove firewalld >> "$RUN_LOG" 2>&1
 
   # Install extra packages if any
   if [ -n "$extra_packages" ]; then
