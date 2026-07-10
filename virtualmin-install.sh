@@ -10,7 +10,7 @@
 # License and version
 SERIAL="${SERIAL:-GPL}"
 KEY="${KEY:-GPL}"
-VER=8.1.3
+VER=8.2.0
 vm_version=8
 
 # Server
