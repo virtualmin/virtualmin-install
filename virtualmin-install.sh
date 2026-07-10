@@ -922,9 +922,6 @@ grade_b_system() {
         *\.10|*[13579].04) # non-LTS versions are unstable
           return 0
           ;;
-        26.04)             # 26.04 is in testing so far
-          return 0
-          ;;
         *)
           return 1
           ;;
@@ -1193,7 +1190,7 @@ install_msg() {
       UNSTABLERHEL${NORMAL}
     ${CYANBG}${BLACK}${BOLD}Debian Linux and derivatives${NORMAL}${CYAN}
       - Debian 12 and 13 on i386, amd64, and arm64
-      - Ubuntu 22.04 LTS and 24.04 LTS on i386, amd64, and arm64${NORMAL}
+      - Ubuntu 22.04 LTS, 24.04 LTS, and 26.04 LTS on i386, amd64, and arm64${NORMAL}
       UNSTABLEDEB${NORMAL}"
 
   cat <<EOF
@@ -1229,8 +1226,7 @@ EOF
      - openEuler 24.03 and later on x86_64 and aarch64\\n \
      - CloudLinux 8 and 9 on x86_64\\n \
           ${NORMAL}"
-    unstable_deb="${YELLOW}- Ubuntu 26.04 developer preview on i386, amd64, and arm64\\n \
-     - Kali Linux Rolling on amd64 and arm64\\n \
+    unstable_deb="${YELLOW}- Kali Linux Rolling on amd64 and arm64\\n \
      - Ubuntu interim (non-LTS) releases on i386, amd64, and arm64\\n \
           ${NORMAL}"
     supported_all=$(echo "$supported_all" | sed "s/UNSTABLERHEL/$unstable_rhel/")
