@@ -25,8 +25,8 @@ The **Grade A** systems currently supported by install script are:
       - RHEL 8, 9 and 10 on x86_64 and aarch64
       
     Debian Linux and derivatives
-      - Debian 11, 12 and 13 on i386, amd64 and arm64
-      - Ubuntu 20.04, 22.04, 24.04 and 26.04 on i386, amd64 and arm64
+      - Debian 12 and 13 on i386, amd64 and arm64
+      - Ubuntu 24.04 and 26.04 on i386, amd64 and arm64
 
 The _Grade B_ systems currently supported by install script are:
 
