@@ -2020,7 +2020,7 @@ install_with_yum() {
     # go with different name, e.g. mariadb105-server instead of mariadb-server
     add_extra_packages "mariadb*-server"
     # Exclude from config what's not available on Amazon Linux
-    add_config_excludes "AWStats,Etckeeper,Fail2banFirewalld,ProFTPd"
+    add_config_excludes "AWStats,Etckeeper,Fail2ban,ProFTPd"
   fi
 
   # Important Perl packages are now hidden in PowerTools repo
