@@ -1455,6 +1455,8 @@ post_install_message() {
   if [ -z "$ssl_host_success" ]; then
     log_warning "You will see a security warning in the browser on your first visit."
   fi
+  log_info "Extra Webmin modules are now provided as separate packages:"
+  log_info "https://www.virtualmin.com/webmin-modules"
   bind_hook "virtualmin_config_postinstall_messages"
 }
 
