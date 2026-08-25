@@ -1972,10 +1972,10 @@ install_with_apt() {
     extra_packages_cmd=" && $install $extra_packages"
   fi
 
-  # Install Webmin/Usermin first, because it needs to be already done
-  # for the deps. Then install Virtualmin Core and then Stack packages
-  # Do it all in one go for the nicer UI
-  run_ok "$install webmin$extra_packages_cmd && $install $debvmpackages && $install $deps" \
+  # Install Webmin and extra packages first, then resolve Virtualmin Core and
+  # the stack together so APT can select the stack's packages as dependency
+  # providers
+  run_ok "$install webmin$extra_packages_cmd && $install $debvmpackages $deps" \
     "Installing Virtualmin $vm_version and all related packages"
   if [ $? -ne 0 ]; then
     log_warning "apt-get seems to have failed. Are you sure your OS and version is supported?"
