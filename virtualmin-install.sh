@@ -69,6 +69,10 @@ usage() {
   printf "  --no-package-updates|-x          skip package updates during install\\n"
   printf "  --no-hostname-ssl|-nhs           skip SSL certificate request for hostname\\n"
   echo
+  printf "  --swap|-S <size>                 managed swap: MiB or K/M/G[B]; 0 to remove\\n"
+  printf "  --swap-only                      configure swap without installing\\n"
+  printf "  --no-swap|-ns                    leave system swap unchanged\\n"
+  echo
   printf "  --uninstall|-u                   remove all packages and dependencies\\n"
   printf "  --setup|-s                       reconfigure repos without installing\\n"
   printf "  --connect|-C <ipv4|ipv6>         test connectivity without installing\\n"
@@ -422,6 +426,61 @@ parse_args() {
       forcehostname=$1
       shift
       ;;
+    --swap-only)
+      shift
+      swap_only=1
+      log_file_name="virtualmin-swap"
+      ;;
+    --swap | -S)
+      shift
+      if [ "$#" -eq 0 ]; then
+        printf 'Option --swap requires a size\n'
+        exit 1
+      fi
+      swap_arg=$1
+      # Split into a numeric part and an optional K/M/G[B] suffix, with a
+      # bare number meaning megabytes; store the result in KB
+      swap_num=${swap_arg%%[!0-9]*}
+      swap_suffix=${swap_arg#"$swap_num"}
+      case "$swap_suffix" in
+      [Kk] | [Kk][Bb])
+        swap_mult=1
+        ;;
+      [Mm] | [Mm][Bb] | '')
+        swap_mult=1024
+        ;;
+      [Gg] | [Gg][Bb])
+        swap_mult=1048576
+        ;;
+      *)
+        printf 'Invalid swap size: %s\n' "$swap_arg"
+        bind_hook "usage"
+        exit 1
+        ;;
+      esac
+      # Strip leading zeros, as some shells treat them as octal in
+      # arithmetic, and bound the number to keep arithmetic safe
+      swap_num=${swap_num#"${swap_num%%[!0]*}"}
+      # Zero is an explicit removal request; an empty numeric part is invalid.
+      if [ -z "${swap_arg%%[!0-9]*}" ] || [ "${#swap_num}" -gt 10 ]; then
+        printf 'Invalid swap size: %s\n' "$swap_arg"
+        bind_hook "usage"
+        exit 1
+      fi
+      swap_num=${swap_num:-0}
+      # Bound before multiplication for shells with 32-bit arithmetic.
+      if [ "$swap_num" -gt $((1073740800 / swap_mult)) ]; then
+        printf 'Invalid swap size: %s\n' "$swap_arg"
+        exit 1
+      fi
+      # Round up to a whole MiB; Linux reserves one page for the swap header.
+      swapsize=$(( (swap_num * swap_mult + 1023) / 1024 * 1024 ))
+      shift
+      ;;
+    --no-swap | -ns)
+      shift
+      noswap=1
+      ;;
     --force | -f | --yes | -y)
       shift
       skipyesno=1
@@ -458,6 +517,21 @@ parse_args() {
 
 # Hook arguments
 bind_hook "parse_args" "$@"
+
+# Conflicting swap options
+if [ -n "$swapsize" ] && [ -n "$noswap" ]; then
+  printf "Options --swap and --no-swap are mutually exclusive\\n"
+  bind_hook "usage"
+  exit 1
+fi
+
+# Swap-only cannot also request another operation. Repository setup always
+# bypasses swap, including when VIRTUALMIN_SETUP_ONLY forces that mode.
+if [ -n "$swap_only" ] &&
+   { [ -n "$setup_only" ] || [ "$mode" = uninstall ] || [ -n "$test_connection_type" ]; }; then
+  printf 'Option --swap-only cannot be combined with --setup, --uninstall, or --connect\n'
+  exit 1
+fi
 
 # Default function to show installer version
 show_version() {
@@ -498,8 +572,15 @@ fi
 # run an actual install script under any circumstances
 if [ "${VIRTUALMIN_SETUP_ONLY:-}" = "1" ]; then
   setup_only=1
+  swap_only=
   mode='setup'
   unstable='unstable'
+fi
+
+# A swap-only opt-out needs no library, log, or installation preparation.
+if [ -n "$swap_only" ] && [ -n "$noswap" ]; then
+  printf 'System swap left unchanged.\n'
+  exit 0
 fi
 
 # Store new log each time
@@ -517,7 +598,7 @@ if [ -e "$log" ]; then
 fi
 
 # If license file exists and both serial and key are set use them
-if [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f "$virtualmin_license_file" ]; then
+if [ -z "$swap_only" ] && [ "$SERIAL" = "GPL" ] && [ "$KEY" = "GPL" ] && [ -f "$virtualmin_license_file" ]; then
   virtualmin_license_existing_serial="$(grep 'SerialNumber=' "$virtualmin_license_file" | sed 's/SerialNumber=//')"
   virtualmin_license_existing_key="$(grep 'LicenseKey=' "$virtualmin_license_file" | sed 's/LicenseKey=//')"
   if [ -n "$virtualmin_license_existing_serial" ] && [ -n "$virtualmin_license_existing_key" ]; then
@@ -630,6 +711,12 @@ pre_check_http_client() {
       return 1
     fi
 
+    # Swap-only must never install packages just to obtain the library.
+    if [ -n "$swap_only" ]; then
+      printf 'No HTTP client available; place slib.sh beside the installer.\n'
+      return 1
+    fi
+
     # Made it here without finding a downloader, so try to install one
     wget_attempted=1
     if [ -x /usr/bin/dnf ]; then
@@ -679,7 +766,7 @@ download_slib() {
   # Download the slib (source: http://github.com/virtualmin/slib)
   else
     # We need HTTP client first
-    pre_check_http_client
+    pre_check_http_client || exit 1
     $download "https://$download_virtualmin_host_lib/slib.sh" >>"$log" 2>&1
     if [ $? -ne 0 ]; then
       echo "Error: Failed to download utility function library. Cannot continue. Check your network connection and DNS settings, and verify that your system's time is accurately synchronized."
@@ -709,26 +796,59 @@ download_slib # for production this block
               # minus its header
 ##########################################
 
-# Get OS type
-get_distro
-
-# Check the serial number and key
-serial_ok "$SERIAL" "$KEY"
-# Setup slog
+# Configure logging before either standalone swap setup or installation starts.
 LOG_PATH="$log"
-# Setup run_ok
 RUN_LOG="$log"
-# Exit on any failure during shell stage
-RUN_ERRORS_FATAL=1
-
-# Console output level; ignore debug level messages.
 if [ "$VERBOSE" = "1" ]; then
   LOG_LEVEL_STDOUT="DEBUG"
 else
   LOG_LEVEL_STDOUT="INFO"
 fi
-# Log file output level; catch literally everything.
 LOG_LEVEL_LOG="DEBUG"
+
+# A failed swap operation must stop before installation proceeds. Explain how
+# to opt out without combining the mutually exclusive swap options.
+swap_abort() {
+  log_error "Re-run the installer with --no-swap${swapsize:+ instead of --swap} to skip swap setup."
+  exit 1
+}
+
+# The swap-only path exits before distro, license, repository, package, or
+# hostname configuration. It also works on an already installed system.
+if [ -n "$swap_only" ]; then
+  log_info "Swap setup log is written to $LOG_PATH"
+  if [ "${SLIB_SWAP_API:-0}" != 2 ]; then
+    log_error "The loaded utility library does not support the requested swap option. Update slib.sh."
+    exit 1
+  fi
+  log_info "Started swap setup"
+  if ! swap_plan 0; then log_error "$swap_error"; swap_abort; fi
+  if [ "$swap_action" = none ]; then
+    log_success "System swap left unchanged."
+    exit 0
+  fi
+  # Store the plain plan in the log; highlight sizes only on the console.
+  log_info "$(swap_plan_message)" |
+    sed "s/[0-9][0-9]* [GM]iB/${YELLOW}&${NORMAL}/g"
+  if [ "$skipyesno" -ne 1 ]; then
+    printf 'Apply these swap changes? (y/n) '
+    if ! yesno; then
+      log_info "Swap setup cancelled; system swap left unchanged."
+      exit 0
+    fi
+  fi
+  swap_setup 0 || swap_abort
+  log_success "Swap setup completed successfully."
+  exit 0
+fi
+
+# Get OS type
+get_distro
+
+# Check the serial number and key
+serial_ok "$SERIAL" "$KEY"
+# Exit on any failure during shell stage
+RUN_ERRORS_FATAL=1
 
 # If already installed successfully, do not allow running again
 if [ -f "/etc/webmin/virtual-server/installed-auto" ] && 
@@ -736,6 +856,30 @@ if [ -f "/etc/webmin/virtual-server/installed-auto" ] &&
    [ "$mode" != "uninstall" ]; then
   bind_hook "already_installed_block"
 fi
+
+# Swap management requires the matching library; setup and opt-out bypass it.
+if [ -z "$setup_only" ] && [ "$mode" != "uninstall" ] &&
+   [ -z "$noswap" ] && [ "${SLIB_SWAP_API:-0}" != 2 ]; then
+  if [ -n "$swapsize" ]; then
+    log_error "The loaded utility library does not support the requested swap option."
+  else
+    log_error "The loaded utility library does not support swap management."
+  fi
+  log_error "Update slib.sh, or use --no-swap to install without swap changes."
+  exit 1
+fi
+
+# Reserve the estimated package footprint separately from swap disk headroom.
+if [ "$mode" != full ]; then disk_space_required=1; else disk_space_required=2; fi
+
+# Explicit requests fail before any installation changes when preflight fails.
+if [ -n "$swapsize" ] && [ -z "$setup_only" ] && [ "$mode" != uninstall ]; then
+  if ! swap_plan "$disk_space_required"; then
+    log_error "$swap_error"
+    swap_abort
+  fi
+fi
+
 if [ -n "$setup_only" ]; then
   log_info "Setup log is written to $LOG_PATH"
 elif [ "$mode" = "uninstall" ]; then
@@ -1175,13 +1319,6 @@ if [ "$mode" = "uninstall" ]; then
   exit 0
 fi
 
-# Calculate disk space requirements (this is a guess, for now)
-if [ "$mode" != 'full' ]; then
-  disk_space_required=1
-else
-  disk_space_required=2
-fi
-
 # Message to display in interactive mode
 install_msg() {
   supported="    ${CYANBG}${BLACK}${BOLD}Enterprise Linux and derivatives${NORMAL}${CYAN}
@@ -1236,15 +1373,56 @@ EOF
     supported_all=$(echo "$supported_all" | sed 's/UNSTABLEDEB//')
   fi
   echo "$supported_all"
+  # Include the optional swap plan in the installation summary below.
+  swap_note=""
+  if [ "${SLIB_SWAP_API:-0}" = 2 ] && [ -z "$setup_only" ] &&
+     swap_plan "$disk_space_required"; then
+    swap_note=$(swap_plan_message)
+  fi
   cat <<EOF
   If your OS/version/arch is not listed, installation ${BOLD}${RED}will fail${NORMAL}. More
   details about the systems supported by the script can be found here:
 
     ${UNDERLINE}https://www.virtualmin.com/os-support${NORMAL}
 
-  The installation will require up to ${CYAN}${disk_space_required} GB${NORMAL} of disk space. The selected
-  package bundle is ${CYAN}${bundle}${NORMAL} and the type of install is ${CYAN}${mode}${NORMAL}. More details
-  about the package bundles and types can be found here:
+EOF
+  # Wrap the complete paragraph to match the surrounding text. Count plain
+  # characters before adding color, keeping each size and its unit together.
+  # The first input line contains the disk estimate; later sizes describe swap.
+  printf '%s\n' \
+    "The installation will require up to $disk_space_required GiB of disk space." \
+    "${swap_note:+$swap_note }The selected" \
+    "package bundle is $bundle and the type of install is $mode. More details" \
+    "about the package bundles and types can be found here:" |
+    awk -v cyan="$CYAN" -v yellow="$YELLOW" -v normal="$NORMAL" \
+        -v bundle="$bundle" -v mode="$mode" '
+      {
+        for (i = 1; i <= NF; i++) {
+          word = $i
+          display = word
+          if (word ~ /^[0-9]+$/ && i < NF && $(i + 1) ~ /^[GM]iB[.]?$/) {
+            unit = $(++i)
+            suffix = (unit ~ /[.]$/ ? "." : "")
+            sub(/[.]$/, "", unit)
+            word = word " " unit
+            display = (NR == 1 ? cyan : yellow) word normal suffix
+            word = word suffix
+          } else if (word == bundle) {
+            display = cyan word normal
+          } else if (word == mode ".") {
+            display = cyan mode normal "."
+          }
+          if (column && column + 1 + length(word) > 70) {
+            printf "\n"
+            column = 0
+          }
+          printf "%s%s", (column ? " " : "  "), display
+          column += (column ? 1 : 0) + length(word)
+        }
+      }
+      END { printf "\n" }
+    '
+  cat <<EOF
 
     ${UNDERLINE}https://www.virtualmin.com/installation-variations${NORMAL}
 
@@ -1469,17 +1647,17 @@ if [ -z "$setup_only" ] && [ -z "$skipbanner" ]; then
   bind_hook "already_installed_msg"
 fi
 
-# Check memory
-if [ "$mode" = "full" ]; then
-  minimum_memory=1610613
-else
-  # minimal mode probably needs less memory to succeed
-  minimum_memory=1048576
-fi
-if ! memory_ok "$minimum_memory" "$disk_space_required"; then
-  log_fatal "Too little memory, and unable to create a swap file. Consider adding swap"
-  log_fatal "or more RAM to your system."
-  exit 1
+# Check memory, and set up swap if needed (not in repo-only setup mode)
+if [ -z "$setup_only" ]; then
+  if [ "$mode" = "full" ]; then
+    minimum_memory=1610613
+  else
+    # minimal mode probably needs less memory to succeed
+    minimum_memory=1048576
+  fi
+  if [ -z "$noswap" ] && ! memory_ok "$minimum_memory" "$disk_space_required"; then
+    swap_abort
+  fi
 fi
 
 # Check for localhost in /etc/hosts
