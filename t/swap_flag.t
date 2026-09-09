@@ -164,8 +164,13 @@ for my $shell (qw(sh dash)) {
         ($status, $out) = run_installer($shell, '--swap-only', '--swap', '64M', '--yes');
         isnt($status, 0, "$shell reports $failure");
         like($out, qr/^ERROR:.*failed\./m, "$shell shows the failure as an error");
-        like($out, qr/^ERROR:.*--no-swap/m, "$shell retains the opt-out advice");
+        unlike($out, qr/--no-swap/, "$shell omits installation advice for $failure");
         unlike($out, qr/^SUCCESS:/m, "$shell never announces success after $failure");
+        open my $failure_log, '<', "$tempdir/virtualmin-swap.log" or die $!;
+        my $failure_logged = do { local $/; <$failure_log> };
+        close $failure_log;
+        like($failure_logged, qr/^ERROR:.*failed\./m, "$shell logs the cause of $failure");
+        unlike($failure_logged, qr/--no-swap/, "$shell keeps installation advice out of the $failure log");
     }
 
     # A no-op completes successfully; declining confirmation only cancels.

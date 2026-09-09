@@ -815,10 +815,11 @@ else
 fi
 LOG_LEVEL_LOG="DEBUG"
 
-# A failed swap operation must stop before installation proceeds. Explain how
-# to opt out without combining the mutually exclusive swap options.
+# Stop on swap failure; opt-out advice only applies to a full installation.
 swap_abort() {
-  log_error "Re-run the installer with --no-swap${swapsize:+ instead of --swap} to skip swap setup."
+  if [ -z "$swap_only" ]; then
+    log_error "Re-run the installer with --no-swap${swapsize:+ instead of --swap} to skip swap setup."
+  fi
   exit 1
 }
 
