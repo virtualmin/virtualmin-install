@@ -48,6 +48,15 @@ config_excludes="${config_excludes:-}"
 config_includes="${config_includes:-}"
 extra_packages="${extra_packages:-}"
 
+# Report argument errors before slib loads and replaces this fallback logger.
+log_error() {
+  if [ -t 2 ] && [ "${INTERACTIVE_MODE:-}" != off ] && command -v tput >/dev/null 2>&1; then
+    printf '%s[ERROR]%s %s\n' "$(tput setaf 1 2>/dev/null)" "$(tput sgr0 2>/dev/null)" "$1" >&2
+  else
+    printf '[ERROR] %s\n' "$1" >&2
+  fi
+}
+
 usage() {
   # shellcheck disable=SC2046
   echo
@@ -194,7 +203,7 @@ add_extra_packages() {
     # Don't allow leading dash or whitespace
     case "$p" in
       \*|-*|*[[:space:]]*|*\'*)
-        printf "Invalid extra package name: %s\n" "$p" >&2
+        log_error "Invalid extra package name: $p"
         bind_hook "usage"
         exit 1
         ;;
@@ -218,7 +227,7 @@ add_config_excludes() {
     [ -n "$x" ] || continue
     case "$x" in
       -*|*[!A-Za-z0-9]*)
-        printf "Invalid exclude name: %s\n" "$x" >&2
+        log_error "Invalid exclude name: $x"
         exit 1
         ;;
     esac
@@ -245,7 +254,7 @@ add_config_includes() {
     [ -n "$x" ] || continue
     case "$x" in
       -*|*[!A-Za-z0-9]*)
-        printf "Invalid include name: %s\n" "$x" >&2
+        log_error "Invalid include name: $x"
         exit 1
         ;;
     esac
@@ -281,7 +290,7 @@ parse_args() {
         bundle='LEMP'
         ;;
       *)
-        printf "Unknown bundle: $1\\n"
+        log_error "Unknown bundle: $1"
         bind_hook "usage"
         exit 1
         ;;
@@ -303,7 +312,7 @@ parse_args() {
         mode='mini'
         ;;
       *)
-        printf "Unknown type: $1\\n"
+        log_error "Unknown type: $1"
         bind_hook "usage"
         exit 1
         ;;
@@ -325,7 +334,7 @@ parse_args() {
         branch='stable'
         ;;
       *)
-        printf "Unknown branch: $1\\n"
+        log_error "Unknown branch: $1"
         bind_hook "usage"
         exit 1
         ;;
@@ -357,7 +366,7 @@ parse_args() {
         test_connection_type="ipv4 ipv6"
       else
         if [ "$1" != "ipv4" ] && [ "$1" != "ipv6" ]; then
-          printf "Invalid protocol: $1\\n"
+          log_error "Invalid protocol: $1"
           bind_hook "usage"
           exit 1
         fi
@@ -376,7 +385,7 @@ parse_args() {
         unstable='unstable'
         ;;
       *)
-        printf "Unknown OS grade: $1\\n"
+        log_error "Unknown OS grade: $1"
         bind_hook "usage"
         exit 1
         ;;
@@ -389,7 +398,7 @@ parse_args() {
     --extra | -E)
       shift
       if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
-        printf "Missing value for extra flag\n"
+        log_error "Missing value for extra flag"
         bind_hook "usage"
         exit 1
       fi
@@ -399,7 +408,7 @@ parse_args() {
     --exclude | -e)
       shift
       if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
-        printf "Missing value for exclude flag\\n"
+        log_error "Missing value for exclude flag"
         bind_hook "usage"
         exit 1
       fi
@@ -409,7 +418,7 @@ parse_args() {
     --include | -i)
       shift
       if [ -z "$1" ] || [ "${1#-}" != "$1" ]; then
-        printf "Missing value for include flag\\n"
+        log_error "Missing value for include flag"
         bind_hook "usage"
         exit 1
       fi
@@ -434,7 +443,7 @@ parse_args() {
     --swap | -S)
       shift
       if [ "$#" -eq 0 ]; then
-        printf 'Option --swap requires a size\n'
+        log_error 'Option --swap requires a size'
         exit 1
       fi
       swap_arg=$1
@@ -453,7 +462,7 @@ parse_args() {
         swap_mult=1048576
         ;;
       *)
-        printf 'Invalid swap size: %s\n' "$swap_arg"
+        log_error "Invalid swap size: $swap_arg"
         bind_hook "usage"
         exit 1
         ;;
@@ -463,14 +472,14 @@ parse_args() {
       swap_num=${swap_num#"${swap_num%%[!0]*}"}
       # Zero is an explicit removal request; an empty numeric part is invalid.
       if [ -z "${swap_arg%%[!0-9]*}" ] || [ "${#swap_num}" -gt 10 ]; then
-        printf 'Invalid swap size: %s\n' "$swap_arg"
+        log_error "Invalid swap size: $swap_arg"
         bind_hook "usage"
         exit 1
       fi
       swap_num=${swap_num:-0}
       # Bound before multiplication for shells with 32-bit arithmetic.
       if [ "$swap_num" -gt $((1073740800 / swap_mult)) ]; then
-        printf 'Invalid swap size: %s\n' "$swap_arg"
+        log_error "Invalid swap size: $swap_arg"
         exit 1
       fi
       # Round up to a whole MiB; Linux reserves one page for the swap header.
@@ -507,7 +516,7 @@ parse_args() {
       log_file_name="${uninstall_log_file_name:-virtualmin-uninstall}"
       ;;
     *)
-      printf "Unrecognized option: $1\\n"
+      log_error "Unrecognized option: $1"
       bind_hook "usage"
       exit 1
       ;;
@@ -520,7 +529,7 @@ bind_hook "parse_args" "$@"
 
 # Conflicting swap options
 if [ -n "$swapsize" ] && [ -n "$noswap" ]; then
-  printf "Options --swap and --no-swap are mutually exclusive\\n"
+  log_error "Options --swap and --no-swap are mutually exclusive"
   bind_hook "usage"
   exit 1
 fi
@@ -529,7 +538,7 @@ fi
 # bypasses swap, including when VIRTUALMIN_SETUP_ONLY forces that mode.
 if [ -n "$swap_only" ] &&
    { [ -n "$setup_only" ] || [ "$mode" = uninstall ] || [ -n "$test_connection_type" ]; }; then
-  printf 'Option --swap-only cannot be combined with --setup, --uninstall, or --connect\n'
+  log_error 'Option --swap-only cannot be combined with --setup, --uninstall, or --connect'
   exit 1
 fi
 

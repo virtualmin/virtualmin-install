@@ -26,7 +26,7 @@ for my $shell (qw(sh dash)) {
     for my $size (qw(bogus 2T 9999999M 999999999999G -1 1.5G M), '%s') {
         my ( $status, $out ) = run_installer( $shell, '--swap', $size );
         isnt( $status, 0, "$shell rejects $size" );
-        like( $out, qr/^Invalid swap size: \Q$size\E/m,
+        like( $out, qr/^\[ERROR\] Invalid swap size: \Q$size\E/m,
               "$shell preserves $size in the diagnostic" );
     }
 
@@ -35,7 +35,8 @@ for my $shell (qw(sh dash)) {
         $shell, '--swap', '1G', '--no-swap'
     );
     isnt( $status, 0, "$shell rejects conflicting flags" );
-    like( $out, qr/mutually exclusive/, "$shell explains the conflict" );
+    like( $out, qr/^\[ERROR\] Options --swap and --no-swap are mutually exclusive$/m,
+          "$shell reports the conflict as an error" );
 
     # Leading zeros must be decimal; dash otherwise interprets 08 as octal
     ( $status, $out ) = run_installer(
@@ -54,10 +55,17 @@ for my $shell (qw(sh dash)) {
     }
     my ($status, $out) = run_installer($shell, '--swap');
     isnt($status, 0, "$shell rejects a missing size");
-    like($out, qr/requires a size/, "$shell diagnoses the missing argument");
+    like($out, qr/^\[ERROR\] Option --swap requires a size$/m,
+         "$shell reports the missing argument as an error");
     for my $mode (qw(--setup --uninstall --connect)) {
-        ($status, $out) = run_installer($shell, '--swap-only', $mode, 'ipv4');
-        isnt($status, 0, "$shell rejects incompatible $mode");
+        my @mode_args = ($mode, $mode eq '--connect' ? 'ipv4' : ());
+        for my $args (['--swap-only', @mode_args, '--swap', '2g'],
+                      [@mode_args, '--swap', '2g', '--swap-only']) {
+            ($status, $out) = run_installer($shell, @{$args});
+            is($status, 1, "$shell rejects incompatible @{$args}");
+            is($out, "[ERROR] Option --swap-only cannot be combined with --setup, --uninstall, or --connect\n",
+               "$shell reports only the conflict without extra blank lines");
+        }
     }
     ($status, $out) = run_installer($shell, '--swap-only', '--no-swap');
     is($status, 0, "$shell permits a standalone opt-out");
