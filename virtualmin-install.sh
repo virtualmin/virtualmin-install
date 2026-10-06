@@ -1858,23 +1858,36 @@ log_debug "Install mode: $mode"
 log_debug "Product: Virtualmin $PRODUCT"
 log_debug "virtualmin-install.sh version: $VER"
 
-# Check for a fully qualified hostname unless setting up repos or doing a
-# minimal install
-if [ -z "$setup_only" ] && [ "$mode" != "mini" ]; then
-  log_debug "Checking for fully qualified hostname .."
-  name="$(hostname -f)"
-  if [ $? -ne 0 ]; then
-    name=$(hostnamectl --static)
-  fi
-  if [ -n "$forcehostname" ]; then
-    set_hostname "$forcehostname"
-  elif ! is_fully_qualified "$name"; then
-    set_hostname
+# Check for a fully qualified hostname unless setting up repos. A minimal
+# install only maps its current hostname in /etc/hosts.
+if [ -z "$setup_only" ]; then
+  if [ "$mode" = "mini" ]; then
+    # Keep the current hostname, as before, even when --hostname is given.
+    # Read it without DNS so unresolved names can still be mapped locally.
+    name=$(hostname)
+    case $name in
+      ''|localhost|localhost.*) ;;
+      *) set_hosts_entry "$name" ;;
+    esac
   else
-    # Hostname is already FQDN, yet still set it 
-    # again to make sure to have it updated everywhere
-    set_hostname "$name"
-  fi
+    # Full installs require a fully qualified hostname.
+    log_debug "Checking for fully qualified hostname .."
+    name="$(hostname -f)"
+    if [ $? -ne 0 ]; then
+      # Use the static hostname when it cannot be resolved.
+      name=$(hostnamectl --static)
+    fi
+    if [ -n "$forcehostname" ]; then
+      # Validate and apply the explicitly requested hostname.
+      set_hostname "$forcehostname"
+    elif ! is_fully_qualified "$name"; then
+      # Prompt for a fully qualified hostname when the current name is unsuitable.
+      set_hostname
+    else
+      # Refresh all hostname settings, including the local hosts entry.
+      set_hostname "$name"
+    fi
+  fi || fatal "Failed to configure the hostname entry in /etc/hosts."
 fi
 
 # Insert the serial number and password into license file
